@@ -223,6 +223,37 @@ pdf(file = file.path(plots_dir, 'embryo_stage_size_colour.pdf'),
 print(embryo_stage_size_colour_plot)
 dev.off()
 
+# plot x position as stage
+# order levels of gene_gt by delay and condition
+sample_info$gene_gt <-
+  factor(
+    paste(sample_info$gene, sample_info$condition, sep="-"),
+    levels = rev( paste(rep(stage_count$gene, each = 3),
+                        c('wt', 'het', 'hom'), sep="-") )
+  )
+
+# create stage boundaries
+ts_boundaries <- data.frame(
+  Stage = c(3.5, 7.5, 12.5, 19.5, 29.5),
+  Label = c('TS12a', 'TS12b', 'TS13', 'TS14', 'TS15')
+)
+
+embryo_stage_by_gene_by_gt_plot <-ggplot(data = sample_info) +
+  geom_tile(aes(x = stage_as_number, y = gene_gt, fill = condition)) +
+  scale_fill_manual(values = c('firebrick2', 'green', 'steelblue3'),
+                    guide = guide_legend(reverse = TRUE)) +
+  geom_vline(data = ts_boundaries, aes(xintercept = Stage)) + 
+  theme_void() + theme(legend.position = 'top',
+                     legend.title = element_text(size = 8),
+                     legend.text = element_text(size = 6),
+                     legend.key.size = unit(0.7, 'lines') )
+
+pdf(file = file.path(plots_dir, 'embryo_stage_by_gene_by_gt.pdf'),
+    width = 2, height = 5 )
+print(embryo_stage_by_gene_by_gt_plot)
+dev.off()
+
+
 # expression of the knocked out gene in homs and hets
 ko_expr_file <- cmd_line_args$args[2]
 ko_expr <- read.table(ko_expr_file, sep = "\t", header = FALSE )
