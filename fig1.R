@@ -210,16 +210,23 @@ for ( i in seq_len(length(stage_count_by_gt.m_by_type))) {
 }
 stage_count.for_tiles <- do.call(rbind, stage_count.for_tiles_list)
 
+
 embryo_stage_size_colour_plot <- ggplot(data = stage_count.for_tiles) + 
   geom_rect( aes( xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = condition)) +
+  scale_y_continuous(expand = c(0,0),
+                     breaks = seq(0.5,73.5,1),
+                     labels = rev(stage_count$gene) ) +
   scale_fill_manual(values = c('firebrick2', 'green', 'steelblue3'),
                     guide = guide_legend(reverse = TRUE)) +
   geom_vline(data = stage_separators, aes(xintercept = raw)) + 
-  theme_void() + theme(legend.position = 'top',
-                     legend.title = element_text(size = 10))
+  theme_void() + theme( axis.text.y = element_text(size = 8, colour = 'black', angle = 0, debug = FALSE),
+                        legend.position = 'top',
+                        legend.title = element_text(size = 9),
+                        legend.text = element_text(size = 7),
+                        legend.key.size = unit(1, 'lines') )
 
 pdf(file = file.path(plots_dir, 'embryo_stage_size_colour.pdf'),
-    width = 2, height = 5 )
+    width = 4, height = 8 )
 print(embryo_stage_size_colour_plot)
 dev.off()
 
