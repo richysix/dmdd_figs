@@ -207,3 +207,30 @@ pdf(file = file.path(plots_dir, 'embryo_stage_size_norm.pdf'),
 print(embryo_stage_size_norm_plot)
 dev.off()
 
+# expression of the knocked out gene in homs and hets
+ko_expr_file <- cmd_line_args$args[2]
+ko_expr <- read.table(ko_expr_file, sep = "\t", header = FALSE )
+names(ko_expr) <- c('gene_id', 'symbol', 'comparison', 'log2fc')
+ko_expr$gt <- factor( gsub('_vs_.*', '', ko_expr$comparison),
+                     levels = c('hom', 'het') )
+ko_expr$symbol <- factor(ko_expr$symbol,
+                          levels = rev(stage_count$gene))
+
+# 
+embryo_ko_expr_plot <- ggplot(data = ko_expr) + 
+  geom_tile(aes(x = gt, y = gene_id, fill = log2fc )) +
+  scale_x_discrete(position = 'top') +
+  scale_fill_gradient2(na.value = 'white') +
+  theme_void() + theme(axis.text.x =
+                       element_text(size = 10, colour = 'black', angle = 90,
+                                    hjust = 0, debug = FALSE),
+                       legend.position = 'top',
+                       legend.title = element_text(size = 10))
+
+pdf(file = file.path(plots_dir, 'embryo_ko_expr_plot.pdf'),
+    width = 2, height = 5)
+print(embryo_ko_expr_plot)
+dev.off()
+
+
+save.image(file = file.path(dir, 'fig1.RData'))
