@@ -28,19 +28,19 @@ if ( cmd_line_args$options[['verbose']] ){
 }
 
 if (cmd_line_args$options[['directory']] == 'cwd') {
-  dir <- getwd()
+  wd <- getwd()
 } else {
-  dir <- cmd_line_args$options[['directory']]
+  wd <- cmd_line_args$options[['directory']]
 }
 
 # set up directories
 for ( new_dir in c('plots', 'output') ) {
-  dir_path <- file.path(dir, new_dir)
+  dir_path <- file.path(wd, new_dir)
   if( !dir.exists(dir_path) ){
     dir.create(dir_path)
   }
 }
-plots_dir <- file.path(dir, 'plots')
+plots_dir <- file.path(wd, 'plots')
 
 packages <- c('ggplot2', 'plyr', 'viridis', 'reshape2')
 #for( package in packages ){
@@ -56,17 +56,22 @@ for( package in packages ){
 sample_file <- cmd_line_args$args[1]
 sample_info <- read.table(file = sample_file, sep = "\t", header = TRUE, row.names = 1 )
 sample_info$gene <- gsub('_[a-z0-9]+', '', row.names(sample_info))
+# set levels of gt
+sample_info$condition <- factor(sample_info$condition,
+                                levels = c('hom', 'het', 'wt'))
 
 # label with Theiler stage
-stage_boundaries <- c(4, 7, 12, 20, 29, 34)
+stage_boundaries <- c(4, 7, 12, 19, 29, 34)
 stage_labels <- c('TS12b', 'TS13', 'TS14', 'TS15', 'Other')
 
 # assign stage numbers with their TS
 # this issues a warning about introducing NAs by coercion. suppress it.
-stage_numbers <-
+sample_info$stage_as_number <-
   suppressWarnings(as.integer( gsub('somites', '', sample_info$stage) ))
 
-sample_info$Theiler_stage <- cut(stage_numbers, breaks = stage_boundaries, labels = stage_labels)
+sample_info$Theiler_stage <-
+  cut(sample_info$stage_as_number,
+      breaks = stage_boundaries, labels = stage_labels)
 # 4 embryos are of Unknown stage. Put these in Other with the one TS16 (30s) embryo
 sample_info$Theiler_stage[is.na(sample_info$Theiler_stage)] <- 'Other'
 
@@ -129,82 +134,93 @@ dev.off()
 
 # also plot number of embryos as size of box
 # split by delay_type
-stage_count.m_by_type <- split(stage_count.m, stage_count.m$delay_type)
+stage_count_by_gt <-
+  ddply(sample_info, .(gene, condition), .drop = FALSE, summarise,
+    Severe = sum(Theiler_stage == 'TS12b'),
+    Moderate = sum(Theiler_stage == 'TS13'),
+    Slight = sum(Theiler_stage == 'TS14'),
+    None = sum(Theiler_stage == 'TS15')
+  )
+# order genes in the same order as stage_count
+stage_count_by_gt <- do.call(rbind, lapply(stage_count$gene,
+       function(x){ stage_count_by_gt[ stage_count_by_gt$gene == x, ] } )
+)
+
+# melt and split by delay_type
+stage_count_by_gt.m <- melt(stage_count_by_gt, id.vars = c('gene', 'condition'),
+                      variable.name = 'delay_type',
+                      value.name = 'count')
+stage_count_by_gt.m$gene <- factor(stage_count_by_gt.m$gene,
+                                   levels = rev(stage_count$gene) )
+
+stage_count_by_gt.m_by_type <- split(stage_count_by_gt.m, stage_count_by_gt.m$delay_type)
+# also split stage_count by delay_type
+stage_count_by_type <- split(stage_count.m, stage_count.m$delay_type)
 
 # figure out max width of column and calculate widths and positions of boxes
-calculate_boxes <- function(counts_df, x_offset = 0, x_offset_norm = 0, normalised_width = 10){
-  n_genes <- nrow(counts_df)
+calculate_boxes <- function(delay_type, stage_count_by_gt.m_by_type,
+                            stage_count_by_type, x_offset = 0){
+  counts_df <- stage_count_by_gt.m_by_type[[delay_type]]
+  counts_df_agg <- stage_count_by_type[[delay_type]]
+  n_genes <- nrow(counts_df_agg)
   # max box width
-  max_width <- max(counts_df$count)
-  ymax <- n_genes:1
-  ymin <- (n_genes - 1):0
-  xmax <- rep(x_offset + max_width, n_genes)
-  xmax_norm <- rep(x_offset_norm + normalised_width, n_genes)
+  max_width <- max(counts_df_agg$count)
+  ymax <- rep(n_genes:1, each = 3)
+  ymin <- rep((n_genes - 1):0, each = 3)
   base_xmax <- x_offset + max_width
-  xmin <- vector('integer', length = n_genes)
-  boxes_list <- vector('list', length = n_genes)
-  for (i in seq_len(n_genes)) {
-    if (counts_df$count[i] == 0) {
-      xmin[i] = base_xmax
-    } else {
-      xmin[i] = base_xmax - counts_df$count[i]
+  
+  xmin <- vector('integer', length = n_genes * 3)
+  xmax <- vector('integer', length = n_genes * 3)
+  gts <- unique(counts_df$condition)
+  for (gene_i in seq_len(n_genes)) {
+    current_xmax <- base_xmax
+    for (gt_i in seq_len(length(gts)) ) {
+      i <- (gene_i - 1) * 3 + gt_i
+      xmax[i] <- current_xmax
+      xmin[i] <- current_xmax - counts_df$count[i]
+      current_xmax <- xmin[i]
     }
   }
-  xmin_norm <- xmax_norm - ( (xmax - xmin) / max_width * normalised_width )
-  # remove one with no data
-  to_keep <- xmin != xmax
-  return(
-    data.frame(
-      gene = counts_df$gene[to_keep],
-      xmin = xmin[to_keep],
-      xmax = xmax[to_keep],
-      ymin = ymin[to_keep],
-      ymax = ymax[to_keep],
-      xmin_norm = xmin_norm[to_keep],
-      xmax_norm = xmax_norm[to_keep]
-    )
-  )
+  
+  # add calculated values to data frame
+  counts_df$xmin <- xmin
+  counts_df$xmax <- xmax
+  counts_df$ymin <- ymin
+  counts_df$ymax <- ymax
+  
+  return(counts_df)
 }
 
-stage_count.for_tiles_list <- vector('list', length = length(stage_count.m_by_type))
+stage_count.for_tiles_list <- vector('list', length = length(stage_count_by_gt.m_by_type))
 offset <- 0
-offset_norm <- 0
-normalised_width <- 10
+#offset_norm <- 0
+#normalised_width <- 10
 stage_separators <- data.frame(
   class = c('Left', 'Severe', 'Moderate', 'Slight', 'Right'),
-  raw = rep(0, 5),
-  normalised = rep(0, 5)
+  raw = rep(0, 5)
+  #normalised = rep(0, 5)
 )
-for ( i in seq_len(length(stage_count.m_by_type))) {
+for ( i in seq_len(length(stage_count_by_gt.m_by_type))) {
+  delay_type <- names(stage_count_by_gt.m_by_type)[i]
   stage_count.for_tiles_list[[i]] <-
-    calculate_boxes(stage_count.m_by_type[[i]], offset, offset_norm, normalised_width)
-  offset <- offset + max(stage_count.m_by_type[[i]]$count)
-  offset_norm <- offset_norm + normalised_width
+    calculate_boxes(delay_type, stage_count_by_gt.m_by_type,
+                    stage_count_by_type, offset)
+  offset <- offset + max(stage_count_by_type[[i]]$count)
   stage_separators$raw[i+1] <- offset
-  stage_separators$normalised[i+1] <- offset_norm
 }
 stage_count.for_tiles <- do.call(rbind, stage_count.for_tiles_list)
 
-embryo_stage_size_plot <- ggplot(data = stage_count.for_tiles) + 
-  geom_rect( aes( xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax), fill = 'steelblue3') +
+embryo_stage_size_colour_plot <- ggplot(data = stage_count.for_tiles) + 
+  geom_rect( aes( xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = condition)) +
+  scale_fill_manual(values = c('firebrick2', 'green', 'steelblue3'),
+                    guide = guide_legend(reverse = TRUE)) +
   geom_vline(data = stage_separators, aes(xintercept = raw)) + 
-  theme_void()
+  theme_void() + theme(legend.position = 'top',
+                     legend.title = element_text(size = 10))
 
-pdf(file = file.path(plots_dir, 'embryo_stage_size.pdf'),
+pdf(file = file.path(plots_dir, 'embryo_stage_size_colour.pdf'),
     width = 2, height = 5 )
-print(embryo_stage_size_plot)
-dev.off()
-
-# plot equalised column widths
-embryo_stage_size_norm_plot <- ggplot(data = stage_count.for_tiles) + 
-  geom_rect(aes( xmin = xmin_norm, xmax = xmax_norm, ymin = ymin, ymax = ymax),
-            fill = 'steelblue3') +
-  geom_vline(data = stage_separators, aes(xintercept = normalised)) + 
-  theme_void()
-
-pdf(file = file.path(plots_dir, 'embryo_stage_size_norm.pdf'),
-    width = 2, height = 5 )
-print(embryo_stage_size_norm_plot)
+print(embryo_stage_size_colour_plot)
 dev.off()
 
 # expression of the knocked out gene in homs and hets
@@ -233,4 +249,4 @@ print(embryo_ko_expr_plot)
 dev.off()
 
 
-save.image(file = file.path(dir, 'fig1.RData'))
+save.image(file = file.path(wd, 'fig1.RData'))
