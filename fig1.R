@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript
+.libPaths('/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/.R/lib')
 
 library('optparse')
 option_list <- list(
@@ -15,15 +16,16 @@ cmd_line_args <- parse_args(
   positional_arguments = 1
 )
 
-if ( cmd_line_args$options[['verbose']] ){
-  cat( "Working directory:", cmd_line_args$options[['directory']], "\n", sep=" " )
-}
-
 #cmd_line_args <- list(
-#  options = list(directory = '/nfs/users/nfs_r/rw4/checkouts/plots'),
+#  options = list(directory = '/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd',
+#                 verbose = FALSE ),
 #  args = c('/lustre/scratch117/maz/team31/projects/mouse_DMDD/samples-minus-outliers.txt',
 #           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/KO_expr.tsv')
 #)
+
+if ( cmd_line_args$options[['verbose']] ){
+  cat( "Working directory:", cmd_line_args$options[['directory']], "\n", sep=" " )
+}
 
 if (cmd_line_args$options[['directory']] == 'cwd') {
   dir <- getwd()
@@ -31,7 +33,19 @@ if (cmd_line_args$options[['directory']] == 'cwd') {
   dir <- cmd_line_args$options[['directory']]
 }
 
+# set up directories
+for ( new_dir in c('plots', 'output') ) {
+  dir_path <- file.path(dir, new_dir)
+  if( !dir.exists(dir_path) ){
+    dir.create(dir_path)
+  }
+}
+plots_dir <- file.path(dir, 'plots')
+
 packages <- c('ggplot2', 'plyr', 'viridis', 'reshape2')
+#for( package in packages ){
+#  library(package, character.only = TRUE)
+#}
 for( package in packages ){
   suppressPackageStartupMessages(
     suppressWarnings( library(package, character.only = TRUE) )
@@ -83,7 +97,7 @@ embryo_stage_plot <- ggplot(data = stage_count.m) +
   theme_void() + theme(axis.text.x = element_text(colour = 'black', angle = 90, hjust = 0, debug = FALSE),
                        legend.position = 'top' )
 
-pdf(file = file.path(dir, 'embryo_stage_colour.pdf'),
+pdf(file = file.path(plots_dir, 'embryo_stage_colour.pdf'),
     width = 2, height = 5 )
 print(embryo_stage_plot)
 dev.off()
@@ -103,12 +117,12 @@ embryo_stage_zero_white_plot <- ggplot(data = stage_count_na.m) +
                        legend.position = 'top',
                        legend.title = element_text(size = 10))
 
-pdf(file = file.path(dir, 'embryo_stage_colour_zero_white.pdf'),
+pdf(file = file.path(plots_dir, 'embryo_stage_colour_zero_white.pdf'),
     width = 2, height = 5 )
 print(embryo_stage_zero_white_plot)
 dev.off()
 
-postscript(file = file.path(dir, 'embryo_stage_colour_zero_white.eps'),
+postscript(file = file.path(plots_dir, 'embryo_stage_colour_zero_white.eps'),
     width = 2, height = 5 )
 print(embryo_stage_zero_white_plot)
 dev.off()
@@ -176,18 +190,19 @@ embryo_stage_size_plot <- ggplot(data = stage_count.for_tiles) +
   geom_vline(data = stage_separators, aes(xintercept = raw)) + 
   theme_void()
 
-pdf(file = file.path(dir, 'embryo_stage_size.pdf'),
+pdf(file = file.path(plots_dir, 'embryo_stage_size.pdf'),
     width = 2, height = 5 )
 print(embryo_stage_size_plot)
 dev.off()
 
 # plot equalised column widths
 embryo_stage_size_norm_plot <- ggplot(data = stage_count.for_tiles) + 
-  geom_rect( aes( xmin = xmin_norm, xmax = xmax_norm, ymin = ymin, ymax = ymax), fill = 'steelblue3') +
+  geom_rect(aes( xmin = xmin_norm, xmax = xmax_norm, ymin = ymin, ymax = ymax),
+            fill = 'steelblue3') +
   geom_vline(data = stage_separators, aes(xintercept = normalised)) + 
   theme_void()
 
-pdf(file = file.path(dir, 'embryo_stage_size_norm.pdf'),
+pdf(file = file.path(plots_dir, 'embryo_stage_size_norm.pdf'),
     width = 2, height = 5 )
 print(embryo_stage_size_norm_plot)
 dev.off()
