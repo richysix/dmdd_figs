@@ -11,7 +11,7 @@ option_list <- list(
 
 cmd_line_args <- parse_args(
   OptionParser(
-    option_list=option_list, prog = 'fig1.R',
+    option_list=option_list, prog = 'fig2.R',
     usage = "Usage: %prog [options] expt_samples_file KO_expression_file mouse_baseline zfish_baseline sig_genes" ),
   positional_arguments = 5
 )
@@ -430,7 +430,7 @@ print(sig_genes_heatmap)
 dev.off()
 
 # save plot objects
-save.image(file = file.path(wd, 'output', 'fig1.RData'))
+save.image(file = file.path(wd, 'output', 'fig2.RData'))
 #object_to_save = c('embryo_stage_size_colour_plot', 'embryo_ko_expr_plot',
 #                   'mouse_baseline_ts_heatmap', 'sig_genes_heatmap')
 #save(list = object_to_save, file = file.path(wd, 'output', 'fig1.RData'))
