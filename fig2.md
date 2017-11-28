@@ -72,3 +72,17 @@ awk '{print $3}' KO_expr.tsv | sort | uniq -c
 # 51 hom_vs_wt
 ```
 
+Get numbers of significantly differentially expressed genes
+
+```
+perl -le 'print join("\t", qw{Gene Comparison Type Count});' \
+ > ~/checkouts/mouse_dmdd/data/sig_gene_counts.tsv
+for comparison in hom_vs_het_wt het_vs_wt
+do
+cut -f2 $ROOT/lane-process/dmdd/deseq2/samples.txt  | grep _ | \
+sed -E 's/_(wt|het|hom)//' | sort -u | grep -v Sh3pxd2a_i | \
+perl ~/checkouts/mouse_dmdd/get_number_sig_genes.pl \
+--base_dir $ROOT/lane-process \
+--comparison $comparison
+done >> ~/checkouts/mouse_dmdd/data/sig_gene_counts.tsv
+```
