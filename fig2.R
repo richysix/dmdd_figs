@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-.libPaths('/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/.R/lib')
+.libPaths('./.R/lib')
 
 library('optparse')
 option_list <- list(
@@ -22,7 +22,7 @@ cmd_line_args <- parse_args(
 #  args = c('/lustre/scratch117/maz/team31/projects/mouse_DMDD/samples-minus-outliers.txt',
 #           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/KO_expr.tsv',
 #           'data/Mm_GRCm38_e88_baseline.rda', 'data/Dr_GRCz10_e90_baseline.rda',
-#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/sig_gene_counts.tsv')
+#           '/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/data/sig_gene_counts.tsv')
 #)
 
 if ( cmd_line_args$options[['verbose']] ){
@@ -381,41 +381,37 @@ print(mouse_baseline_ts_log10_heatmap)
 dev.off()
 
 # Zfish expression
-load(cmd_line_args$args[4])
+# load(cmd_line_args$args[4])
 
 # numbers of significant genes
 sig_genes_file <- cmd_line_args$args[5]
-sig_genes <- read.delim(sig_genes_file, header = FALSE)
-names(sig_genes) <- c('Gene', 'Comparison', 'Type', 'Count')
+sig_genes <- read.delim(sig_genes_file)
 # order genes
 sig_genes$Gene <- factor(sig_genes$Gene,
                          levels = rev(stage_count$gene))
 
-# subset to basic analysis and plus baseline
-sig_genes <- sig_genes[ sig_genes$Type == 'deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers' |
-                        sig_genes$Type == 'deseq2-baseline-grandhet-blacklist-adj-gt-adj-sex-stage-nicole-definite-maybe-outliers', ]
-# hom_vs_wt and het_vs_wt
-sig_genes <- sig_genes[ sig_genes$Comparison == 'hom_vs_wt' |
-                        sig_genes$Comparison == 'het_vs_wt', ]
-
 # create new column with combination of type and comparison
-category <- character(length = nrow(sig_genes))
-category[ sig_genes$Comparison == 'hom_vs_wt' &
-          sig_genes$Type == 'deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers' ] <- 'hom vs wt'
-category[ sig_genes$Comparison == 'hom_vs_wt' &
-          sig_genes$Type == 'deseq2-baseline-grandhet-blacklist-adj-gt-adj-sex-stage-nicole-definite-maybe-outliers' ] <- 'hom vs wt post filter'
-category[ sig_genes$Comparison == 'het_vs_wt' &
-          sig_genes$Type == 'deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers' ] <- 'het vs wt'
-category[ sig_genes$Comparison == 'het_vs_wt' &
-          sig_genes$Type == 'deseq2-baseline-grandhet-blacklist-adj-gt-adj-sex-stage-nicole-definite-maybe-outliers' ] <- 'het vs wt post filter'
-
-sig_genes$Category <- factor(category,
-                             levels = c('hom vs wt', 'hom vs wt post filter',
-                                        'het vs wt', 'het vs wt post filter'))
+sig_genes$Category <-
+  factor( paste(sig_genes$Comparison, sig_genes$Type, sep = '-' ),
+          levels = c('hom_vs_het_wt-unfiltered', 'hom_vs_het_wt-filtered',
+                      'het_vs_wt-unfiltered', 'het_vs_wt-filtered'))
 
 sig_genes_heatmap <- ggplot(data = sig_genes) +
   geom_tile( aes(x = Category, y = Gene, fill = Count) ) +
-  scale_fill_viridis(limits = c(0, 5000), direction = -1) +
+  scale_fill_viridis(direction = -1, na.value = 'grey 85') +
+  scale_x_discrete(position = 'top') + 
+  theme_void() +
+  theme(axis.text.x = element_text(size = 10, colour = 'black', angle = 90,
+                                    hjust = 0, debug = FALSE),
+        legend.position = 'top',
+        legend.title = element_text(size = 9),
+        legend.text = element_text(size = 7))
+
+# plot as log10 count as well
+sig_genes$log10_count <- log10(sig_genes$Count + 1)
+sig_genes_log10_heatmap <- ggplot(data = sig_genes) +
+  geom_tile( aes(x = Category, y = Gene, fill = log10_count) ) +
+  scale_fill_viridis(direction = -1, na.value = 'grey 85') +
   scale_x_discrete(position = 'top') + 
   theme_void() +
   theme(axis.text.x = element_text(size = 10, colour = 'black', angle = 90,
@@ -427,6 +423,8 @@ sig_genes_heatmap <- ggplot(data = sig_genes) +
 pdf(file = file.path(plots_dir, 'sig_genes_heatmap.pdf'),
     width = 2, height = 8)
 print(sig_genes_heatmap)
+print(sig_genes_heatmap + scale_fill_viridis(direction = 1, na.value = 'grey 85'))
+print(sig_genes_log10_heatmap)
 dev.off()
 
 # save plot objects
