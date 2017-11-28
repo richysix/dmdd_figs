@@ -12,15 +12,17 @@ option_list <- list(
 cmd_line_args <- parse_args(
   OptionParser(
     option_list=option_list, prog = 'fig1.R',
-    usage = "Usage: %prog [options] input_file" ),
-  positional_arguments = 1
+    usage = "Usage: %prog [options] expt_samples_file KO_expression_file mouse_baseline zfish_baseline sig_genes" ),
+  positional_arguments = 5
 )
 
 #cmd_line_args <- list(
 #  options = list(directory = '/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd',
 #                 verbose = FALSE ),
 #  args = c('/lustre/scratch117/maz/team31/projects/mouse_DMDD/samples-minus-outliers.txt',
-#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/KO_expr.tsv')
+#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/KO_expr.tsv',
+#           'data/Mm_GRCm38_e88_baseline.rda', 'data/Dr_GRCz10_e90_baseline.rda',
+#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/sig_gene_counts.tsv')
 #)
 
 if ( cmd_line_args$options[['verbose']] ){
@@ -33,16 +35,10 @@ if (cmd_line_args$options[['directory']] == 'cwd') {
   wd <- cmd_line_args$options[['directory']]
 }
 
-# set up directories
-for ( new_dir in c('plots', 'output') ) {
-  dir_path <- file.path(wd, new_dir)
-  if( !dir.exists(dir_path) ){
-    dir.create(dir_path)
-  }
-}
 plots_dir <- file.path(wd, 'plots')
 
-packages <- c('ggplot2', 'plyr', 'viridis', 'reshape2')
+packages <- c('ggplot2', 'plyr', 'viridis', 'RColorBrewer', 'reshape2',
+              'SummarizedExperiment')
 #for( package in packages ){
 #  library(package, character.only = TRUE)
 #}
@@ -87,6 +83,15 @@ stage_count <- ddply(sample_info, .(gene), summarise,
 stage_count <- 
   stage_count[order(stage_count$Severe, stage_count$Moderate, 
                     stage_count$Slight, stage_count$None, decreasing = TRUE), ]
+  
+# get names of genes that are delayed
+stage_count$delayed <-
+  stage_count$Severe + stage_count$Moderate + stage_count$Slight
+delayed_genes <- stage_count$gene[ stage_count$delayed > 0 ]
+# write genes to file
+write.table(delayed_genes, file = file.path(wd, 'output', 'KOs_delayed.txt'),
+            quote = FALSE, row.names = FALSE, col.names = FALSE)
+
 # reshape for plotting
 stage_count.m <- melt(stage_count, id.vars = c('gene'),
                       variable.name = 'delay_type',
@@ -245,8 +250,8 @@ ts_boundaries <- data.frame(
   Label = c('TS12a', 'TS12b', 'TS13', 'TS14', 'TS15')
 )
 
-embryo_stage_by_gene_by_gt_plot <-ggplot(data = sample_info) +
-  geom_tile(aes(x = stage_as_number, y = gene_gt, fill = condition)) +
+embryo_stage_by_gene_by_gt_plot <- ggplot(data = sample_info) +
+  geom_tile(aes(x = stage_as_number, y = gene_gt, fill = condition), alpha = 0.2) +
   scale_fill_manual(values = c('firebrick2', 'green', 'steelblue3'),
                     guide = guide_legend(reverse = TRUE)) +
   geom_vline(data = ts_boundaries, aes(xintercept = Stage)) + 
@@ -270,7 +275,7 @@ ko_expr$gt <- factor( gsub('_vs_.*', '', ko_expr$comparison),
 ko_expr$symbol <- factor(ko_expr$symbol,
                           levels = rev(stage_count$gene))
 
-# 
+# heatmap
 embryo_ko_expr_plot <- ggplot(data = ko_expr) + 
   geom_tile(aes(x = gt, y = gene_id, fill = log2fc )) +
   scale_x_discrete(position = 'top') +
@@ -286,5 +291,146 @@ pdf(file = file.path(plots_dir, 'embryo_ko_expr_plot.pdf'),
 print(embryo_ko_expr_plot)
 dev.off()
 
+# heatmap for expression of the knocked out genes in baseline
+# load baseline data
+load(cmd_line_args$args[3])
 
-save.image(file = file.path(wd, 'fig1.RData'))
+# get gene_ids in the same order as the heatmap
+id_for <- as.character(unique(ko_expr$gene_id))
+names(id_for) <- as.character(unique(ko_expr$symbol))
+id_for <- id_for[ stage_count$gene ]
+
+# get counts for those genes
+baseline_counts <- assay(Mm_GRCm38_e88_baseline)[id_for, ]
+names(dimnames(baseline_counts)) <- c('Gene', 'Stage')
+# get means for each gene for each stage
+baseline_counts_by_stage <-
+  split.data.frame(t(baseline_counts),
+                    colData(Mm_GRCm38_e88_baseline)$condition )
+mean_counts_by_stage <- lapply(baseline_counts_by_stage, colMeans)
+mean_counts <- do.call(cbind, mean_counts_by_stage)
+names(dimnames(mean_counts)) <- c('Gene', 'Stage')
+# mean center and scale, melt
+mean_counts_scaled <- t(scale(t(mean_counts)))
+mean_counts_scaled.m <- melt(mean_counts_scaled)
+
+# heatmap
+# diverging colour palette
+max_fill <- max(abs(mean_counts_scaled.m$value))
+mouse_baseline_heatmap <-
+  ggplot(data = mean_counts_scaled.m) +
+    geom_tile( aes(x = Stage, y = Gene, fill = value)) +
+    scale_fill_distiller(limits = c(-max_fill, max_fill), type= 'div', palette = "RdBu") +
+    scale_x_discrete(position = 'top') + 
+    theme_void() +
+    theme( axis.text = element_text(colour = 'black', angle = 90,
+                                    hjust = 0, vjust = 1),
+          axis.text.y = element_blank(),
+          legend.position = 'top')
+
+pdf(file = file.path(plots_dir, 'mouse_baseline_heatmap.pdf'))
+print(mouse_baseline_heatmap)
+dev.off()
+
+# do average per Theiler stage
+baseline_counts_by_theiler_stage <-
+  split.data.frame(t(baseline_counts),
+                    colData(Mm_GRCm38_e88_baseline)$Theiler_stage )
+mean_counts_by_theiler_stage <- lapply(baseline_counts_by_theiler_stage, colMeans)
+mean_counts_ts <- do.call(cbind, mean_counts_by_theiler_stage)
+names(dimnames(mean_counts_ts)) <- c('Gene', 'Stage')
+# mean center and scale, melt
+mean_counts_ts_scaled <- t(scale(t(mean_counts_ts)))
+names(dimnames(mean_counts_ts_scaled)) <- c('Gene', 'Stage')
+mean_counts_ts_scaled.m <- melt(mean_counts_ts_scaled)
+
+max_fill <- max(abs(mean_counts_ts_scaled.m$value))
+mouse_baseline_ts_heatmap <-
+  ggplot(data = mean_counts_ts_scaled.m) +
+    geom_tile( aes(x = Stage, y = Gene, fill = value)) +
+    scale_fill_distiller(limits = c(-max_fill, max_fill), type= 'div', palette = "RdBu") +
+    scale_x_discrete(position = 'top') + 
+    theme_void() +
+    theme( axis.text = element_text(colour = 'black', angle = 90,
+                                    hjust = 0, vjust = 1),
+          axis.text.y = element_blank(),
+          legend.position = 'top')
+
+pdf(file = file.path(plots_dir, 'mouse_baseline_theiler_stage_heatmap.pdf'),
+    width = 2, height = 8)
+print(mouse_baseline_ts_heatmap)
+dev.off()
+
+# log10 heatmap
+mean_counts_ts.m <- melt(mean_counts_ts)
+mean_counts_ts.m$log10 <- log10(mean_counts_ts.m$value + 1)
+mouse_baseline_ts_log10_heatmap <-
+  ggplot(data = mean_counts_ts.m) +
+    geom_tile( aes(x = Stage, y = Gene, fill = log10)) +
+    scale_fill_viridis() +
+    scale_x_discrete(position = 'top') + 
+    theme_void() +
+    theme( axis.text = element_text(colour = 'black', angle = 90,
+                                    hjust = 0, vjust = 1),
+          axis.text.y = element_blank(),
+          legend.position = 'top')
+
+pdf(file = file.path(plots_dir, 'mouse_baseline_theiler_stage_log10_heatmap.pdf'),
+    width = 2, height = 8)
+print(mouse_baseline_ts_log10_heatmap)
+dev.off()
+
+# Zfish expression
+load(cmd_line_args$args[4])
+
+# numbers of significant genes
+sig_genes_file <- cmd_line_args$args[5]
+sig_genes <- read.delim(sig_genes_file, header = FALSE)
+names(sig_genes) <- c('Gene', 'Comparison', 'Type', 'Count')
+# order genes
+sig_genes$Gene <- factor(sig_genes$Gene,
+                         levels = rev(stage_count$gene))
+
+# subset to basic analysis and plus baseline
+sig_genes <- sig_genes[ sig_genes$Type == 'deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers' |
+                        sig_genes$Type == 'deseq2-baseline-grandhet-blacklist-adj-gt-adj-sex-stage-nicole-definite-maybe-outliers', ]
+# hom_vs_wt and het_vs_wt
+sig_genes <- sig_genes[ sig_genes$Comparison == 'hom_vs_wt' |
+                        sig_genes$Comparison == 'het_vs_wt', ]
+
+# create new column with combination of type and comparison
+category <- character(length = nrow(sig_genes))
+category[ sig_genes$Comparison == 'hom_vs_wt' &
+          sig_genes$Type == 'deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers' ] <- 'hom vs wt'
+category[ sig_genes$Comparison == 'hom_vs_wt' &
+          sig_genes$Type == 'deseq2-baseline-grandhet-blacklist-adj-gt-adj-sex-stage-nicole-definite-maybe-outliers' ] <- 'hom vs wt post filter'
+category[ sig_genes$Comparison == 'het_vs_wt' &
+          sig_genes$Type == 'deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers' ] <- 'het vs wt'
+category[ sig_genes$Comparison == 'het_vs_wt' &
+          sig_genes$Type == 'deseq2-baseline-grandhet-blacklist-adj-gt-adj-sex-stage-nicole-definite-maybe-outliers' ] <- 'het vs wt post filter'
+
+sig_genes$Category <- factor(category,
+                             levels = c('hom vs wt', 'hom vs wt post filter',
+                                        'het vs wt', 'het vs wt post filter'))
+
+sig_genes_heatmap <- ggplot(data = sig_genes) +
+  geom_tile( aes(x = Category, y = Gene, fill = Count) ) +
+  scale_fill_viridis(limits = c(0, 5000), direction = -1) +
+  scale_x_discrete(position = 'top') + 
+  theme_void() +
+  theme(axis.text.x = element_text(size = 10, colour = 'black', angle = 90,
+                                    hjust = 0, debug = FALSE),
+        legend.position = 'top',
+        legend.title = element_text(size = 9),
+        legend.text = element_text(size = 7))
+
+pdf(file = file.path(plots_dir, 'sig_genes_heatmap.pdf'),
+    width = 2, height = 8)
+print(sig_genes_heatmap)
+dev.off()
+
+# save plot objects
+save.image(file = file.path(wd, 'output', 'fig1.RData'))
+#object_to_save = c('embryo_stage_size_colour_plot', 'embryo_ko_expr_plot',
+#                   'mouse_baseline_ts_heatmap', 'sig_genes_heatmap')
+#save(list = object_to_save, file = file.path(wd, 'output', 'fig1.RData'))
