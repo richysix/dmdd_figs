@@ -1,3 +1,5 @@
+.libPaths('./.R/lib')
+
 # load packages
 packages <- c('SummarizedExperiment')
 for( package in packages ){
