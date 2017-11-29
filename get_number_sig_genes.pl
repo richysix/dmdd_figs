@@ -8,10 +8,15 @@ use strict;
 use Getopt::Long;
 use autodie;
 use Pod::Usage;
+use Readonly;
 
 # get options
 my %options;
 get_and_check_options();
+
+# set directory to find DESeq results
+Readonly my $RESULTS_DIR =>
+    'deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers';
 
 while(<>){
     chomp;
@@ -20,9 +25,8 @@ while(<>){
     my $gene_count;
     my $type = 'unfiltered';
     my $deseq_file =
-        File::Spec->catfile($options{'base_dir'}, $gene,
-            'deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers',
-            $options{'comparison'} . '.sig.tsv' );
+        File::Spec->catfile($options{'dir'}, $gene, $RESULTS_DIR,
+                            $options{'comparison'} . '.sig.tsv' );
     
     if( -e $deseq_file ) {
         # this assumes that the file has a header line and
@@ -40,8 +44,7 @@ while(<>){
     $gene_count = undef;
     $type = 'filtered';
     my $baseline_comparison_dir =
-        File::Spec->catfile($options{'base_dir'}, $gene,
-            'deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers',
+        File::Spec->catfile($options{'dir'}, $gene, $RESULTS_DIR,
             $options{'comparison'} . '.baseline-comp' );
     if( -e $baseline_comparison_dir ) {
         # open baseline overlaps file
@@ -104,7 +107,7 @@ sub get_and_check_options {
     
     GetOptions(
         \%options,
-        'base_dir=s',
+        'dir=s',
         'comparison=s',
         'help',
         'man',
@@ -122,7 +125,7 @@ sub get_and_check_options {
     
     # defaults
     $options{'debug'} = $options{'debug'} ? $options{'debug'} : 0;
-    $options{'base_dir'} = $options{'base_dir'} ? $options{'base_dir'}
+    $options{'dir'} = $options{'dir'} ? $options{'dir'}
         :   './';
     $options{'comparison'} = $options{'comparison'} ? $options{'comparison'}
         :   'hom_vs_het_wt';
@@ -148,6 +151,8 @@ differentially expressed for that DESeq2 run.
 =head1 SYNOPSIS
 
     get_number_sig_genes.pl [options] input file | STDIN
+        --dir                   working directory   default: cwd
+        --comparison            comparison to use   default: hom_vs_het_wt
         --help                  print this help message
         --man                   print the manual page
         --debug                 print debugging information
@@ -158,15 +163,30 @@ differentially expressed for that DESeq2 run.
 
 =over
 
-arguments
+=item <input_file>
 
+A list of directory names to get the results from. Can also be supplied on STDIN.
+The DESeq results are expected to be in
+
+    [working_directory]/[gene]/[RESULTS_DIR]/[comparison].sig.tsv
+
+    see --dir, --comparison options and RESULTS_DIR (set at top of the script)
+    
 =back
 
 =head1 OPTIONS
 
-**Same for optional arguments.
-
 =over
+
+=item B<--dir>
+
+Working directory to search for the directory names supplied in the input.
+default: current working directory
+
+=item B<--comparison>
+
+DESeq comparison to get the results from.
+default: hom_vs_het_wt
 
 =item B<--debug>
 
