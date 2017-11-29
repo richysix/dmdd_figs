@@ -38,7 +38,7 @@ if (cmd_line_args$options[['directory']] == 'cwd') {
 plots_dir <- file.path(wd, 'plots')
 
 packages <- c('ggplot2', 'plyr', 'viridis', 'RColorBrewer', 'reshape2',
-              'SummarizedExperiment')
+              'SummarizedExperiment', 'cowplot')
 #for( package in packages ){
 #  library(package, character.only = TRUE)
 #}
@@ -218,17 +218,18 @@ stage_count.for_tiles <- do.call(rbind, stage_count.for_tiles_list)
 
 embryo_stage_size_colour_plot <- ggplot(data = stage_count.for_tiles) + 
   geom_rect( aes( xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = condition)) +
+  geom_vline(data = stage_separators, aes(xintercept = raw)) +
   scale_y_continuous(expand = c(0,0),
                      breaks = seq(0.5,73.5,1),
                      labels = rev(stage_count$gene) ) +
-  scale_fill_manual(values = c('firebrick2', 'green', 'steelblue3'),
+  scale_fill_manual(values = c('firebrick2', 'steelblue3', 'green'),
                     guide = guide_legend(reverse = TRUE)) +
-  geom_vline(data = stage_separators, aes(xintercept = raw)) + 
+  
   theme_void() + theme( axis.text.y = element_text(size = 8, colour = 'black', angle = 0, debug = FALSE),
                         legend.position = 'top',
                         legend.title = element_text(size = 9),
-                        legend.text = element_text(size = 7),
-                        legend.key.size = unit(1, 'lines') )
+                        legend.text = element_text(size = 7) )
+                        #legend.key.size = unit(1, 'lines') )
 
 pdf(file = file.path(plots_dir, 'embryo_stage_size_colour.pdf'),
     width = 4, height = 8 )
@@ -277,14 +278,17 @@ ko_expr$symbol <- factor(ko_expr$symbol,
 
 # heatmap
 embryo_ko_expr_plot <- ggplot(data = ko_expr) + 
-  geom_tile(aes(x = gt, y = gene_id, fill = log2fc )) +
+  geom_tile(aes(x = gt, y = symbol, fill = log2fc )) +
   scale_x_discrete(position = 'top') +
-  scale_fill_gradient2(na.value = 'white') +
+  scale_fill_gradient2(na.value = 'grey 80',
+    guide = guide_colourbar(title =
+                expression(paste(log[2], "[Fold Change]", sep = '') ) ) ) +
   theme_void() + theme(axis.text.x =
                        element_text(size = 10, colour = 'black', angle = 90,
                                     hjust = 0, debug = FALSE),
                        legend.position = 'top',
-                       legend.title = element_text(size = 10))
+                       legend.title = element_text(size = 9),
+                       legend.text = element_text(size = 7) )
 
 pdf(file = file.path(plots_dir, 'embryo_ko_expr_plot.pdf'),
     width = 2, height = 5)
@@ -348,13 +352,20 @@ max_fill <- max(abs(mean_counts_ts_scaled.m$value))
 mouse_baseline_ts_heatmap <-
   ggplot(data = mean_counts_ts_scaled.m) +
     geom_tile( aes(x = Stage, y = Gene, fill = value)) +
-    scale_fill_distiller(limits = c(-max_fill, max_fill), type= 'div', palette = "RdBu") +
+    scale_fill_distiller(
+      limits = c(-max_fill, max_fill), type= 'div',
+      palette = "RdBu",
+      guide =
+        guide_colourbar(title = "Normalised Counts\n(Mean Centred and Scaled)")
+    ) +
     scale_x_discrete(position = 'top') + 
     theme_void() +
-    theme( axis.text = element_text(colour = 'black', angle = 90,
+    theme( axis.text = element_text(colour = 'black', size = 10, angle = 90,
                                     hjust = 0, vjust = 1),
           axis.text.y = element_blank(),
-          legend.position = 'top')
+          legend.position = 'top',
+          legend.title = element_text(size = 9),
+          legend.text = element_text(size = 7) )
 
 pdf(file = file.path(plots_dir, 'mouse_baseline_theiler_stage_heatmap.pdf'),
     width = 2, height = 8)
@@ -398,7 +409,7 @@ sig_genes$Category <-
 
 sig_genes_heatmap <- ggplot(data = sig_genes) +
   geom_tile( aes(x = Category, y = Gene, fill = Count) ) +
-  scale_fill_viridis(direction = -1, na.value = 'grey 85') +
+  scale_fill_viridis(direction = -1, na.value = 'grey 90') +
   scale_x_discrete(position = 'top') + 
   theme_void() +
   theme(axis.text.x = element_text(size = 10, colour = 'black', angle = 90,
@@ -411,8 +422,12 @@ sig_genes_heatmap <- ggplot(data = sig_genes) +
 sig_genes$log10_count <- log10(sig_genes$Count + 1)
 sig_genes_log10_heatmap <- ggplot(data = sig_genes) +
   geom_tile( aes(x = Category, y = Gene, fill = log10_count) ) +
-  scale_fill_viridis(direction = -1, na.value = 'grey 85') +
-  scale_x_discrete(position = 'top') + 
+  scale_fill_viridis(direction = -1, na.value = 'grey 90',
+    guide = guide_colourbar(title =
+              expression(paste(log[10], "[Sig genes count]", sep = '') ) ) ) +
+  scale_x_discrete(position = 'top',
+                   labels = c('hom vs sibs', "hom vs sibs\npost filter",
+                              'het vs wt', "het vs wt\npost filter") ) + 
   theme_void() +
   theme(axis.text.x = element_text(size = 10, colour = 'black', angle = 90,
                                     hjust = 0, debug = FALSE),
@@ -426,6 +441,14 @@ print(sig_genes_heatmap)
 print(sig_genes_heatmap + scale_fill_viridis(direction = 1, na.value = 'grey 85'))
 print(sig_genes_log10_heatmap)
 dev.off()
+
+# make composite figure
+save_plot(file.path(plots_dir, "Figure2.eps"),
+          plot_grid(embryo_stage_size_colour_plot, embryo_ko_expr_plot,
+          mouse_baseline_ts_heatmap, sig_genes_log10_heatmap,
+          ncol = 4, rel_widths = c(4,1,2,2), align = 'h' ),
+          ncol = 4, device = 'eps',
+          base_height = 10, base_aspect_ratio = 0.2 )
 
 # save plot objects
 save.image(file = file.path(wd, 'output', 'fig2.RData'))
