@@ -31,7 +31,7 @@ while(<>){
     if( -e $deseq_file ) {
         # this assumes that the file has a header line and
         # all the rest are significant genes
-        my $lines = `/usr/bin/wc -l $deseq_file`;
+        my $lines = `wc -l $deseq_file`;
         chomp $lines;
         my ( $num_genes, undef ) = split / /, $lines;
         warn $num_genes, "\n" if $options{'debug'};
@@ -53,8 +53,7 @@ while(<>){
         open my $overlap_fh, '<', $overlaps_file;
         while( my $line = <$overlap_fh> ){
             my ( $category, $num_genes, ) = split /: /, $line;
-            if( $category eq 'plus_baseline.plus_stage' ||
-                   $category eq 'no_baseline.plus_baseline.plus_stage' ){
+            if( $category eq 'ko_response' ){
                 $gene_count += $num_genes;
             }
         }
@@ -64,31 +63,8 @@ while(<>){
     print join("\t", $gene, $options{'comparison'}, $type, $gene_count, ), "\n";
 }
 
-
-#
-#Is there a baseline comparison directory?
-#
-#YES -> open baseline-comp.tsv
-#	count the number of no_baseline.plus_baseline.plus_stage and plus_baseline.plus_stage sig genes
-#
-#NO -> does $comparison.sig.tsv exist
-#	YES -> open $comparison.sig.tsv
-#		count the number of sig genes
-#	NO -> output null record
-#
-
-
 ################################################################################
 # SUBROUTINES
-
-#subroutine_name
-#
-#  Usage       : subroutine_name( arguments )
-#  Purpose     : 
-#  Returns     : 
-#  Parameters  : 
-#  Throws      : 
-#  Comments    : None
 
 #get_and_check_options
 #
