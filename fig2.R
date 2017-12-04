@@ -92,6 +92,11 @@ delayed_genes <- stage_count$gene[ stage_count$delayed > 0 ]
 write.table(delayed_genes, file = file.path(wd, 'output', 'KOs_delayed.txt'),
             quote = FALSE, row.names = FALSE, col.names = FALSE)
 
+# output delayed order
+write.table(stage_count$gene,
+            file = file.path(wd, 'output', 'KOs_ordered_by_delay.txt'),
+            quote = FALSE, row.names = FALSE, col.names = FALSE)
+
 # reshape for plotting
 stage_count.m <- melt(stage_count, id.vars = c('gene'),
                       variable.name = 'delay_type',
