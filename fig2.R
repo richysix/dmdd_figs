@@ -38,7 +38,7 @@ if (cmd_line_args$options[['directory']] == 'cwd') {
 plots_dir <- file.path(wd, 'plots')
 
 packages <- c('ggplot2', 'plyr', 'viridis', 'RColorBrewer', 'reshape2',
-              'SummarizedExperiment', 'cowplot')
+              'SummarizedExperiment', 'cowplot', 'grid')
 #for( package in packages ){
 #  library(package, character.only = TRUE)
 #}
@@ -103,6 +103,16 @@ stage_count.m <- melt(stage_count, id.vars = c('gene'),
                       value.name = 'count')
 stage_count.m$gene <- factor(stage_count.m$gene,
                              levels = rev(stage_count$gene) )
+
+# function to get legend of a ggplot object
+get_gg_legend <- function(ggplot_obj){ 
+  tmp <- ggplot_gtable(ggplot_build(ggplot_obj)) 
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box") 
+  legend <- tmp$grobs[[leg]] 
+  return(legend)
+} 
+
+
 
 # plot
 embryo_stage_plot <- ggplot(data = stage_count.m) + 
@@ -220,7 +230,9 @@ for ( i in seq_len(length(stage_count_by_gt.m_by_type))) {
 }
 stage_count.for_tiles <- do.call(rbind, stage_count.for_tiles_list)
 
-
+# plot with stage as bar length and gt as colour
+## TO DO: Add annotations at top for Delay category, somite numbers,
+##        Theiler Stage and dpc
 embryo_stage_size_colour_plot <- ggplot(data = stage_count.for_tiles) + 
   geom_rect( aes( xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = condition)) +
   geom_vline(data = stage_separators, aes(xintercept = raw)) +
@@ -228,17 +240,30 @@ embryo_stage_size_colour_plot <- ggplot(data = stage_count.for_tiles) +
                      breaks = seq(0.5,73.5,1),
                      labels = rev(stage_count$gene) ) +
   scale_fill_manual(values = c('firebrick2', 'steelblue3', 'green'),
-                    guide = guide_legend(reverse = TRUE)) +
-  
-  theme_void() + theme( axis.text.y = element_text(size = 8, colour = 'black', angle = 0, debug = FALSE),
-                        legend.position = 'top',
-                        legend.title = element_text(size = 9),
-                        legend.text = element_text(size = 7) )
-                        #legend.key.size = unit(1, 'lines') )
+                    guide = 'none') +  
+  theme_void() + theme( axis.text.y = element_text(size = 8, colour = 'black',
+                                                   angle = 0, debug = FALSE) )
 
+# get legend for plotting separately
+embryo_stage_size_colour_plot_plus_legend <-
+  embryo_stage_size_colour_plot +
+    scale_fill_manual(values = c('firebrick2', 'steelblue3', 'green'),
+                      guide = guide_legend(reverse = TRUE, title = "Genotype")) +
+    theme( legend.position = 'top',
+      legend.title = element_text(size = 9),
+      legend.text = element_text(size = 7)
+    )
+gt_legend <- get_gg_legend(embryo_stage_size_colour_plot_plus_legend)
+
+# plot with legend
 pdf(file = file.path(plots_dir, 'embryo_stage_size_colour.pdf'),
     width = 4, height = 8 )
-print(embryo_stage_size_colour_plot)
+print(embryo_stage_size_colour_plot_plus_legend)
+dev.off()
+# and plot legend separately
+postscript(file = file.path(plots_dir, 'embryo_stage_size_colour.legend.eps'),
+           width = 6, height = 4)
+grid.draw(gt_legend)
 dev.off()
 
 # plot x position as stage
@@ -286,18 +311,32 @@ embryo_ko_expr_plot <- ggplot(data = ko_expr) +
   geom_tile(aes(x = gt, y = symbol, fill = log2fc )) +
   scale_x_discrete(position = 'top') +
   scale_fill_gradient2(na.value = 'grey 80',
-    guide = guide_colourbar(title =
-                expression(paste(log[2], "[Fold Change]", sep = '') ) ) ) +
+    guide = 'none') +
   theme_void() + theme(axis.text.x =
                        element_text(size = 10, colour = 'black', angle = 90,
-                                    hjust = 0, debug = FALSE),
-                       legend.position = 'top',
-                       legend.title = element_text(size = 9),
-                       legend.text = element_text(size = 7) )
+                                    hjust = 0, debug = FALSE))
 
+# get legend for plotting separately
+embryo_ko_expr_plot_plus_legend <-
+  embryo_ko_expr_plot +
+    scale_fill_gradient2(
+      na.value = 'grey 80',
+      guide = guide_colourbar(title = expression(paste(log[2], "[Fold Change]", sep = '') ) ) ) +
+    theme( legend.position = 'top',
+      legend.title = element_text(size = 9),
+      legend.text = element_text(size = 7)
+    )
+ko_legend <- get_gg_legend(embryo_ko_expr_plot_plus_legend)
+
+# plot with legend
 pdf(file = file.path(plots_dir, 'embryo_ko_expr_plot.pdf'),
     width = 2, height = 5)
-print(embryo_ko_expr_plot)
+print(embryo_ko_expr_plot_plus_legend)
+dev.off()
+# and plot legend separately
+postscript(file = file.path(plots_dir, 'embryo_ko_expr_plot.legend.eps'),
+           width = 6, height = 4)
+grid.draw(ko_legend) 
 dev.off()
 
 # heatmap for expression of the knocked out genes in baseline
@@ -357,25 +396,43 @@ max_fill <- max(abs(mean_counts_ts_scaled.m$value))
 mouse_baseline_ts_heatmap <-
   ggplot(data = mean_counts_ts_scaled.m) +
     geom_tile( aes(x = Stage, y = Gene, fill = value)) +
+    scale_fill_distiller(limits = c(-max_fill, max_fill), type= 'div',
+      palette = "RdBu", guide = 'none') +
+    scale_x_discrete(position = 'top') + 
+    theme_void() +
+    theme( axis.text = element_text(colour = 'black', size = 10, angle = 90,
+                                    hjust = 0, vjust = 1),
+          axis.text.y = element_blank(),
+ )
+
+# get legend for plotting separately
+mouse_baseline_ts_heatmap_plus_legend <-
+  mouse_baseline_ts_heatmap +
     scale_fill_distiller(
       limits = c(-max_fill, max_fill), type= 'div',
       palette = "RdBu",
       guide =
         guide_colourbar(title = "Normalised Counts\n(Mean Centred and Scaled)")
     ) +
-    scale_x_discrete(position = 'top') + 
-    theme_void() +
-    theme( axis.text = element_text(colour = 'black', size = 10, angle = 90,
-                                    hjust = 0, vjust = 1),
-          axis.text.y = element_blank(),
-          legend.position = 'top',
-          legend.title = element_text(size = 9),
-          legend.text = element_text(size = 7) )
+    theme( legend.position = 'top',
+      legend.title = element_text(size = 9),
+      legend.text = element_text(size = 7)
+    )
 
+mouse_baseline_legend <- get_gg_legend(mouse_baseline_ts_heatmap_plus_legend)
+
+# plot with legend
 pdf(file = file.path(plots_dir, 'mouse_baseline_theiler_stage_heatmap.pdf'),
     width = 2, height = 8)
-print(mouse_baseline_ts_heatmap)
+print(mouse_baseline_ts_heatmap_plus_legend)
 dev.off()
+
+# and plot legend separately
+postscript(file = file.path(plots_dir, 'mouse_baseline_theiler_stage_heatmap.legend.eps'),
+           width = 6, height = 4)
+grid.draw(mouse_baseline_legend) 
+dev.off()
+
 
 # log10 heatmap
 mean_counts_ts.m <- melt(mean_counts_ts)
@@ -395,6 +452,7 @@ pdf(file = file.path(plots_dir, 'mouse_baseline_theiler_stage_log10_heatmap.pdf'
     width = 2, height = 8)
 print(mouse_baseline_ts_log10_heatmap)
 dev.off()
+
 
 # Zfish expression
 # load(cmd_line_args$args[4])
@@ -427,33 +485,47 @@ sig_genes_heatmap <- ggplot(data = sig_genes) +
 sig_genes$log10_count <- log10(sig_genes$Count + 1)
 sig_genes_log10_heatmap <- ggplot(data = sig_genes) +
   geom_tile( aes(x = Category, y = Gene, fill = log10_count) ) +
-  scale_fill_viridis(direction = -1, na.value = 'grey 90',
-    guide = guide_colourbar(title =
-              expression(paste(log[10], "[Sig genes count]", sep = '') ) ) ) +
+  scale_fill_viridis(direction = -1, na.value = 'grey 90', guide = 'none') +
   scale_x_discrete(position = 'top',
                    labels = c('hom vs sibs', "hom vs sibs\npost filter",
                               'het vs wt', "het vs wt\npost filter") ) + 
   theme_void() +
   theme(axis.text.x = element_text(size = 10, colour = 'black', angle = 90,
-                                    hjust = 0, debug = FALSE),
-        legend.position = 'top',
-        legend.title = element_text(size = 9),
-        legend.text = element_text(size = 7))
+                                    hjust = 0, debug = FALSE))
 
+# get legend for plotting separately
+sig_genes_log10_heatmap_plus_legend <-
+  sig_genes_log10_heatmap +
+    scale_fill_viridis(direction = -1, na.value = 'grey 90',
+    guide = guide_colourbar(title =
+              expression(paste(log[10], "[Sig genes count]", sep = '') ) ) ) +
+    theme( legend.position = 'top',
+      legend.title = element_text(size = 9),
+      legend.text = element_text(size = 7)
+    )
+sig_genes_log10_legend <- get_gg_legend(sig_genes_log10_heatmap_plus_legend)
+
+# plot with legend
 pdf(file = file.path(plots_dir, 'sig_genes_heatmap.pdf'),
     width = 2, height = 8)
 print(sig_genes_heatmap)
 print(sig_genes_heatmap + scale_fill_viridis(direction = 1, na.value = 'grey 85'))
-print(sig_genes_log10_heatmap)
+print(sig_genes_log10_heatmap_plus_legend)
+dev.off()
+
+# and plot legend separately
+postscript(file = file.path(plots_dir, 'sig_genes_heatmap.legend.eps'),
+           width = 6, height = 4)
+grid.draw(sig_genes_log10_legend) 
 dev.off()
 
 # make composite figure
 save_plot(file.path(plots_dir, "Figure2.eps"),
           plot_grid(embryo_stage_size_colour_plot, embryo_ko_expr_plot,
-          mouse_baseline_ts_heatmap, sig_genes_log10_heatmap,
-          ncol = 4, rel_widths = c(4,1,2,2), align = 'h' ),
+          sig_genes_log10_heatmap, mouse_baseline_ts_heatmap, 
+          ncol = 4, rel_widths = c(6,1,2,3), align = 'h' ),
           ncol = 4, device = 'eps',
-          base_height = 10, base_aspect_ratio = 0.2 )
+          base_height = 9, base_aspect_ratio = 0.2 )
 
 # save plot objects
 save.image(file = file.path(wd, 'output', 'fig2.RData'))
