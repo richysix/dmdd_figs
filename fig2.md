@@ -7,6 +7,27 @@
 export ROOT=/lustre/scratch117/maz/team31/projects/mouse_DMDD
 ```
 
+Run comparison of baseline
+
+```
+for mut in $( < ~/checkouts/mouse_dmdd/output/KOs_delayed.txt )
+do
+echo $mut
+ROOT=/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/$mut
+for comparison in $( find $ROOT/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers | \
+grep done$ | sed -e 's|^.*/||; s|\.done$||' )
+do
+echo $comparison
+rm -r $ROOT/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/$comparison.baseline-comp/
+perl ~/checkouts/team31/scripts/compare_sig_lists_baseline.pl \
+--dir $ROOT/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/$comparison.baseline-comp \
+$ROOT/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/$comparison.tsv \
+$ROOT/deseq2-baseline-grandhet-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/$comparison.tsv \
+$ROOT/deseq2-baseline-grandhet-blacklist-adj-gt-adj-sex-stage-nicole-definite-maybe-outliers/$comparison.tsv
+done
+done
+```
+
 ## KO lines summary
 
 Get stage information for each Line
@@ -37,6 +58,7 @@ geneId=$( grep -E "^$mut[[:space:]]" lane-process/dmdd-genes.txt | cut -f4 )
 hom=0
 for comparison in hom_vs_wt hom_vs_het
 do
+# check for baseline comparison
 file="$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/$comparison.tsv"
 if [[ ! -e $file ]]
   then
@@ -82,7 +104,7 @@ do
 cut -f2 $ROOT/lane-process/dmdd/deseq2/samples.txt  | grep _ | \
 sed -E 's/_(wt|het|hom)//' | sort -u | grep -v Sh3pxd2a_i | \
 perl ~/checkouts/mouse_dmdd/get_number_sig_genes.pl \
---base_dir $ROOT/lane-process \
+--dir $ROOT/lane-process \
 --comparison $comparison
 done >> ~/checkouts/mouse_dmdd/data/sig_gene_counts.tsv
 ```
