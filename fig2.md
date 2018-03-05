@@ -49,49 +49,90 @@ Get log2 Fold Change for each gene in homs (vs het_wt) and hets (vs wt)
 # gene names and Ensembl IDs
 
 # get log2fc for hom_vs_het_wt if it exists, then hom_vs_wt, then hom_vs_het
-cat /dev/null > KO_expr.tsv
-cat /dev/null > KO_expr.err
+mkdir ko_expr
+cat /dev/null > ko_expr/ko_expr.tsv
+cat /dev/null > ko_expr/ko_expr.err
+ROOT=/lustre/scratch117/maz/team31/projects/mouse_DMDD
 for mut in $( cut -f2 $ROOT/lane-process/dmdd/deseq2/samples.txt  | grep _ | \
-sed -E 's/_(wt|het|hom)//' | sort -u | grep -v Sh3pxd2a_i )
+sed -E 's/_(wt|het|hom)//' | sort -u | grep -vE 'Sh3pxd2a_i|Cenpl' )
 do
 geneId=$( grep -E "^$mut[[:space:]]" lane-process/dmdd-genes.txt | cut -f4 )
 hom=0
+counts=0
 for comparison in hom_vs_wt hom_vs_het
 do
 # check for baseline comparison
-file="$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/$comparison.tsv"
-if [[ ! -e $file ]]
+file="$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/$comparison.baseline-comp/ko_response.tsv"
+if [[ -e $file ]]
   then
-    echo "$mut $file does not exist" >> KO_expr.err
-  else
-    grep -E "$geneId" $file | perl -F"\t" -lane '{print join("\t", $F[0], "'$mut'", "'$comparison'", $F[3], ); }'
+    grep -E "^Gene|^$geneId" $file > ko_expr/$geneId.expr.tsv
+    counts=1
+    grep -E "$geneId" $file | grep ^ENS | \
+    perl -F"\t" -lane '{print join("\t", $F[0], "'$mut'", "'$comparison'", $F[2], ); }' \
+        >> ko_expr/ko_expr.tsv
     hom=1
     break
+  else
+    echo "$mut $file does not exist" >> ko_expr/ko_expr.err
 fi
-done >> KO_expr.tsv
+# try without baseline
+file="$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/$comparison.tsv"
+if [[ -e $file ]]
+  then
+    grep -E "^Gene|^$geneId" $file > ko_expr/$geneId.expr.tsv
+    counts=1
+    grep -E "$geneId" $file | grep ^ENS | \
+    perl -F"\t" -lane '{print join("\t", $F[0], "'$mut'", "'$comparison'", $F[3], ); }' \
+        >> ko_expr/ko_expr.tsv
+    hom=1
+    break
+  else
+    echo "$mut $file does not exist" >> ko_expr/ko_expr.err
+fi
+done
 if [[ $hom -eq 0 ]]; then
-    echo -e "$geneId\t$mut\thom\tNA" >> KO_expr.tsv
+    echo -e "$geneId\t$mut\thom\tNA" >> ko_expr/ko_expr.tsv
 fi
 for comparison in het_vs_wt
 do
-file="$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/$comparison.tsv"
-if [[ ! -e $file ]]
+# baseline
+file="$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/$comparison.baseline-comp/ko_response.tsv"
+if [[ -e $file ]]
   then
-    echo "$mut $file does not exist" >> KO_expr.err
-    echo -e "$geneId\t$mut\thet\tNA" >> KO_expr.tsv
-  else
-    grep -E "$geneId" $file | grep ^ENS | perl -F"\t" -lane '{print join("\t", $F[0], "'$mut'", "'$comparison'", $F[3], ); }'
+    if [[ $counts -eq 0 ]]; then
+      grep -E "^Gene|^$geneId" $file > ko_expr/$geneId.expr.tsv
+    fi
+    grep -E "$geneId" $file | grep ^ENS | \
+    perl -F"\t" -lane '{print join("\t", $F[0], "'$mut'", "'$comparison'", $F[2], ); }' \
+        >> ko_expr/ko_expr.tsv
     break
+  else
+    echo "$mut $file does not exist" >> ko_expr/ko_expr.err
+fi
+file="$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/$comparison.tsv"
+if [[ -e $file ]]
+  then
+    if [[ $counts -eq 0 ]]; then
+      grep -E "^Gene|^$geneId" $file > ko_expr/$geneId.expr.tsv
+    fi
+    grep -E "$geneId" $file | grep ^ENS | \
+    perl -F"\t" -lane '{print join("\t", $F[0], "'$mut'", "'$comparison'", $F[3], ); }' \
+        >> ko_expr/ko_expr.tsv
+    break
+  else
+    echo "$mut $file does not exist" >> ko_expr/ko_expr.err
+    echo -e "$geneId\t$mut\thet\tNA" >> ko_expr/ko_expr.tsv
 fi
 done
-done >> KO_expr.tsv
+done
 
 # check numbers
-awk '{print $3}' KO_expr.tsv | sort | uniq -c
-# should be
-# 72 het_vs_wt
-#  2 hom_vs_het
-# 51 hom_vs_wt
+awk '{print $3}' ko_expr/ko_expr.tsv | sort | uniq -c
+      2 het
+     71 het_vs_wt
+     20 hom
+      2 hom_vs_het
+     51 hom_vs_wt
 ```
 
 Get numbers of significantly differentially expressed genes

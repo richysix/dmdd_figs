@@ -323,25 +323,85 @@ pdf(file = file.path(plots_dir, 'embryo_stage_by_gene_by_gt.pdf'),
 print(embryo_stage_by_gene_by_gt_plot)
 dev.off()
 
+if (debug) {
+  cat('KO EXPRESSION PLOT...\n')
+}
 
 # expression of the knocked out gene in homs and hets
 ko_expr_file <- cmd_line_args$args[2]
 ko_expr <- read.table(ko_expr_file, sep = "\t", header = FALSE )
 names(ko_expr) <- c('gene_id', 'symbol', 'comparison', 'log2fc')
 ko_expr$gt <- factor( gsub('_vs_.*', '', ko_expr$comparison),
-                     levels = c('hom', 'het') )
+                     levels = c('hom', 'het', 'wt') )
 ko_expr$symbol <- factor(ko_expr$symbol,
                           levels = rev(stage_count$gene))
+
+# add a df for wt (log2fc = 0)
+num_genes <- nlevels(ko_expr$gene_id)
+
+ko_expr <-
+  rbind(ko_expr,
+    data.frame(
+      gene_id = unique(ko_expr$gene_id),
+      symbol = unique(ko_expr$symbol),
+      comparison = rep('wt', num_genes),
+      log2fc = rep(0, num_genes),
+      gt = rep('wt', num_genes)
+    )
+  )
+
+# get count data for ko expression to add to heatmap
+get_mean_counts <- function(gene_id, sample_info){
+  # open counts file
+  #counts_file <- file.path(wd, 'data', paste0(gene_id, '.expr.tsv'))
+  counts_file <-
+    file.path('/lustre/scratch117/maz/team31/projects/mouse_DMDD/ko_expr',
+                paste0(gene_id, '.expr.tsv'))
+  counts_data <- read.delim(counts_file, check.names = FALSE)
+  # get counts columns
+  counts <- counts_data[ , grepl('normalised.count', names(counts_data)) ]
+  names(counts) <- gsub('.normalised.count', '', names(counts))
+  counts <- melt(counts, variable.name = 'sample',
+                 value.name = 'normalised count', id.vars = c())
+  
+  counts <- merge( sample_info, counts,
+                    by.x = "row.names", by.y = c('sample') )
+  # calculate mean for each genotype
+  mean_count_by_gt <-
+    melt( sapply( split(counts, counts$condition),
+            function(counts_df){ mean(counts_df[['normalised count']]) } ),
+         value.name = 'Mean.Count', id.vars = c())
+  mean_count_by_gt$gt <- factor( row.names(mean_count_by_gt),
+                                levels = c('hom', 'het', 'wt') )
+  mean_count_by_gt$gene_id <- rep(gene_id, nrow(mean_count_by_gt))
+  # add gene name in from ko_expr data frame
+  mean_count_by_gt <- merge(mean_count_by_gt,
+                            unique(ko_expr[ , c('gene_id', 'symbol')]) )
+  
+  return(mean_count_by_gt)
+}
+
+mean_count_by_gt <- do.call(rbind,
+                            lapply(as.character(unique(ko_expr$gene_id)),
+                                    get_mean_counts,
+                                    sample_info) )
+# round to 0dp
+mean_count_by_gt$Mean.Count <- round(mean_count_by_gt$Mean.Count)
+
+# subset to wt only
+wt_mean_count <- mean_count_by_gt[ mean_count_by_gt$gt == 'wt', ]
 
 # heatmap
 embryo_ko_expr_plot <- ggplot(data = ko_expr) + 
   geom_tile(aes(x = gt, y = symbol, fill = log2fc )) +
+  geom_text(data = wt_mean_count,
+            aes(x = gt, y = symbol, label = Mean.Count),
+            size = 2, hjust = 0.5 ) +
   scale_x_discrete(position = 'top') +
-  scale_fill_gradient2(na.value = 'grey 80',
-    guide = 'none') +
-  theme_void() + theme(axis.text.x =
-                       element_text(size = 10, colour = 'black', angle = 90,
-                                    hjust = 0, debug = FALSE))
+  scale_fill_gradient2(na.value = 'grey 80', guide = 'none') +
+  theme_void() +
+  theme(axis.text.x = element_text(size = 10, colour = 'black', angle = 90,
+                                    hjust = 0, debug = FALSE) )
 
 # get legend for plotting separately
 embryo_ko_expr_plot_plus_legend <-
@@ -361,7 +421,7 @@ ko_legend <- get_gg_legend(embryo_ko_expr_plot_plus_legend)
 
 # plot with legend
 pdf(file = file.path(plots_dir, 'embryo_ko_expr_plot.pdf'),
-    width = 2, height = 5)
+    width = 4, height = 8)
 print(embryo_ko_expr_plot_plus_legend)
 dev.off()
 # and plot legend separately
