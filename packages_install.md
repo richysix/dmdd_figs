@@ -1,0 +1,21 @@
+install.packages('tidyverse', lib = '.R/lib')
+install.packages('viridis', lib = '.R/lib')
+install.packages('cowplot', lib = '.R/lib')
+install.packages('optparse', lib = '.R/lib')
+install.packages('reshape2', lib = '.R/lib')
+install.packages('seriation', lib = '.R/lib')
+install.packages('plyr', lib = '.R/lib')
+install.packages('RColorBrewer', lib = '.R/lib')
+install.packages('ggdendro', lib = '.R/lib')
+
+source("https://bioconductor.org/biocLite.R")
+biocLite("SummarizedExperiment", lib = '.R/lib', lib.loc = '.R/lib')
+biocLite("Rgraphviz", lib = '.R/lib', lib.loc = '.R/lib')
+biocLite("biomaRt", lib = '.R/lib', lib.loc = '.R/lib')
+
+install.packages("ontologyIndex", lib = '.R/lib')
+install.packages("ontologyPlot", lib = '.R/lib')
+
+install.packages("devtools", lib = '.R/lib')
+library('devtools')
+install_github('richysix/biovisr', lib='.R/lib')
