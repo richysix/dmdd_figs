@@ -442,34 +442,41 @@ load(cmd_line_args$args[3])
 # get gene_ids in the same order as the heatmap
 id_for <- as.character(unique(ko_expr$gene_id))
 names(id_for) <- as.character(unique(ko_expr$symbol))
-id_for <- id_for[ stage_count$gene ]
+gene_ids <- id_for[ as.character(stage_count$gene) ]
 
 # get counts for those genes
-baseline_counts <- assay(Mm_GRCm38_e88_baseline)[id_for, ]
-names(dimnames(baseline_counts)) <- c('Gene', 'Stage')
+baseline_subset <- Mm_GRCm38_e88_baseline[gene_ids, ]
+baseline_counts <- assays(baseline_subset)$norm_counts
 # get means for each gene for each stage
 baseline_counts_by_stage <-
   split.data.frame(t(baseline_counts),
-                    colData(Mm_GRCm38_e88_baseline)$condition )
+                    colData(baseline_subset)$condition )
 mean_counts_by_stage <- lapply(baseline_counts_by_stage, colMeans)
 mean_counts <- do.call(cbind, mean_counts_by_stage)
-names(dimnames(mean_counts)) <- c('Gene', 'Stage')
 # mean center and scale, melt
 mean_counts_scaled <- t(scale(t(mean_counts)))
-mean_counts_scaled.m <- melt(mean_counts_scaled)
+mean_counts_scaled_df <- data.frame(
+  gene_name = factor(rowData(baseline_subset)$Name,
+                     levels = rev(as.character(rowData(baseline_subset)$Name))),
+  mean_counts_scaled,
+  check.names = FALSE
+)
+mean_counts_scaled_m <- melt(mean_counts_scaled_df, id.vars = c('gene_name'),
+                             variable.name = 'Stage')
 
 # heatmap
 # diverging colour palette
-max_fill <- max(abs(mean_counts_scaled.m$value))
+max_fill <- max(abs(mean_counts_scaled_m$value))
 mouse_baseline_heatmap <-
-  ggplot(data = mean_counts_scaled.m) +
-    geom_tile( aes(x = Stage, y = Gene, fill = value)) +
+  ggplot(data = mean_counts_scaled_m) +
+    geom_tile( aes(x = Stage, y = gene_name, fill = value)) +
     scale_fill_distiller(limits = c(-max_fill, max_fill), type= 'div', palette = "RdBu") +
     scale_x_discrete(position = 'top') + 
     theme_void() +
-    theme( axis.text = element_text(colour = 'black', angle = 90,
-                                    hjust = 0, vjust = 1),
-          axis.text.y = element_blank(),
+    theme( axis.text.x = element_text(colour = 'black', size = 10, angle = 90,
+                                      debug = FALSE, hjust = 0),
+          axis.text.y = element_text(colour = 'black', size = 10, angle = 0,
+                                      debug = FALSE, vjust = 0),
           legend.position = 'top')
 
 pdf(file = file.path(plots_dir, 'mouse_baseline_heatmap.pdf'))
@@ -479,25 +486,29 @@ dev.off()
 # do average per Theiler stage
 baseline_counts_by_theiler_stage <-
   split.data.frame(t(baseline_counts),
-                    colData(Mm_GRCm38_e88_baseline)$Theiler_stage )
+                    colData(baseline_subset)$Theiler_stage )
 mean_counts_by_theiler_stage <- lapply(baseline_counts_by_theiler_stage, colMeans)
 mean_counts_ts <- do.call(cbind, mean_counts_by_theiler_stage)
-names(dimnames(mean_counts_ts)) <- c('Gene', 'Stage')
 # mean center and scale, melt
 mean_counts_ts_scaled <- t(scale(t(mean_counts_ts)))
-names(dimnames(mean_counts_ts_scaled)) <- c('Gene', 'Stage')
-mean_counts_ts_scaled.m <- melt(mean_counts_ts_scaled)
+mean_counts_ts_scaled_df <- data.frame(
+  gene_name = factor(rowData(baseline_subset)$Name,
+                     levels = rev(as.character(rowData(baseline_subset)$Name))),
+  mean_counts_ts_scaled,
+  check.names = FALSE
+)
+mean_counts_ts_scaled_m <- melt(mean_counts_ts_scaled_df, id.vars = c('gene_name'),
+                             variable.name = 'Stage')
 
-max_fill <- max(abs(mean_counts_ts_scaled.m$value))
+max_fill <- max(abs(mean_counts_ts_scaled_m$value))
 mouse_baseline_ts_heatmap <-
-  ggplot(data = mean_counts_ts_scaled.m) +
-    geom_tile( aes(x = Stage, y = Gene, fill = value)) +
+  ggplot(data = mean_counts_ts_scaled_m) +
+    geom_tile( aes(x = Stage, y = gene_name, fill = value)) +
     scale_fill_distiller(limits = c(-max_fill, max_fill), type= 'div',
       palette = "RdBu", guide = 'none') +
     scale_x_discrete(position = 'top') + 
     theme_void() +
-    theme( axis.text = element_text(colour = 'black', size = 10, angle = 90,
-                                    hjust = 0, vjust = 1),
+    theme( axis.text = element_text(colour = 'black', size = 10, angle = 90),
           axis.text.y = element_blank(),
  )
 
@@ -522,7 +533,7 @@ mouse_baseline_legend <- get_gg_legend(mouse_baseline_ts_heatmap_plus_legend)
 
 # plot with legend
 pdf(file = file.path(plots_dir, 'mouse_baseline_theiler_stage_heatmap.pdf'),
-    width = 2, height = 8)
+    width = 5, height = 8)
 print(mouse_baseline_ts_heatmap_plus_legend)
 dev.off()
 
@@ -532,18 +543,23 @@ postscript(file = file.path(plots_dir, 'mouse_baseline_theiler_stage_heatmap.leg
 grid.draw(mouse_baseline_legend) 
 dev.off()
 
-
 # log10 heatmap
-mean_counts_ts.m <- melt(mean_counts_ts)
-mean_counts_ts.m$log10 <- log10(mean_counts_ts.m$value + 1)
+mean_counts_ts_df <- data.frame(
+  gene_name = factor(rowData(baseline_subset)$Name,
+                     levels = rev(as.character(rowData(baseline_subset)$Name))),
+  mean_counts_ts,
+  check.names = FALSE
+)
+mean_counts_ts_m <- melt(mean_counts_ts_df, variable.name = 'Stage')
+mean_counts_ts_m$log10 <- log10(mean_counts_ts_m$value + 1)
 mouse_baseline_ts_log10_heatmap <-
-  ggplot(data = mean_counts_ts.m) +
-    geom_tile( aes(x = Stage, y = Gene, fill = log10)) +
+  ggplot(data = mean_counts_ts_m) +
+    geom_tile( aes(x = Stage, y = gene_name, fill = log10)) +
     scale_fill_viridis() +
     scale_x_discrete(position = 'top') + 
     theme_void() +
     theme( axis.text = element_text(colour = 'black', angle = 90,
-                                    hjust = 0, vjust = 1),
+                                    hjust = 0, vjust = 0.5),
           axis.text.y = element_blank(),
           legend.position = 'top')
 

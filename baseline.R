@@ -11,9 +11,7 @@ for( package in packages ){
 # load baseline data
 baseline_count_file <-
     '/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/baseline-grandhet/all.tsv'
-baseline_counts <- read.delim(baseline_count_file)
-# remove X from colnames
-colnames(baseline_counts) <- gsub('^X', '', colnames(baseline_counts))
+baseline_counts <- read.delim(baseline_count_file, check.names = FALSE)
 
 baseline_sample_file <-
     '/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/baseline-grandhet/deseq2/samples.txt'
@@ -38,19 +36,27 @@ baseline_samples$Theiler_stage <-
       breaks = stage_boundaries, labels = stage_labels)
 
 # get normalised counts
+counts <- 
+    baseline_counts[, grepl(' count$', colnames(baseline_counts)) &
+                      !grepl('normalised count$', colnames(baseline_counts))]
+colnames(counts) <-
+    gsub(' count$', '', colnames(counts))
+rownames(counts) <- baseline_counts[, 'Gene ID']
+
 norm_counts <-
-    baseline_counts[, grepl('normalised.count$', colnames(baseline_counts))]
+    baseline_counts[, grepl('normalised count$', colnames(baseline_counts))]
 colnames(norm_counts) <-
-    gsub('.normalised.count$', '', colnames(norm_counts))
-rownames(norm_counts) <- baseline_counts[, 'Gene.ID']
+    gsub(' normalised count$', '', colnames(norm_counts))
+rownames(norm_counts) <- baseline_counts[, 'Gene ID']
 
 # row data. chr, start etc for each gene
-baseline_row_data <- baseline_counts[, c('Gene.ID', 'Chr', 'Start', 'End',
+baseline_row_data <- baseline_counts[, c('Gene ID', 'Chr', 'Start', 'End',
                                          'Strand', 'Biotype', 'Name',
                                          'Description')]
 
 Mm_GRCm38_e88_baseline <-
-    SummarizedExperiment(assays = list(norm_counts = as.matrix(norm_counts)),
+    SummarizedExperiment(assays = list(counts = as.matrix(counts),
+                                       norm_counts = as.matrix(norm_counts)),
                         rowData = DataFrame(baseline_row_data),
                         colData = DataFrame(baseline_samples))
 
