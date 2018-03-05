@@ -640,13 +640,53 @@ postscript(file = file.path(plots_dir, 'sig_genes_heatmap.legend.eps'),
 grid.draw(sig_genes_log10_legend) 
 dev.off()
 
+if (debug) {
+  cat('OMIM DATA TABLE PLOT...\n')
+}
+
+# plot MIM data as graphical table
+mim_data_file <- cmd_line_args$args[5]
+mim_data <- read.delim(mim_data_file)
+mim_data$Dir <- factor(mim_data$Dir, levels = rev(stage_count$gene))
+
+mim_reformatted <- do.call(rbind,
+                    lapply(split(mim_data, mim_data$Dir),
+                      function(x){
+                        data.frame(
+                          x = 1,
+                          gene = x$Dir[1],
+                          mim = paste(x$mim_short, collapse = '; ')
+                        )
+                      }
+                    )
+                  )
+
+mim_table_plot <- ggplot( data = mim_reformatted ) + 
+  geom_tile( aes(x = x, y = gene), fill = "white", colour = "white" ) +
+  geom_text( aes(x = x, y = gene, label = mim), size = 2.1 ) + 
+  theme_void()
+
+pdf(file = file.path(plots_dir, 'MIM-table.pdf'))
+print(mim_table_plot +
+      theme(axis.text.y = element_text(colour = 'black', size = 10,
+                                       angle = 0, debug = FALSE) )
+     )
+dev.off()
+
+# Zfish expression
+# load(cmd_line_args$args[6])
+
+if (debug) {
+  cat('COMPOSITE FIGURE...\n')
+}
+
 # make composite figure
 save_plot(file.path(plots_dir, "Figure2.eps"),
           plot_grid(embryo_stage_size_colour_plot, embryo_ko_expr_plot,
-          sig_genes_log10_heatmap, mouse_baseline_ts_heatmap, 
-          ncol = 4, rel_widths = c(6,1,2,3), align = 'h' ),
-          ncol = 4, device = 'eps',
-          base_height = 9, base_aspect_ratio = 0.2 )
+          sig_genes_log10_heatmap, mouse_baseline_ts_heatmap, mim_table_plot,
+          ncol = 5, rel_widths = c(12,3,4,6,4), align = 'h' ),
+          ncol = 5, device = 'eps',
+          base_height = 7.7, base_aspect_ratio = 0.2 )
 
 # save plot objects
 save.image(file = file.path(wd, 'output', 'fig2.RData'))
