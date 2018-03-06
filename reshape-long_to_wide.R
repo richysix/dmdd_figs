@@ -1,0 +1,6 @@
+library("reshape2")
+Args <- commandArgs()
+data <- read.delim(Args[6], header = FALSE)
+names(data) <- c("gene", "mut", "present")
+data_matrix <- dcast(data, gene ~ mut, value.var = "present", fill = 0)
+write.table(data_matrix, file = Args[7], sep = "\t", quote = FALSE, row.names = FALSE)
