@@ -1,0 +1,32 @@
+forebrain
+midbrain
+hindbrain
+spinal cord
+neural tube
+visual system
+auditory system
+olfactory system
+vestibular system
+neural crest
+peripheral nervous system
+cranial ganglion
+cranial nerve
+branchial arch
+somite
+notochord
+muscle tissue
+skeletal system
+heart
+blood
+vascular system
+skin
+alimentary system
+salivary gland
+adrenal gland
+pancreas
+liver and biliary system
+metanephros
+mesonephros
+respiratory system
+reproductive system
+extraembryonic component
