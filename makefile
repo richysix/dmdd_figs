@@ -5,6 +5,16 @@ plots/Figure2.eps \
 output/duplicated_terms.tsv \
 output/mrna_abnormal-jaccard-all.rda
 
+# Mean counts by KO gene and genotype for PCA
+output/mean_by_mut_gt.counts.tsv output/samples_by_mut_by_gt.txt: \
+mean_expression_by_mut_gt.R output/all_samples_merged.counts.tsv \
+output/all_mutants-samples.tsv output/KOs_ordered_by_delay.txt
+	/software/R-3.3.0/bin/Rscript mean_expression_by_mut_gt.R \
+	output/all_samples_merged.counts.tsv \
+	output/all_mutants-samples.tsv \
+	output/KOs_ordered_by_delay.txt
+
+# Overlaps by genes of mrna_abnormal lists
 output/mrna_abnormal-jaccard-all.rda: delayed_overlaps.R \
 output/mrna_abnormal-hom_vs_het_wt-sig_genes.out
 	/software/R-3.3.0/bin/Rscript delayed_overlaps.R \
@@ -13,6 +23,7 @@ output/mrna_abnormal-hom_vs_het_wt-sig_genes.out
 	--output_data_file output/mrna_abnormal-jaccard-all.rda \
 	output/mrna_abnormal-hom_vs_het_wt-sig_genes.out
 
+# aggregate EMAPA terms to umbrella terms
 output/duplicated_terms.tsv: data/emap_results.all.tsv \
 /lustre/scratch117/maz/team31/projects/mouse_DMDD/emap/EMAPA_Nov_17_2017.obo \
 data/root_terms.txt
