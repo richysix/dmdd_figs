@@ -4,7 +4,24 @@ output/human-mim.tsv \
 plots/Figure2.eps \
 output/duplicated_terms.tsv \
 output/mrna_abnormal-jaccard-all.rda \
-output/mean_by_mut_gt.counts.tsv output/samples_by_mut_by_gt.txt
+output/mean_by_mut_gt.counts.tsv output/samples_by_mut_by_gt.txt \
+plots/mrna_abnormal.emap_aggregated_summary.eps \
+plots/mrna_abnormal-gene_list-overlaps.eps
+
+# Fig4
+plots/mrna_abnormal.emap_aggregated_summary.eps \
+plots/mrna_abnormal-gene_list-overlaps.eps: fig4.R \
+data/go_results.tsv output/KOs_ordered_by_delay.txt \
+data/emap_results.all.tsv output/duplicated_terms-edited.tsv \
+data/sig_gene_counts.tsv output/mrna_abnormal-jaccard-all.rda
+	export R_LIBS_USER=.R/lib:/software/team31/R:/software/team31/R-3.3.0; \
+	/software/R-3.3.0/bin/Rscript fig4.R \
+	data/go_results.tsv \
+	output/KOs_ordered_by_delay.txt \
+	data/emap_results.all.tsv \
+	output/duplicated_terms-edited.tsv \
+	data/sig_gene_counts.tsv \
+	output/mrna_abnormal-jaccard-all.rda
 
 # Mean counts by KO gene and genotype for PCA
 output/mean_by_mut_gt.counts.tsv output/samples_by_mut_by_gt.txt: \
