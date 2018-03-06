@@ -19,12 +19,12 @@ cmd_line_args <- parse_args(
 )
 
 #cmd_line_args <- list(
-#  options = list(directory = '/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd',
+#  options = list(directory = 'cwd',
 #                 verbose = FALSE ),
 #  args = c('/lustre/scratch117/maz/team31/projects/mouse_DMDD/samples-minus-outliers.txt',
 #           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/ko_expr/ko_expr.tsv',
 #           'data/Mm_GRCm38_e88_baseline.rda',
-#           '/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/data/sig_gene_counts.tsv',
+#           'data/sig_gene_counts.tsv',
 #           'output/human-mim-edited.tsv',
 #           'data/Dr_GRCz10_e90_baseline.rda'
 #          )
@@ -575,8 +575,11 @@ if (debug) {
 # numbers of significant genes
 sig_genes_file <- cmd_line_args$args[4]
 sig_genes <- read.delim(sig_genes_file)
-# subset to ko_response
-sig_genes <- sig_genes[ sig_genes$Set == 'ko_response', ]
+# subset to ko_response and remove hom_vs_het
+sig_genes <- sig_genes[ sig_genes$Set == 'ko_response' &
+                        sig_genes$Comparison != 'hom_vs_het', ]
+sig_genes <- droplevels(sig_genes)
+
 # order genes
 sig_genes$Gene <- factor(sig_genes$Gene,
                          levels = rev(stage_count$gene))
