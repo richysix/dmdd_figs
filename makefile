@@ -3,7 +3,8 @@ plots/tissue_vs_WE_heatmap.eps output/highly_expressed-tissues.tsv \
 output/human-mim.tsv \
 plots/Figure2.eps \
 output/duplicated_terms.tsv \
-output/mrna_abnormal-jaccard-all.rda
+output/mrna_abnormal-jaccard-all.rda \
+output/mean_by_mut_gt.counts.tsv output/samples_by_mut_by_gt.txt
 
 # Mean counts by KO gene and genotype for PCA
 output/mean_by_mut_gt.counts.tsv output/samples_by_mut_by_gt.txt: \
