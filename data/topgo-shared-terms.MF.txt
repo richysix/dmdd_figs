@@ -1,0 +1,47 @@
+GO:0001228	RNA polymerase II transcription regulato...	20
+GO:0043565	sequence-specific DNA binding	20
+GO:0000978	RNA polymerase II core promoter proximal...	19
+GO:0001077	RNA polymerase II core promoter proximal...	19
+GO:0005515	protein binding	16
+GO:0003705	RNA polymerase II distal enhancer sequen...	16
+GO:0042803	protein homodimerization activity	16
+GO:0031543	peptidyl-proline dioxygenase activity	15
+GO:0005506	iron ion binding	15
+GO:0003682	chromatin binding	15
+GO:0000977	RNA polymerase II regulatory region sequ...	15
+GO:0001968	fibronectin binding	14
+GO:0048029	monosaccharide binding	14
+GO:0005509	calcium ion binding	14
+GO:0046983	protein dimerization activity	14
+GO:1901681	sulfur compound binding	14
+GO:0031418	L-ascorbic acid binding	14
+GO:0042802	identical protein binding	13
+GO:0070888	E-box binding	13
+GO:0050840	extracellular matrix binding	12
+GO:0008134	transcription factor binding	12
+GO:0005539	glycosaminoglycan binding	12
+GO:0019200	carbohydrate kinase activity	12
+GO:0001047	core promoter binding	12
+GO:0051015	actin filament binding	12
+GO:0019899	enzyme binding	11
+GO:0005179	hormone activity	11
+GO:0005524	ATP binding	11
+GO:0005536	glucose binding	11
+GO:0008092	cytoskeletal protein binding	10
+GO:0098641	cadherin binding involved in cell-cell a...	10
+GO:0001078	RNA polymerase II core promoter proximal...	10
+GO:0019900	kinase binding	10
+GO:0008201	heparin binding	10
+GO:0043236	laminin binding	9
+GO:0001948	glycoprotein binding	9
+GO:0008307	structural constituent of muscle	9
+GO:0042826	histone deacetylase binding	9
+GO:0005102	receptor binding	9
+GO:0003723	RNA binding	9
+GO:0019901	protein kinase binding	9
+GO:0071837	HMG box domain binding	9
+GO:0046982	protein heterodimerization activity	9
+GO:0019825	oxygen binding	9
+GO:0003779	actin binding	9
+GO:0000982	RNA polymerase II core promoter proximal...	9
+GO:0030506	ankyrin binding	9

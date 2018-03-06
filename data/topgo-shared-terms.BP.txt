@@ -1,0 +1,47 @@
+GO:0045944	positive regulation of transcription fro...	23
+GO:0001666	response to hypoxia	23
+GO:0000122	negative regulation of transcription fro...	22
+GO:0071456	cellular response to hypoxia	19
+GO:0008285	negative regulation of cell proliferatio...	19
+GO:0009725	response to hormone	17
+GO:0009798	axis specification	17
+GO:0071495	cellular response to endogenous stimulus	17
+GO:0042060	wound healing	16
+GO:0014898	cardiac muscle hypertrophy in response t...	16
+GO:0019511	peptidyl-proline hydroxylation	16
+GO:0002026	regulation of the force of heart contrac...	16
+GO:0035914	skeletal muscle cell differentiation	16
+GO:0055114	oxidation-reduction process	15
+GO:0006096	glycolytic process	15
+GO:0030198	extracellular matrix organization	15
+GO:0001525	angiogenesis	15
+GO:0051384	response to glucocorticoid	15
+GO:0007411	axon guidance	15
+GO:0042493	response to drug	15
+GO:0071407	cellular response to organic cyclic comp...	15
+GO:0048545	response to steroid hormone	15
+GO:0035270	endocrine system development	14
+GO:0043066	negative regulation of apoptotic process	14
+GO:0001657	ureteric bud development	14
+GO:0060048	cardiac muscle contraction	14
+GO:0060441	epithelial tube branching involved in lu...	14
+GO:0001568	blood vessel development	14
+GO:0055010	ventricular cardiac muscle tissue morpho...	14
+GO:0016337	single organismal cell-cell adhesion	14
+GO:0045214	sarcomere organization	14
+GO:0045665	negative regulation of neuron differenti...	14
+GO:0007584	response to nutrient	14
+GO:0005980	glycogen catabolic process	14
+GO:0030334	regulation of cell migration	14
+GO:0043627	response to estrogen	13
+GO:0009749	response to glucose	13
+GO:0086091	regulation of heart rate by cardiac cond...	13
+GO:0030324	lung development	13
+GO:0001701	in utero embryonic development	13
+GO:0010628	positive regulation of gene expression	13
+GO:0071363	cellular response to growth factor stimu...	13
+GO:0010038	response to metal ion	13
+GO:0021978	telencephalon regionalization	13
+GO:0009952	anterior/posterior pattern specification	13
+GO:0031016	pancreas development	13
+GO:0019471	4-hydroxyproline metabolic process	13
