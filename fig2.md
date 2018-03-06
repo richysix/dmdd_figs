@@ -138,14 +138,20 @@ awk '{print $3}' ko_expr/ko_expr.tsv | sort | uniq -c
 Get numbers of significantly differentially expressed genes
 
 ```
-perl -le 'print join("\t", qw{Gene Comparison Type Count});' \
- > ~/checkouts/mouse_dmdd/data/sig_gene_counts.tsv
+perl -le 'print join("\t", qw{Gene Comparison Set Type Count});' \
+ > data/sig_gene_counts.tsv
 for comparison in hom_vs_het_wt het_vs_wt
 do
 cut -f2 $ROOT/lane-process/dmdd/deseq2/samples.txt  | grep _ | \
-sed -E 's/_(wt|het|hom)//' | sort -u | grep -v Sh3pxd2a_i | \
-perl ~/checkouts/mouse_dmdd/get_number_sig_genes.pl \
+sed -E 's/_(wt|het|hom)//' | sort -u | grep -vE 'Sh3pxd2a_i|Cenpl' | \
+perl ./get_number_sig_genes.pl \
 --dir $ROOT/lane-process \
 --comparison $comparison
-done >> ~/checkouts/mouse_dmdd/data/sig_gene_counts.tsv
+done >> data/sig_gene_counts.tsv
+echo 'Ift140
+Oaz1' | \
+perl ./get_number_sig_genes.pl \
+--dir $ROOT/lane-process \
+--comparison hom_vs_het >> data/sig_gene_counts.tsv
+
 ```

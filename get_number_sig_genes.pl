@@ -39,28 +39,31 @@ while(<>){
     }
     # print output
     $gene_count = defined $gene_count ? $gene_count : 'NA';
-    print join("\t", $gene, $options{'comparison'}, $type, $gene_count, ), "\n";
+    print join("\t", $gene, $options{'comparison'}, 'ko_response', $type, $gene_count, ), "\n";
     
-    $gene_count = undef;
     $type = 'filtered';
     my $baseline_comparison_dir =
         File::Spec->catfile($options{'dir'}, $gene, $RESULTS_DIR,
             $options{'comparison'} . '.baseline-comp' );
+    $gene_count = undef;
     if( -e $baseline_comparison_dir ) {
         # open baseline overlaps file
         my $overlaps_file = File::Spec->catfile($baseline_comparison_dir,
                                                 'overlaps.txt');
         open my $overlap_fh, '<', $overlaps_file;
         while( my $line = <$overlap_fh> ){
+            chomp $line;
             my ( $category, $num_genes, ) = split /: /, $line;
-            if( $category eq 'ko_response' ){
-                $gene_count += $num_genes;
+            # print out line
+            if ($category ne 'ko_response') {
+                print join("\t", $gene, $options{'comparison'}, $category, $type, $num_genes, ), "\n";
+            } else {
+                $gene_count = $num_genes;
             }
         }
     }
-    # print out line
     $gene_count = defined $gene_count ? $gene_count : 'NA';
-    print join("\t", $gene, $options{'comparison'}, $type, $gene_count, ), "\n";
+    print join("\t", $gene, $options{'comparison'}, 'ko_response', $type, $gene_count, ), "\n";
 }
 
 ################################################################################

@@ -1,293 +1,513 @@
-Gene	Comparison	Type	Count
-4933434E20Rik	hom_vs_het_wt	unfiltered	0
-4933434E20Rik	hom_vs_het_wt	filtered	NA
-Adamts3	hom_vs_het_wt	unfiltered	140
-Adamts3	hom_vs_het_wt	filtered	NA
-Anks6	hom_vs_het_wt	unfiltered	1
-Anks6	hom_vs_het_wt	filtered	NA
-Atxn10	hom_vs_het_wt	unfiltered	NA
-Atxn10	hom_vs_het_wt	filtered	NA
-B9d2	hom_vs_het_wt	unfiltered	16
-B9d2	hom_vs_het_wt	filtered	NA
-Bap1	hom_vs_het_wt	unfiltered	8261
-Bap1	hom_vs_het_wt	filtered	5921
-Brd2	hom_vs_het_wt	unfiltered	5789
-Brd2	hom_vs_het_wt	filtered	2506
-Camsap3	hom_vs_het_wt	unfiltered	7
-Camsap3	hom_vs_het_wt	filtered	NA
-Cc2d2a	hom_vs_het_wt	unfiltered	62
-Cc2d2a	hom_vs_het_wt	filtered	NA
-Ccdc6	hom_vs_het_wt	unfiltered	2361
-Ccdc6	hom_vs_het_wt	filtered	2194
-Cnot4	hom_vs_het_wt	unfiltered	1400
-Cnot4	hom_vs_het_wt	filtered	1303
-Col4a3bp	hom_vs_het_wt	unfiltered	3402
-Col4a3bp	hom_vs_het_wt	filtered	1424
-Copg	hom_vs_het_wt	unfiltered	NA
-Copg	hom_vs_het_wt	filtered	NA
-Coq4	hom_vs_het_wt	unfiltered	NA
-Coq4	hom_vs_het_wt	filtered	NA
-Crls	hom_vs_het_wt	unfiltered	NA
-Crls	hom_vs_het_wt	filtered	NA
-Cyp11a1	hom_vs_het_wt	unfiltered	0
-Cyp11a1	hom_vs_het_wt	filtered	NA
-Dctn1	hom_vs_het_wt	unfiltered	NA
-Dctn1	hom_vs_het_wt	filtered	NA
-Dctn4	hom_vs_het_wt	unfiltered	NA
-Dctn4	hom_vs_het_wt	filtered	NA
-Dennd4c	hom_vs_het_wt	unfiltered	5576
-Dennd4c	hom_vs_het_wt	filtered	4635
-Dhodh	hom_vs_het_wt	unfiltered	NA
-Dhodh	hom_vs_het_wt	filtered	NA
-Dhx35	hom_vs_het_wt	unfiltered	7253
-Dhx35	hom_vs_het_wt	filtered	5966
-Dpm1	hom_vs_het_wt	unfiltered	NA
-Dpm1	hom_vs_het_wt	filtered	NA
-Edc4	hom_vs_het_wt	unfiltered	61
-Edc4	hom_vs_het_wt	filtered	71
-Ehmt1	hom_vs_het_wt	unfiltered	3658
-Ehmt1	hom_vs_het_wt	filtered	1414
-Elac2	hom_vs_het_wt	unfiltered	NA
-Elac2	hom_vs_het_wt	filtered	NA
-Fam160a	hom_vs_het_wt	unfiltered	1632
-Fam160a	hom_vs_het_wt	filtered	1129
-Fcho2	hom_vs_het_wt	unfiltered	7462
-Fcho2	hom_vs_het_wt	filtered	7788
-Fryl	hom_vs_het_wt	unfiltered	1261
-Fryl	hom_vs_het_wt	filtered	260
-Gfm1	hom_vs_het_wt	unfiltered	NA
-Gfm1	hom_vs_het_wt	filtered	NA
-Gpr107	hom_vs_het_wt	unfiltered	1315
-Gpr107	hom_vs_het_wt	filtered	584
-H13	hom_vs_het_wt	unfiltered	1464
-H13	hom_vs_het_wt	filtered	456
-Hira	hom_vs_het_wt	unfiltered	7159
-Hira	hom_vs_het_wt	filtered	5317
-Hmgxb3	hom_vs_het_wt	unfiltered	73
-Hmgxb3	hom_vs_het_wt	filtered	NA
-Ift140	hom_vs_het_wt	unfiltered	NA
-Ift140	hom_vs_het_wt	filtered	NA
-Kif18b	hom_vs_het_wt	unfiltered	NA
-Kif18b	hom_vs_het_wt	filtered	NA
-Kif3b	hom_vs_het_wt	unfiltered	2859
-Kif3b	hom_vs_het_wt	filtered	2894
-Kifap3	hom_vs_het_wt	unfiltered	120
-Kifap3	hom_vs_het_wt	filtered	NA
-Lztr	hom_vs_het_wt	unfiltered	1
-Lztr	hom_vs_het_wt	filtered	23
-Mad2l2	hom_vs_het_wt	unfiltered	3688
-Mad2l2	hom_vs_het_wt	filtered	858
-Map2k7	hom_vs_het_wt	unfiltered	51
-Map2k7	hom_vs_het_wt	filtered	NA
-Mir96	hom_vs_het_wt	unfiltered	0
-Mir96	hom_vs_het_wt	filtered	NA
-Morc2a	hom_vs_het_wt	unfiltered	1546
-Morc2a	hom_vs_het_wt	filtered	982
-Mtor	hom_vs_het_wt	unfiltered	NA
-Mtor	hom_vs_het_wt	filtered	NA
-Nadk2	hom_vs_het_wt	unfiltered	5981
-Nadk2	hom_vs_het_wt	filtered	5305
-Nek9	hom_vs_het_wt	unfiltered	1474
-Nek9	hom_vs_het_wt	filtered	609
-Oaz1	hom_vs_het_wt	unfiltered	NA
-Oaz1	hom_vs_het_wt	filtered	NA
-Orc1	hom_vs_het_wt	unfiltered	NA
-Orc1	hom_vs_het_wt	filtered	NA
-Otud7b	hom_vs_het_wt	unfiltered	2
-Otud7b	hom_vs_het_wt	filtered	2
-Pdzk1	hom_vs_het_wt	unfiltered	0
-Pdzk1	hom_vs_het_wt	filtered	1
-Pgap2	hom_vs_het_wt	unfiltered	NA
-Pgap2	hom_vs_het_wt	filtered	NA
-Pigf	hom_vs_het_wt	unfiltered	5096
-Pigf	hom_vs_het_wt	filtered	3314
-Pigl	hom_vs_het_wt	unfiltered	NA
-Pigl	hom_vs_het_wt	filtered	NA
-Psph	hom_vs_het_wt	unfiltered	119
-Psph	hom_vs_het_wt	filtered	344
-Rala	hom_vs_het_wt	unfiltered	28
-Rala	hom_vs_het_wt	filtered	6
-RIKEN1700007K13	hom_vs_het_wt	unfiltered	0
-RIKEN1700007K13	hom_vs_het_wt	filtered	NA
-Rpgripl1	hom_vs_het_wt	unfiltered	72
-Rpgripl1	hom_vs_het_wt	filtered	NA
-Sh3pxd2a	hom_vs_het_wt	unfiltered	1
-Sh3pxd2a	hom_vs_het_wt	filtered	1
-Smc3	hom_vs_het_wt	unfiltered	NA
-Smc3	hom_vs_het_wt	filtered	NA
-Smg1	hom_vs_het_wt	unfiltered	NA
-Smg1	hom_vs_het_wt	filtered	NA
-Smg9	hom_vs_het_wt	unfiltered	6
-Smg9	hom_vs_het_wt	filtered	62
-Ssr2	hom_vs_het_wt	unfiltered	291
-Ssr2	hom_vs_het_wt	filtered	NA
-Supt3	hom_vs_het_wt	unfiltered	5247
-Supt3	hom_vs_het_wt	filtered	2515
-Tial1	hom_vs_het_wt	unfiltered	36
-Tial1	hom_vs_het_wt	filtered	207
-Timmdc1	hom_vs_het_wt	unfiltered	NA
-Timmdc1	hom_vs_het_wt	filtered	NA
-Tmem30a	hom_vs_het_wt	unfiltered	NA
-Tmem30a	hom_vs_het_wt	filtered	NA
-Tmem98	hom_vs_het_wt	unfiltered	12
-Tmem98	hom_vs_het_wt	filtered	NA
-Traf2	hom_vs_het_wt	unfiltered	4
-Traf2	hom_vs_het_wt	filtered	NA
-Traf6	hom_vs_het_wt	unfiltered	0
-Traf6	hom_vs_het_wt	filtered	NA
-Trps1	hom_vs_het_wt	unfiltered	2
-Trps1	hom_vs_het_wt	filtered	NA
-Wrap53	hom_vs_het_wt	unfiltered	NA
-Wrap53	hom_vs_het_wt	filtered	NA
-Zfyve20	hom_vs_het_wt	unfiltered	4710
-Zfyve20	hom_vs_het_wt	filtered	1665
-Zkscan14	hom_vs_het_wt	unfiltered	78
-Zkscan14	hom_vs_het_wt	filtered	94
-Zkscan17	hom_vs_het_wt	unfiltered	60
-Zkscan17	hom_vs_het_wt	filtered	NA
-4933434E20Rik	het_vs_wt	unfiltered	0
-4933434E20Rik	het_vs_wt	filtered	NA
-Adamts3	het_vs_wt	unfiltered	1
-Adamts3	het_vs_wt	filtered	NA
-Anks6	het_vs_wt	unfiltered	0
-Anks6	het_vs_wt	filtered	NA
-Atxn10	het_vs_wt	unfiltered	1
-Atxn10	het_vs_wt	filtered	NA
-B9d2	het_vs_wt	unfiltered	0
-B9d2	het_vs_wt	filtered	NA
-Bap1	het_vs_wt	unfiltered	3
-Bap1	het_vs_wt	filtered	1
-Brd2	het_vs_wt	unfiltered	757
-Brd2	het_vs_wt	filtered	760
-Camsap3	het_vs_wt	unfiltered	1
-Camsap3	het_vs_wt	filtered	NA
-Cc2d2a	het_vs_wt	unfiltered	2
-Cc2d2a	het_vs_wt	filtered	NA
-Ccdc6	het_vs_wt	unfiltered	1
-Ccdc6	het_vs_wt	filtered	1
-Cnot4	het_vs_wt	unfiltered	4
-Cnot4	het_vs_wt	filtered	8
-Col4a3bp	het_vs_wt	unfiltered	1
-Col4a3bp	het_vs_wt	filtered	2
-Copg	het_vs_wt	unfiltered	1
-Copg	het_vs_wt	filtered	1
-Coq4	het_vs_wt	unfiltered	1
-Coq4	het_vs_wt	filtered	1
-Crls	het_vs_wt	unfiltered	0
-Crls	het_vs_wt	filtered	NA
-Cyp11a1	het_vs_wt	unfiltered	0
-Cyp11a1	het_vs_wt	filtered	NA
-Dctn1	het_vs_wt	unfiltered	0
-Dctn1	het_vs_wt	filtered	NA
-Dctn4	het_vs_wt	unfiltered	0
-Dctn4	het_vs_wt	filtered	NA
-Dennd4c	het_vs_wt	unfiltered	0
-Dennd4c	het_vs_wt	filtered	0
-Dhodh	het_vs_wt	unfiltered	1
-Dhodh	het_vs_wt	filtered	NA
-Dhx35	het_vs_wt	unfiltered	3
-Dhx35	het_vs_wt	filtered	13
-Dpm1	het_vs_wt	unfiltered	0
-Dpm1	het_vs_wt	filtered	NA
-Edc4	het_vs_wt	unfiltered	1
-Edc4	het_vs_wt	filtered	12
-Ehmt1	het_vs_wt	unfiltered	2
-Ehmt1	het_vs_wt	filtered	13
-Elac2	het_vs_wt	unfiltered	1
-Elac2	het_vs_wt	filtered	NA
-Fam160a	het_vs_wt	unfiltered	3
-Fam160a	het_vs_wt	filtered	0
-Fcho2	het_vs_wt	unfiltered	0
-Fcho2	het_vs_wt	filtered	0
-Fryl	het_vs_wt	unfiltered	717
-Fryl	het_vs_wt	filtered	0
-Gfm1	het_vs_wt	unfiltered	6
-Gfm1	het_vs_wt	filtered	NA
-Gpr107	het_vs_wt	unfiltered	2
-Gpr107	het_vs_wt	filtered	3
-H13	het_vs_wt	unfiltered	0
-H13	het_vs_wt	filtered	0
-Hira	het_vs_wt	unfiltered	1
-Hira	het_vs_wt	filtered	0
-Hmgxb3	het_vs_wt	unfiltered	1
-Hmgxb3	het_vs_wt	filtered	NA
-Ift140	het_vs_wt	unfiltered	NA
-Ift140	het_vs_wt	filtered	NA
-Kif18b	het_vs_wt	unfiltered	0
-Kif18b	het_vs_wt	filtered	0
-Kif3b	het_vs_wt	unfiltered	0
-Kif3b	het_vs_wt	filtered	1
-Kifap3	het_vs_wt	unfiltered	1
-Kifap3	het_vs_wt	filtered	NA
-Lztr	het_vs_wt	unfiltered	0
-Lztr	het_vs_wt	filtered	19
-Mad2l2	het_vs_wt	unfiltered	1
-Mad2l2	het_vs_wt	filtered	1
-Map2k7	het_vs_wt	unfiltered	0
-Map2k7	het_vs_wt	filtered	NA
-Mir96	het_vs_wt	unfiltered	0
-Mir96	het_vs_wt	filtered	NA
-Morc2a	het_vs_wt	unfiltered	9
-Morc2a	het_vs_wt	filtered	6
-Mtor	het_vs_wt	unfiltered	1
-Mtor	het_vs_wt	filtered	1
-Nadk2	het_vs_wt	unfiltered	1
-Nadk2	het_vs_wt	filtered	1
-Nek9	het_vs_wt	unfiltered	1
-Nek9	het_vs_wt	filtered	1
-Oaz1	het_vs_wt	unfiltered	NA
-Oaz1	het_vs_wt	filtered	NA
-Orc1	het_vs_wt	unfiltered	0
-Orc1	het_vs_wt	filtered	NA
-Otud7b	het_vs_wt	unfiltered	2
-Otud7b	het_vs_wt	filtered	2
-Pdzk1	het_vs_wt	unfiltered	0
-Pdzk1	het_vs_wt	filtered	0
-Pgap2	het_vs_wt	unfiltered	3
-Pgap2	het_vs_wt	filtered	NA
-Pigf	het_vs_wt	unfiltered	0
-Pigf	het_vs_wt	filtered	0
-Pigl	het_vs_wt	unfiltered	1
-Pigl	het_vs_wt	filtered	NA
-Psph	het_vs_wt	unfiltered	1
-Psph	het_vs_wt	filtered	1
-Rala	het_vs_wt	unfiltered	1
-Rala	het_vs_wt	filtered	2
-RIKEN1700007K13	het_vs_wt	unfiltered	0
-RIKEN1700007K13	het_vs_wt	filtered	NA
-Rpgripl1	het_vs_wt	unfiltered	1
-Rpgripl1	het_vs_wt	filtered	NA
-Sh3pxd2a	het_vs_wt	unfiltered	1
-Sh3pxd2a	het_vs_wt	filtered	1
-Smc3	het_vs_wt	unfiltered	3
-Smc3	het_vs_wt	filtered	NA
-Smg1	het_vs_wt	unfiltered	0
-Smg1	het_vs_wt	filtered	0
-Smg9	het_vs_wt	unfiltered	0
-Smg9	het_vs_wt	filtered	0
-Ssr2	het_vs_wt	unfiltered	1
-Ssr2	het_vs_wt	filtered	NA
-Supt3	het_vs_wt	unfiltered	2
-Supt3	het_vs_wt	filtered	3
-Tial1	het_vs_wt	unfiltered	1
-Tial1	het_vs_wt	filtered	6
-Timmdc1	het_vs_wt	unfiltered	1
-Timmdc1	het_vs_wt	filtered	1
-Tmem30a	het_vs_wt	unfiltered	1
-Tmem30a	het_vs_wt	filtered	NA
-Tmem98	het_vs_wt	unfiltered	1
-Tmem98	het_vs_wt	filtered	NA
-Traf2	het_vs_wt	unfiltered	0
-Traf2	het_vs_wt	filtered	NA
-Traf6	het_vs_wt	unfiltered	2
-Traf6	het_vs_wt	filtered	NA
-Trps1	het_vs_wt	unfiltered	0
-Trps1	het_vs_wt	filtered	NA
-Wrap53	het_vs_wt	unfiltered	0
-Wrap53	het_vs_wt	filtered	NA
-Zfyve20	het_vs_wt	unfiltered	1
-Zfyve20	het_vs_wt	filtered	1
-Zkscan14	het_vs_wt	unfiltered	0
-Zkscan14	het_vs_wt	filtered	2
-Zkscan17	het_vs_wt	unfiltered	1
-Zkscan17	het_vs_wt	filtered	NA
+Gene	Comparison	Set	Type	Count
+4933434E20Rik	hom_vs_het_wt	ko_response	unfiltered	0
+4933434E20Rik	hom_vs_het_wt	ko_response	filtered	NA
+Adamts3	hom_vs_het_wt	ko_response	unfiltered	140
+Adamts3	hom_vs_het_wt	ko_response	filtered	NA
+Anks6	hom_vs_het_wt	ko_response	unfiltered	1
+Anks6	hom_vs_het_wt	ko_response	filtered	NA
+Atxn10	hom_vs_het_wt	ko_response	unfiltered	NA
+Atxn10	hom_vs_het_wt	ko_response	filtered	NA
+B9d2	hom_vs_het_wt	ko_response	unfiltered	16
+B9d2	hom_vs_het_wt	ko_response	filtered	NA
+Bap1	hom_vs_het_wt	ko_response	unfiltered	8261
+Bap1	hom_vs_het_wt	mrna_abnormal	filtered	2260
+Bap1	hom_vs_het_wt	mrna_as_wt	filtered	2010
+Bap1	hom_vs_het_wt	not_used	filtered	872
+Bap1	hom_vs_het_wt	ko_response	filtered	5921
+Brd2	hom_vs_het_wt	ko_response	unfiltered	5789
+Brd2	hom_vs_het_wt	mrna_abnormal	filtered	3348
+Brd2	hom_vs_het_wt	mrna_as_wt	filtered	1023
+Brd2	hom_vs_het_wt	not_used	filtered	1303
+Brd2	hom_vs_het_wt	ko_response	filtered	2506
+Camsap3	hom_vs_het_wt	ko_response	unfiltered	7
+Camsap3	hom_vs_het_wt	ko_response	filtered	NA
+Cc2d2a	hom_vs_het_wt	ko_response	unfiltered	62
+Cc2d2a	hom_vs_het_wt	ko_response	filtered	NA
+Ccdc6	hom_vs_het_wt	ko_response	unfiltered	2361
+Ccdc6	hom_vs_het_wt	mrna_abnormal	filtered	549
+Ccdc6	hom_vs_het_wt	mrna_as_wt	filtered	178
+Ccdc6	hom_vs_het_wt	not_used	filtered	801
+Ccdc6	hom_vs_het_wt	ko_response	filtered	2194
+Cnot4	hom_vs_het_wt	ko_response	unfiltered	1400
+Cnot4	hom_vs_het_wt	mrna_abnormal	filtered	465
+Cnot4	hom_vs_het_wt	mrna_as_wt	filtered	113
+Cnot4	hom_vs_het_wt	not_used	filtered	1177
+Cnot4	hom_vs_het_wt	ko_response	filtered	1303
+Col4a3bp	hom_vs_het_wt	ko_response	unfiltered	3402
+Col4a3bp	hom_vs_het_wt	mrna_abnormal	filtered	1701
+Col4a3bp	hom_vs_het_wt	mrna_as_wt	filtered	1550
+Col4a3bp	hom_vs_het_wt	not_used	filtered	582
+Col4a3bp	hom_vs_het_wt	ko_response	filtered	1424
+Copg	hom_vs_het_wt	ko_response	unfiltered	NA
+Copg	hom_vs_het_wt	ko_response	filtered	NA
+Coq4	hom_vs_het_wt	ko_response	unfiltered	NA
+Coq4	hom_vs_het_wt	ko_response	filtered	NA
+Crls	hom_vs_het_wt	ko_response	unfiltered	NA
+Crls	hom_vs_het_wt	ko_response	filtered	NA
+Cyp11a1	hom_vs_het_wt	ko_response	unfiltered	0
+Cyp11a1	hom_vs_het_wt	ko_response	filtered	NA
+Dctn1	hom_vs_het_wt	ko_response	unfiltered	NA
+Dctn1	hom_vs_het_wt	ko_response	filtered	NA
+Dctn4	hom_vs_het_wt	ko_response	unfiltered	NA
+Dctn4	hom_vs_het_wt	ko_response	filtered	NA
+Dennd4c	hom_vs_het_wt	ko_response	unfiltered	5576
+Dennd4c	hom_vs_het_wt	mrna_abnormal	filtered	1222
+Dennd4c	hom_vs_het_wt	mrna_as_wt	filtered	773
+Dennd4c	hom_vs_het_wt	not_used	filtered	777
+Dennd4c	hom_vs_het_wt	ko_response	filtered	4635
+Dhodh	hom_vs_het_wt	ko_response	unfiltered	NA
+Dhodh	hom_vs_het_wt	ko_response	filtered	NA
+Dhx35	hom_vs_het_wt	ko_response	unfiltered	7253
+Dhx35	hom_vs_het_wt	mrna_abnormal	filtered	1508
+Dhx35	hom_vs_het_wt	mrna_as_wt	filtered	1505
+Dhx35	hom_vs_het_wt	not_used	filtered	535
+Dhx35	hom_vs_het_wt	ko_response	filtered	5966
+Dpm1	hom_vs_het_wt	ko_response	unfiltered	NA
+Dpm1	hom_vs_het_wt	ko_response	filtered	NA
+Edc4	hom_vs_het_wt	ko_response	unfiltered	61
+Edc4	hom_vs_het_wt	mrna_abnormal	filtered	21
+Edc4	hom_vs_het_wt	mrna_as_wt	filtered	33
+Edc4	hom_vs_het_wt	not_used	filtered	145
+Edc4	hom_vs_het_wt	ko_response	filtered	71
+Ehmt1	hom_vs_het_wt	ko_response	unfiltered	3658
+Ehmt1	hom_vs_het_wt	mrna_abnormal	filtered	2635
+Ehmt1	hom_vs_het_wt	mrna_as_wt	filtered	953
+Ehmt1	hom_vs_het_wt	not_used	filtered	1742
+Ehmt1	hom_vs_het_wt	ko_response	filtered	1414
+Elac2	hom_vs_het_wt	ko_response	unfiltered	NA
+Elac2	hom_vs_het_wt	ko_response	filtered	NA
+Fam160a	hom_vs_het_wt	ko_response	unfiltered	1632
+Fam160a	hom_vs_het_wt	mrna_abnormal	filtered	644
+Fam160a	hom_vs_het_wt	mrna_as_wt	filtered	271
+Fam160a	hom_vs_het_wt	not_used	filtered	623
+Fam160a	hom_vs_het_wt	ko_response	filtered	1129
+Fcho2	hom_vs_het_wt	ko_response	unfiltered	7462
+Fcho2	hom_vs_het_wt	mrna_abnormal	filtered	1048
+Fcho2	hom_vs_het_wt	mrna_as_wt	filtered	1700
+Fcho2	hom_vs_het_wt	not_used	filtered	881
+Fcho2	hom_vs_het_wt	ko_response	filtered	7788
+Fryl	hom_vs_het_wt	ko_response	unfiltered	1261
+Fryl	hom_vs_het_wt	mrna_abnormal	filtered	364
+Fryl	hom_vs_het_wt	mrna_as_wt	filtered	142
+Fryl	hom_vs_het_wt	not_used	filtered	643
+Fryl	hom_vs_het_wt	ko_response	filtered	260
+Gfm1	hom_vs_het_wt	ko_response	unfiltered	NA
+Gfm1	hom_vs_het_wt	ko_response	filtered	NA
+Gpr107	hom_vs_het_wt	ko_response	unfiltered	1315
+Gpr107	hom_vs_het_wt	mrna_abnormal	filtered	807
+Gpr107	hom_vs_het_wt	mrna_as_wt	filtered	1550
+Gpr107	hom_vs_het_wt	not_used	filtered	716
+Gpr107	hom_vs_het_wt	ko_response	filtered	584
+H13	hom_vs_het_wt	ko_response	unfiltered	1464
+H13	hom_vs_het_wt	mrna_abnormal	filtered	677
+H13	hom_vs_het_wt	mrna_as_wt	filtered	53
+H13	hom_vs_het_wt	not_used	filtered	394
+H13	hom_vs_het_wt	ko_response	filtered	456
+Hira	hom_vs_het_wt	ko_response	unfiltered	7159
+Hira	hom_vs_het_wt	mrna_abnormal	filtered	2702
+Hira	hom_vs_het_wt	mrna_as_wt	filtered	2206
+Hira	hom_vs_het_wt	not_used	filtered	948
+Hira	hom_vs_het_wt	ko_response	filtered	5317
+Hmgxb3	hom_vs_het_wt	ko_response	unfiltered	73
+Hmgxb3	hom_vs_het_wt	ko_response	filtered	NA
+Ift140	hom_vs_het_wt	ko_response	unfiltered	NA
+Ift140	hom_vs_het_wt	ko_response	filtered	NA
+Kif18b	hom_vs_het_wt	ko_response	unfiltered	NA
+Kif18b	hom_vs_het_wt	ko_response	filtered	NA
+Kif3b	hom_vs_het_wt	ko_response	unfiltered	2859
+Kif3b	hom_vs_het_wt	mrna_abnormal	filtered	1032
+Kif3b	hom_vs_het_wt	mrna_as_wt	filtered	1869
+Kif3b	hom_vs_het_wt	not_used	filtered	1376
+Kif3b	hom_vs_het_wt	ko_response	filtered	2894
+Kifap3	hom_vs_het_wt	ko_response	unfiltered	120
+Kifap3	hom_vs_het_wt	ko_response	filtered	NA
+Lztr	hom_vs_het_wt	ko_response	unfiltered	1
+Lztr	hom_vs_het_wt	mrna_abnormal	filtered	0
+Lztr	hom_vs_het_wt	mrna_as_wt	filtered	3
+Lztr	hom_vs_het_wt	not_used	filtered	23
+Lztr	hom_vs_het_wt	ko_response	filtered	23
+Mad2l2	hom_vs_het_wt	ko_response	unfiltered	3688
+Mad2l2	hom_vs_het_wt	mrna_abnormal	filtered	2826
+Mad2l2	hom_vs_het_wt	mrna_as_wt	filtered	120
+Mad2l2	hom_vs_het_wt	not_used	filtered	1437
+Mad2l2	hom_vs_het_wt	ko_response	filtered	858
+Map2k7	hom_vs_het_wt	ko_response	unfiltered	51
+Map2k7	hom_vs_het_wt	ko_response	filtered	NA
+Mir96	hom_vs_het_wt	ko_response	unfiltered	0
+Mir96	hom_vs_het_wt	ko_response	filtered	NA
+Morc2a	hom_vs_het_wt	ko_response	unfiltered	1546
+Morc2a	hom_vs_het_wt	mrna_abnormal	filtered	450
+Morc2a	hom_vs_het_wt	mrna_as_wt	filtered	364
+Morc2a	hom_vs_het_wt	not_used	filtered	471
+Morc2a	hom_vs_het_wt	ko_response	filtered	982
+Mtor	hom_vs_het_wt	ko_response	unfiltered	NA
+Mtor	hom_vs_het_wt	ko_response	filtered	NA
+Nadk2	hom_vs_het_wt	ko_response	unfiltered	5981
+Nadk2	hom_vs_het_wt	mrna_abnormal	filtered	944
+Nadk2	hom_vs_het_wt	mrna_as_wt	filtered	1600
+Nadk2	hom_vs_het_wt	not_used	filtered	532
+Nadk2	hom_vs_het_wt	ko_response	filtered	5305
+Nek9	hom_vs_het_wt	ko_response	unfiltered	1474
+Nek9	hom_vs_het_wt	mrna_abnormal	filtered	906
+Nek9	hom_vs_het_wt	mrna_as_wt	filtered	115
+Nek9	hom_vs_het_wt	not_used	filtered	789
+Nek9	hom_vs_het_wt	ko_response	filtered	609
+Oaz1	hom_vs_het_wt	ko_response	unfiltered	NA
+Oaz1	hom_vs_het_wt	ko_response	filtered	NA
+Orc1	hom_vs_het_wt	ko_response	unfiltered	NA
+Orc1	hom_vs_het_wt	ko_response	filtered	NA
+Otud7b	hom_vs_het_wt	ko_response	unfiltered	2
+Otud7b	hom_vs_het_wt	mrna_abnormal	filtered	0
+Otud7b	hom_vs_het_wt	mrna_as_wt	filtered	23
+Otud7b	hom_vs_het_wt	not_used	filtered	10
+Otud7b	hom_vs_het_wt	ko_response	filtered	2
+Pdzk1	hom_vs_het_wt	ko_response	unfiltered	0
+Pdzk1	hom_vs_het_wt	mrna_abnormal	filtered	0
+Pdzk1	hom_vs_het_wt	mrna_as_wt	filtered	0
+Pdzk1	hom_vs_het_wt	not_used	filtered	1
+Pdzk1	hom_vs_het_wt	ko_response	filtered	1
+Pgap2	hom_vs_het_wt	ko_response	unfiltered	NA
+Pgap2	hom_vs_het_wt	ko_response	filtered	NA
+Pigf	hom_vs_het_wt	ko_response	unfiltered	5096
+Pigf	hom_vs_het_wt	mrna_abnormal	filtered	1893
+Pigf	hom_vs_het_wt	mrna_as_wt	filtered	1236
+Pigf	hom_vs_het_wt	not_used	filtered	778
+Pigf	hom_vs_het_wt	ko_response	filtered	3314
+Pigl	hom_vs_het_wt	ko_response	unfiltered	NA
+Pigl	hom_vs_het_wt	ko_response	filtered	NA
+Psph	hom_vs_het_wt	ko_response	unfiltered	119
+Psph	hom_vs_het_wt	mrna_abnormal	filtered	51
+Psph	hom_vs_het_wt	mrna_as_wt	filtered	771
+Psph	hom_vs_het_wt	not_used	filtered	818
+Psph	hom_vs_het_wt	ko_response	filtered	344
+Rala	hom_vs_het_wt	ko_response	unfiltered	28
+Rala	hom_vs_het_wt	mrna_abnormal	filtered	22
+Rala	hom_vs_het_wt	mrna_as_wt	filtered	1
+Rala	hom_vs_het_wt	not_used	filtered	191
+Rala	hom_vs_het_wt	ko_response	filtered	6
+RIKEN1700007K13	hom_vs_het_wt	ko_response	unfiltered	0
+RIKEN1700007K13	hom_vs_het_wt	ko_response	filtered	NA
+Rpgripl1	hom_vs_het_wt	ko_response	unfiltered	72
+Rpgripl1	hom_vs_het_wt	ko_response	filtered	NA
+Sh3pxd2a	hom_vs_het_wt	ko_response	unfiltered	1
+Sh3pxd2a	hom_vs_het_wt	mrna_abnormal	filtered	0
+Sh3pxd2a	hom_vs_het_wt	mrna_as_wt	filtered	0
+Sh3pxd2a	hom_vs_het_wt	not_used	filtered	0
+Sh3pxd2a	hom_vs_het_wt	ko_response	filtered	1
+Smc3	hom_vs_het_wt	ko_response	unfiltered	NA
+Smc3	hom_vs_het_wt	ko_response	filtered	NA
+Smg1	hom_vs_het_wt	ko_response	unfiltered	NA
+Smg1	hom_vs_het_wt	ko_response	filtered	NA
+Smg9	hom_vs_het_wt	ko_response	unfiltered	6
+Smg9	hom_vs_het_wt	mrna_abnormal	filtered	0
+Smg9	hom_vs_het_wt	mrna_as_wt	filtered	22
+Smg9	hom_vs_het_wt	not_used	filtered	132
+Smg9	hom_vs_het_wt	ko_response	filtered	62
+Ssr2	hom_vs_het_wt	ko_response	unfiltered	291
+Ssr2	hom_vs_het_wt	ko_response	filtered	NA
+Supt3	hom_vs_het_wt	ko_response	unfiltered	5247
+Supt3	hom_vs_het_wt	mrna_abnormal	filtered	3172
+Supt3	hom_vs_het_wt	mrna_as_wt	filtered	380
+Supt3	hom_vs_het_wt	not_used	filtered	1886
+Supt3	hom_vs_het_wt	ko_response	filtered	2515
+Tial1	hom_vs_het_wt	ko_response	unfiltered	36
+Tial1	hom_vs_het_wt	mrna_abnormal	filtered	3
+Tial1	hom_vs_het_wt	mrna_as_wt	filtered	143
+Tial1	hom_vs_het_wt	not_used	filtered	72
+Tial1	hom_vs_het_wt	ko_response	filtered	207
+Timmdc1	hom_vs_het_wt	ko_response	unfiltered	NA
+Timmdc1	hom_vs_het_wt	ko_response	filtered	NA
+Tmem30a	hom_vs_het_wt	ko_response	unfiltered	NA
+Tmem30a	hom_vs_het_wt	ko_response	filtered	NA
+Tmem98	hom_vs_het_wt	ko_response	unfiltered	12
+Tmem98	hom_vs_het_wt	ko_response	filtered	NA
+Traf2	hom_vs_het_wt	ko_response	unfiltered	4
+Traf2	hom_vs_het_wt	ko_response	filtered	NA
+Traf6	hom_vs_het_wt	ko_response	unfiltered	0
+Traf6	hom_vs_het_wt	ko_response	filtered	NA
+Trps1	hom_vs_het_wt	ko_response	unfiltered	2
+Trps1	hom_vs_het_wt	ko_response	filtered	NA
+Wrap53	hom_vs_het_wt	ko_response	unfiltered	NA
+Wrap53	hom_vs_het_wt	ko_response	filtered	NA
+Zfyve20	hom_vs_het_wt	ko_response	unfiltered	4710
+Zfyve20	hom_vs_het_wt	mrna_abnormal	filtered	3020
+Zfyve20	hom_vs_het_wt	mrna_as_wt	filtered	442
+Zfyve20	hom_vs_het_wt	not_used	filtered	1180
+Zfyve20	hom_vs_het_wt	ko_response	filtered	1665
+Zkscan14	hom_vs_het_wt	ko_response	unfiltered	78
+Zkscan14	hom_vs_het_wt	mrna_abnormal	filtered	0
+Zkscan14	hom_vs_het_wt	mrna_as_wt	filtered	2
+Zkscan14	hom_vs_het_wt	not_used	filtered	2
+Zkscan14	hom_vs_het_wt	ko_response	filtered	94
+Zkscan17	hom_vs_het_wt	ko_response	unfiltered	60
+Zkscan17	hom_vs_het_wt	ko_response	filtered	NA
+4933434E20Rik	het_vs_wt	ko_response	unfiltered	0
+4933434E20Rik	het_vs_wt	ko_response	filtered	NA
+Adamts3	het_vs_wt	ko_response	unfiltered	1
+Adamts3	het_vs_wt	ko_response	filtered	NA
+Anks6	het_vs_wt	ko_response	unfiltered	0
+Anks6	het_vs_wt	ko_response	filtered	NA
+Atxn10	het_vs_wt	ko_response	unfiltered	1
+Atxn10	het_vs_wt	ko_response	filtered	NA
+B9d2	het_vs_wt	ko_response	unfiltered	0
+B9d2	het_vs_wt	ko_response	filtered	NA
+Bap1	het_vs_wt	ko_response	unfiltered	3
+Bap1	het_vs_wt	mrna_abnormal	filtered	0
+Bap1	het_vs_wt	mrna_as_wt	filtered	0
+Bap1	het_vs_wt	not_used	filtered	2
+Bap1	het_vs_wt	ko_response	filtered	1
+Brd2	het_vs_wt	ko_response	unfiltered	757
+Brd2	het_vs_wt	mrna_abnormal	filtered	112
+Brd2	het_vs_wt	mrna_as_wt	filtered	153
+Brd2	het_vs_wt	not_used	filtered	202
+Brd2	het_vs_wt	ko_response	filtered	760
+Camsap3	het_vs_wt	ko_response	unfiltered	1
+Camsap3	het_vs_wt	ko_response	filtered	NA
+Cc2d2a	het_vs_wt	ko_response	unfiltered	2
+Cc2d2a	het_vs_wt	ko_response	filtered	NA
+Ccdc6	het_vs_wt	ko_response	unfiltered	1
+Ccdc6	het_vs_wt	mrna_abnormal	filtered	0
+Ccdc6	het_vs_wt	mrna_as_wt	filtered	0
+Ccdc6	het_vs_wt	not_used	filtered	0
+Ccdc6	het_vs_wt	ko_response	filtered	1
+Cnot4	het_vs_wt	ko_response	unfiltered	4
+Cnot4	het_vs_wt	mrna_abnormal	filtered	2
+Cnot4	het_vs_wt	mrna_as_wt	filtered	3
+Cnot4	het_vs_wt	not_used	filtered	11
+Cnot4	het_vs_wt	ko_response	filtered	8
+Col4a3bp	het_vs_wt	ko_response	unfiltered	1
+Col4a3bp	het_vs_wt	mrna_abnormal	filtered	0
+Col4a3bp	het_vs_wt	mrna_as_wt	filtered	0
+Col4a3bp	het_vs_wt	not_used	filtered	0
+Col4a3bp	het_vs_wt	ko_response	filtered	2
+Copg	het_vs_wt	ko_response	unfiltered	1
+Copg	het_vs_wt	mrna_abnormal	filtered	0
+Copg	het_vs_wt	mrna_as_wt	filtered	0
+Copg	het_vs_wt	not_used	filtered	0
+Copg	het_vs_wt	ko_response	filtered	1
+Coq4	het_vs_wt	ko_response	unfiltered	1
+Coq4	het_vs_wt	mrna_abnormal	filtered	0
+Coq4	het_vs_wt	mrna_as_wt	filtered	0
+Coq4	het_vs_wt	not_used	filtered	0
+Coq4	het_vs_wt	ko_response	filtered	1
+Crls	het_vs_wt	ko_response	unfiltered	0
+Crls	het_vs_wt	ko_response	filtered	NA
+Cyp11a1	het_vs_wt	ko_response	unfiltered	0
+Cyp11a1	het_vs_wt	ko_response	filtered	NA
+Dctn1	het_vs_wt	ko_response	unfiltered	0
+Dctn1	het_vs_wt	ko_response	filtered	NA
+Dctn4	het_vs_wt	ko_response	unfiltered	0
+Dctn4	het_vs_wt	ko_response	filtered	NA
+Dennd4c	het_vs_wt	ko_response	unfiltered	0
+Dennd4c	het_vs_wt	mrna_abnormal	filtered	0
+Dennd4c	het_vs_wt	mrna_as_wt	filtered	0
+Dennd4c	het_vs_wt	not_used	filtered	0
+Dennd4c	het_vs_wt	ko_response	filtered	0
+Dhodh	het_vs_wt	ko_response	unfiltered	1
+Dhodh	het_vs_wt	ko_response	filtered	NA
+Dhx35	het_vs_wt	ko_response	unfiltered	3
+Dhx35	het_vs_wt	mrna_abnormal	filtered	0
+Dhx35	het_vs_wt	mrna_as_wt	filtered	0
+Dhx35	het_vs_wt	not_used	filtered	5
+Dhx35	het_vs_wt	ko_response	filtered	13
+Dpm1	het_vs_wt	ko_response	unfiltered	0
+Dpm1	het_vs_wt	ko_response	filtered	NA
+Edc4	het_vs_wt	ko_response	unfiltered	1
+Edc4	het_vs_wt	mrna_abnormal	filtered	0
+Edc4	het_vs_wt	mrna_as_wt	filtered	0
+Edc4	het_vs_wt	not_used	filtered	4
+Edc4	het_vs_wt	ko_response	filtered	12
+Ehmt1	het_vs_wt	ko_response	unfiltered	2
+Ehmt1	het_vs_wt	mrna_abnormal	filtered	0
+Ehmt1	het_vs_wt	mrna_as_wt	filtered	0
+Ehmt1	het_vs_wt	not_used	filtered	2
+Ehmt1	het_vs_wt	ko_response	filtered	13
+Elac2	het_vs_wt	ko_response	unfiltered	1
+Elac2	het_vs_wt	ko_response	filtered	NA
+Fam160a	het_vs_wt	ko_response	unfiltered	3
+Fam160a	het_vs_wt	mrna_abnormal	filtered	0
+Fam160a	het_vs_wt	mrna_as_wt	filtered	0
+Fam160a	het_vs_wt	not_used	filtered	8
+Fam160a	het_vs_wt	ko_response	filtered	0
+Fcho2	het_vs_wt	ko_response	unfiltered	0
+Fcho2	het_vs_wt	mrna_abnormal	filtered	0
+Fcho2	het_vs_wt	mrna_as_wt	filtered	0
+Fcho2	het_vs_wt	not_used	filtered	5
+Fcho2	het_vs_wt	ko_response	filtered	0
+Fryl	het_vs_wt	ko_response	unfiltered	717
+Fryl	het_vs_wt	mrna_abnormal	filtered	196
+Fryl	het_vs_wt	mrna_as_wt	filtered	0
+Fryl	het_vs_wt	not_used	filtered	536
+Fryl	het_vs_wt	ko_response	filtered	0
+Gfm1	het_vs_wt	ko_response	unfiltered	6
+Gfm1	het_vs_wt	ko_response	filtered	NA
+Gpr107	het_vs_wt	ko_response	unfiltered	2
+Gpr107	het_vs_wt	mrna_abnormal	filtered	0
+Gpr107	het_vs_wt	mrna_as_wt	filtered	0
+Gpr107	het_vs_wt	not_used	filtered	0
+Gpr107	het_vs_wt	ko_response	filtered	3
+H13	het_vs_wt	ko_response	unfiltered	0
+H13	het_vs_wt	mrna_abnormal	filtered	0
+H13	het_vs_wt	mrna_as_wt	filtered	20
+H13	het_vs_wt	not_used	filtered	0
+H13	het_vs_wt	ko_response	filtered	0
+Hira	het_vs_wt	ko_response	unfiltered	1
+Hira	het_vs_wt	mrna_abnormal	filtered	1
+Hira	het_vs_wt	mrna_as_wt	filtered	0
+Hira	het_vs_wt	not_used	filtered	1
+Hira	het_vs_wt	ko_response	filtered	0
+Hmgxb3	het_vs_wt	ko_response	unfiltered	1
+Hmgxb3	het_vs_wt	ko_response	filtered	NA
+Ift140	het_vs_wt	ko_response	unfiltered	NA
+Ift140	het_vs_wt	ko_response	filtered	NA
+Kif18b	het_vs_wt	ko_response	unfiltered	0
+Kif18b	het_vs_wt	mrna_abnormal	filtered	0
+Kif18b	het_vs_wt	mrna_as_wt	filtered	5
+Kif18b	het_vs_wt	not_used	filtered	0
+Kif18b	het_vs_wt	ko_response	filtered	0
+Kif3b	het_vs_wt	ko_response	unfiltered	0
+Kif3b	het_vs_wt	mrna_abnormal	filtered	0
+Kif3b	het_vs_wt	mrna_as_wt	filtered	0
+Kif3b	het_vs_wt	not_used	filtered	0
+Kif3b	het_vs_wt	ko_response	filtered	1
+Kifap3	het_vs_wt	ko_response	unfiltered	1
+Kifap3	het_vs_wt	ko_response	filtered	NA
+Lztr	het_vs_wt	ko_response	unfiltered	0
+Lztr	het_vs_wt	mrna_abnormal	filtered	0
+Lztr	het_vs_wt	mrna_as_wt	filtered	4
+Lztr	het_vs_wt	not_used	filtered	8
+Lztr	het_vs_wt	ko_response	filtered	19
+Mad2l2	het_vs_wt	ko_response	unfiltered	1
+Mad2l2	het_vs_wt	mrna_abnormal	filtered	0
+Mad2l2	het_vs_wt	mrna_as_wt	filtered	0
+Mad2l2	het_vs_wt	not_used	filtered	1
+Mad2l2	het_vs_wt	ko_response	filtered	1
+Map2k7	het_vs_wt	ko_response	unfiltered	0
+Map2k7	het_vs_wt	ko_response	filtered	NA
+Mir96	het_vs_wt	ko_response	unfiltered	0
+Mir96	het_vs_wt	ko_response	filtered	NA
+Morc2a	het_vs_wt	ko_response	unfiltered	9
+Morc2a	het_vs_wt	mrna_abnormal	filtered	3
+Morc2a	het_vs_wt	mrna_as_wt	filtered	0
+Morc2a	het_vs_wt	not_used	filtered	5
+Morc2a	het_vs_wt	ko_response	filtered	6
+Mtor	het_vs_wt	ko_response	unfiltered	1
+Mtor	het_vs_wt	mrna_abnormal	filtered	0
+Mtor	het_vs_wt	mrna_as_wt	filtered	0
+Mtor	het_vs_wt	not_used	filtered	0
+Mtor	het_vs_wt	ko_response	filtered	1
+Nadk2	het_vs_wt	ko_response	unfiltered	1
+Nadk2	het_vs_wt	mrna_abnormal	filtered	0
+Nadk2	het_vs_wt	mrna_as_wt	filtered	0
+Nadk2	het_vs_wt	not_used	filtered	0
+Nadk2	het_vs_wt	ko_response	filtered	1
+Nek9	het_vs_wt	ko_response	unfiltered	1
+Nek9	het_vs_wt	mrna_abnormal	filtered	0
+Nek9	het_vs_wt	mrna_as_wt	filtered	1
+Nek9	het_vs_wt	not_used	filtered	0
+Nek9	het_vs_wt	ko_response	filtered	1
+Oaz1	het_vs_wt	ko_response	unfiltered	NA
+Oaz1	het_vs_wt	ko_response	filtered	NA
+Orc1	het_vs_wt	ko_response	unfiltered	0
+Orc1	het_vs_wt	ko_response	filtered	NA
+Otud7b	het_vs_wt	ko_response	unfiltered	2
+Otud7b	het_vs_wt	mrna_abnormal	filtered	0
+Otud7b	het_vs_wt	mrna_as_wt	filtered	0
+Otud7b	het_vs_wt	not_used	filtered	0
+Otud7b	het_vs_wt	ko_response	filtered	2
+Pdzk1	het_vs_wt	ko_response	unfiltered	0
+Pdzk1	het_vs_wt	mrna_abnormal	filtered	0
+Pdzk1	het_vs_wt	mrna_as_wt	filtered	0
+Pdzk1	het_vs_wt	not_used	filtered	0
+Pdzk1	het_vs_wt	ko_response	filtered	0
+Pgap2	het_vs_wt	ko_response	unfiltered	3
+Pgap2	het_vs_wt	ko_response	filtered	NA
+Pigf	het_vs_wt	ko_response	unfiltered	0
+Pigf	het_vs_wt	mrna_abnormal	filtered	0
+Pigf	het_vs_wt	mrna_as_wt	filtered	1
+Pigf	het_vs_wt	not_used	filtered	0
+Pigf	het_vs_wt	ko_response	filtered	0
+Pigl	het_vs_wt	ko_response	unfiltered	1
+Pigl	het_vs_wt	ko_response	filtered	NA
+Psph	het_vs_wt	ko_response	unfiltered	1
+Psph	het_vs_wt	mrna_abnormal	filtered	0
+Psph	het_vs_wt	mrna_as_wt	filtered	0
+Psph	het_vs_wt	not_used	filtered	0
+Psph	het_vs_wt	ko_response	filtered	1
+Rala	het_vs_wt	ko_response	unfiltered	1
+Rala	het_vs_wt	mrna_abnormal	filtered	0
+Rala	het_vs_wt	mrna_as_wt	filtered	0
+Rala	het_vs_wt	not_used	filtered	0
+Rala	het_vs_wt	ko_response	filtered	2
+RIKEN1700007K13	het_vs_wt	ko_response	unfiltered	0
+RIKEN1700007K13	het_vs_wt	ko_response	filtered	NA
+Rpgripl1	het_vs_wt	ko_response	unfiltered	1
+Rpgripl1	het_vs_wt	ko_response	filtered	NA
+Sh3pxd2a	het_vs_wt	ko_response	unfiltered	1
+Sh3pxd2a	het_vs_wt	mrna_abnormal	filtered	0
+Sh3pxd2a	het_vs_wt	mrna_as_wt	filtered	0
+Sh3pxd2a	het_vs_wt	not_used	filtered	0
+Sh3pxd2a	het_vs_wt	ko_response	filtered	1
+Smc3	het_vs_wt	ko_response	unfiltered	3
+Smc3	het_vs_wt	ko_response	filtered	NA
+Smg1	het_vs_wt	ko_response	unfiltered	0
+Smg1	het_vs_wt	mrna_abnormal	filtered	0
+Smg1	het_vs_wt	mrna_as_wt	filtered	0
+Smg1	het_vs_wt	not_used	filtered	9
+Smg1	het_vs_wt	ko_response	filtered	0
+Smg9	het_vs_wt	ko_response	unfiltered	0
+Smg9	het_vs_wt	mrna_abnormal	filtered	0
+Smg9	het_vs_wt	mrna_as_wt	filtered	0
+Smg9	het_vs_wt	not_used	filtered	6
+Smg9	het_vs_wt	ko_response	filtered	0
+Ssr2	het_vs_wt	ko_response	unfiltered	1
+Ssr2	het_vs_wt	ko_response	filtered	NA
+Supt3	het_vs_wt	ko_response	unfiltered	2
+Supt3	het_vs_wt	mrna_abnormal	filtered	1
+Supt3	het_vs_wt	mrna_as_wt	filtered	881
+Supt3	het_vs_wt	not_used	filtered	22
+Supt3	het_vs_wt	ko_response	filtered	3
+Tial1	het_vs_wt	ko_response	unfiltered	1
+Tial1	het_vs_wt	mrna_abnormal	filtered	0
+Tial1	het_vs_wt	mrna_as_wt	filtered	9
+Tial1	het_vs_wt	not_used	filtered	2
+Tial1	het_vs_wt	ko_response	filtered	6
+Timmdc1	het_vs_wt	ko_response	unfiltered	1
+Timmdc1	het_vs_wt	mrna_abnormal	filtered	0
+Timmdc1	het_vs_wt	mrna_as_wt	filtered	0
+Timmdc1	het_vs_wt	not_used	filtered	0
+Timmdc1	het_vs_wt	ko_response	filtered	1
+Tmem30a	het_vs_wt	ko_response	unfiltered	1
+Tmem30a	het_vs_wt	ko_response	filtered	NA
+Tmem98	het_vs_wt	ko_response	unfiltered	1
+Tmem98	het_vs_wt	ko_response	filtered	NA
+Traf2	het_vs_wt	ko_response	unfiltered	0
+Traf2	het_vs_wt	ko_response	filtered	NA
+Traf6	het_vs_wt	ko_response	unfiltered	2
+Traf6	het_vs_wt	ko_response	filtered	NA
+Trps1	het_vs_wt	ko_response	unfiltered	0
+Trps1	het_vs_wt	ko_response	filtered	NA
+Wrap53	het_vs_wt	ko_response	unfiltered	0
+Wrap53	het_vs_wt	ko_response	filtered	NA
+Zfyve20	het_vs_wt	ko_response	unfiltered	1
+Zfyve20	het_vs_wt	mrna_abnormal	filtered	0
+Zfyve20	het_vs_wt	mrna_as_wt	filtered	0
+Zfyve20	het_vs_wt	not_used	filtered	0
+Zfyve20	het_vs_wt	ko_response	filtered	1
+Zkscan14	het_vs_wt	ko_response	unfiltered	0
+Zkscan14	het_vs_wt	mrna_abnormal	filtered	0
+Zkscan14	het_vs_wt	mrna_as_wt	filtered	0
+Zkscan14	het_vs_wt	not_used	filtered	0
+Zkscan14	het_vs_wt	ko_response	filtered	2
+Zkscan17	het_vs_wt	ko_response	unfiltered	1
+Zkscan17	het_vs_wt	ko_response	filtered	NA
+Ift140	hom_vs_het	ko_response	unfiltered	48
+Ift140	hom_vs_het	mrna_abnormal	filtered	6
+Ift140	hom_vs_het	mrna_as_wt	filtered	36
+Ift140	hom_vs_het	not_used	filtered	12
+Ift140	hom_vs_het	ko_response	filtered	87
+Oaz1	hom_vs_het	ko_response	unfiltered	2
+Oaz1	hom_vs_het	mrna_abnormal	filtered	0
+Oaz1	hom_vs_het	mrna_as_wt	filtered	2
+Oaz1	hom_vs_het	not_used	filtered	1
+Oaz1	hom_vs_het	ko_response	filtered	3
