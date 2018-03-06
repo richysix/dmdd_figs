@@ -2,7 +2,16 @@ outputs: data/Mm_GRCm38_e88_baseline.rda \
 plots/tissue_vs_WE_heatmap.eps output/highly_expressed-tissues.tsv \
 output/human-mim.tsv \
 plots/Figure2.eps \
-output/duplicated_terms.tsv
+output/duplicated_terms.tsv \
+output/mrna_abnormal-jaccard-all.rda
+
+output/mrna_abnormal-jaccard-all.rda: delayed_overlaps.R \
+output/mrna_abnormal-hom_vs_het_wt-sig_genes.out
+	/software/R-3.3.0/bin/Rscript delayed_overlaps.R \
+	--output_base plots/mrna_abnormal-PC3-jaccard-all \
+	--cluster_methods ward.D2 \
+	--output_data_file output/mrna_abnormal-jaccard-all.rda \
+	output/mrna_abnormal-hom_vs_het_wt-sig_genes.out
 
 output/duplicated_terms.tsv: data/emap_results.all.tsv \
 /lustre/scratch117/maz/team31/projects/mouse_DMDD/emap/EMAPA_Nov_17_2017.obo \
