@@ -33,9 +33,9 @@ output/all_mutants-samples.tsv output/KOs_ordered_by_delay.txt
 	output/KOs_ordered_by_delay.txt
 
 # Overlaps by genes of mrna_abnormal lists
-output/mrna_abnormal-jaccard-all.rda: delayed_overlaps.R \
+output/mrna_abnormal-jaccard-all.rda: cluster_by_overlap.R \
 output/mrna_abnormal-hom_vs_het_wt-sig_genes.out
-	/software/R-3.3.0/bin/Rscript delayed_overlaps.R \
+	/software/R-3.3.0/bin/Rscript cluster_by_overlap.R \
 	--output_base plots/mrna_abnormal-PC3-jaccard-all \
 	--cluster_methods ward.D2 \
 	--output_data_file output/mrna_abnormal-jaccard-all.rda \
