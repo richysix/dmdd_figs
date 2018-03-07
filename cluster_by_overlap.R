@@ -15,7 +15,7 @@ option_list <- list(
 
 cmd_line_args <- parse_args(
   OptionParser(
-    option_list=option_list, prog = 'delayed_overlaps.R',
+    option_list=option_list, prog = 'cluster_by_overlap.R',
     usage = "Usage: %prog [options] input_file" ),
   positional_arguments = 1
 )
@@ -26,6 +26,11 @@ cmd_line_args <- parse_args(
 #                 verbose = FALSE ),
 #  args = c('output/mrna_abnormal-hom_vs_het_wt-sig_genes.out')
 #)
+
+################################################################################
+# THIS SCRIPT ASSUMES THAT THE NAMES OF THE THINGS BEING OVERLAPPED
+# ARE IN COLUMNS 1 AND 2 AND THE AMOUNT OF OVERLAP IS IN COLUMN 6
+################################################################################
 
 output_base <- cmd_line_args$options[['output_base']]
 verbose <- cmd_line_args$options[['verbose']]
