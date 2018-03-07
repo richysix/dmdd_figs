@@ -41,7 +41,7 @@ Collect together all EMAPA results
 cat /dev/null > $ROOT/mouse_dmdd_figs/data/sets_to_use.tsv
 echo -e "Mutant\tComparison\tSet\tFile" >> $ROOT/mouse_dmdd_figs/data/sets_to_use.tsv
 base='$ROOT/lane-process'
-for set in ko_response mrna_abnormal mrna_as_wt not_used
+for set in ko_response ko_response mrna_as_wt not_used
 do
 for mut in $( < output/KOs_delayed.txt ) # delayed
 do
@@ -109,6 +109,131 @@ scp ~/sanger/ZMP/mouse\ DMDD/output/duplicated_terms-edited.tsv \
 gen1:/lustre/scratch117/maz/team31/projects/mouse_DMDD/output/duplicated_terms-edited.tsv
 ```
 
+Calculate the pairwise gene overlap from the ko_response lists for all delayed mutants
+```
+# create sig_genes files
+base=/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process
+cat /dev/null > output/sig_genes_files.txt
+# delayed mutants
+for mut in $(grep -v None output/KOs_ordered_by_delay.txt | cut -f1)
+do
+sig_file=$base/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.baseline-comp/ko_response.sig.tsv
+if [[ -e $sig_file ]]
+then
+  sig_genes_file=$(echo $sig_file | sed -e 's|.tsv|_genes.txt|' )
+  cut -f1 $sig_file > $sig_genes_file
+else
+  echo $sig_file does not exist
+  sig_file=$base/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/het_vs_wt.baseline-comp/ko_response.sig.tsv
+  if [[ -e $sig_file ]]
+  then
+    sig_genes_file=$(echo $sig_file | sed -e 's|.tsv|_genes.txt|' )
+    cut -f1 $sig_file > $sig_genes_file
+  else
+    echo $sig_file does not exist
+    sig_file=$base/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het.baseline-comp/ko_response.sig.tsv
+    if [[ -e $sig_file ]]
+    then
+      sig_genes_file=$(echo $sig_file | sed -e 's|.tsv|_genes.txt|' )
+      cut -f1 $sig_file > $sig_genes_file
+    else
+      echo $sig_file does not exist
+    fi
+  fi
+fi
+echo -e "$mut\t$sig_genes_file" >> output/sig_genes_files.txt
+done
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Ift140/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.baseline-comp/ko_response.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Ift140/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/het_vs_wt.baseline-comp/ko_response.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Coq4/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.baseline-comp/ko_response.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Smg1/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.baseline-comp/ko_response.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Copg/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.baseline-comp/ko_response.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Kif18b/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.baseline-comp/ko_response.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Oaz1/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.baseline-comp/ko_response.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Oaz1/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/het_vs_wt.baseline-comp/ko_response.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Timmdc1/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.baseline-comp/ko_response.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Mtor/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.baseline-comp/ko_response.sig.tsv does not exist
+
+# not delayed mutants
+for mut in $(grep None output/KOs_ordered_by_delay.txt | cut -f1)
+do
+sig_file=$base/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv
+if [[ -e $sig_file ]]
+then
+  sig_genes_file=$(echo $sig_file | sed -e 's|.tsv|_genes.txt|')
+  cut -f1 $sig_file > $sig_genes_file
+else
+  echo $sig_file does not exist
+  sig_file=$base/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/het_vs_wt.sig.tsv
+  if [[ -e $sig_file ]]
+  then
+    sig_genes_file=$(echo $sig_file | sed -e 's|.tsv|_genes.txt|')
+    cut -f1 $sig_file > $sig_genes_file
+  else
+    echo $sig_file does not exist
+  fi
+fi
+echo -e "$mut\t$sig_genes_file" >> output/sig_genes_files.txt
+done
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Gfm1/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Dhodh/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Dpm1/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Tmem30a/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Dctn4/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Pgap2/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Pigl/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Elac2/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Orc1/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Smc3/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Dctn1/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Atxn10/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Wrap53/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv does not exist
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Crls/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv does not exist
+
+# check grepping for mutant name only produces one file from output/sig_genes_files.txt
+for mut in $(cut -f1 output/KOs_ordered_by_delay.txt)
+do
+echo -n "$mut "
+grep -c $mut output/sig_genes_files.txt
+done | awk '{if($2 != 1){print $0}}'
+
+# overlap lists
+mutants=( $(cut -f1 output/KOs_ordered_by_delay.txt) )
+cat /dev/null > output/ko_response.sig_genes.err
+base=/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process
+for mut1 in $( seq 0 $(( ${#mutants[@]} - 1 )) )
+do
+for mut2 in $( seq 0 $(( ${#mutants[@]} - 1 )) )
+do
+if [ "$mut1" -lt "$mut2" ]; then
+  file1=$( grep ${mutants[$mut1]} output/sig_genes_files.txt | cut -f2 )
+  file2=$( grep ${mutants[$mut2]} output/sig_genes_files.txt | cut -f2 )
+  if [[ -e $file1 && -e $file2 ]]; then
+    perl ~/checkouts/team31/scripts/intersect_lists.pl --counts --jaccard \
+    --header --output_no_header --no_venn \
+    $file1 $file2
+  else
+    echo "ONE OF THE FILES DOES NOT EXIST: $file1 $file2" >> output/ko_response.sig_genes.err
+  fi
+fi
+done
+done > output/ko_response-hom_vs_het_wt-sig_genes.out.tmp
+
+# edit output file
+sed -e 's|/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/||g' \
+output/ko_response-hom_vs_het_wt-sig_genes.out.tmp | \
+sed -e 's|/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/[a-z._-/]*.txt||g' \
+ > output/ko_response-hom_vs_het_wt-sig_genes.out
+
+# plot heatmap
+/software/R-3.3.0/bin/Rscript cluster_by_overlap.R \
+--output_base plots/ko_response-gene_overlap \
+--cluster_methods ward.D2 \
+--output_data_file output/ko_response-gene_overlap.rda \
+output/ko_response-hom_vs_het_wt-sig_genes.out
+
+```
+
 Calculate the pairwise gene overlap from the mrna_abnormal lists for all delayed mutants
 ```
 mutants=( $(sort output/KOs_delayed.txt) )
@@ -141,7 +266,7 @@ sed -e 's|/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs
  > output/mrna_abnormal-hom_vs_het_wt-sig_genes.out
 
 # cluster all based on gene list overlaps
-/software/R-3.3.0/bin/Rscript delayed_overlaps.R \
+/software/R-3.3.0/bin/Rscript cluster_by_overlap.R \
 --output_base plots/mrna_abnormal-PC3-jaccard-all \
 --cluster_methods ward.D2 \
 --output_data_file output/mrna_abnormal-jaccard-all.rda \
