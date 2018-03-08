@@ -18,10 +18,10 @@ cmd_line_args <- parse_args(
 )
 
 #cmd_line_args <- list(
-#  options = list(directory = '/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd',
+#  options = list(directory = 'cwd',
 #                 verbose = FALSE ),
 #  args = c('output/all_samples_merged.counts.tsv',
-#           'output/ko_response-samples.tsv',
+#           'output/all_mutants-samples.tsv',
 #           'output/KOs_ordered_by_delay.txt')
 #)
 
