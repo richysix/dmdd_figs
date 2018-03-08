@@ -93,7 +93,27 @@ echo -e "Gene\tComparison\tSet\tTerm ID\tDescription\tAnnotated\
 perl collate_emap_results.pl --header \
 $ROOT/mouse_dmdd_figs/data/sets_to_use.tsv \
  >> $ROOT/mouse_dmdd_figs/data/emap_results.all.tsv
+
+# get just mrna_abnormal results
+head -n1 data/emap_results.all.tsv > output/emap_results.mrna_abnormal.tsv
+grep mrna_abnormal data/emap_results.all.tsv | sort -t$'\t' -k5,5 >> output/emap_results.mrna_abnormal.tsv
+
+ 
+export R_LIBS_USER='/lustre/scratch117/maz/team31/projects/mouse_DMDD/mouse_dmdd_figs/.R/lib:/software/team31/R-3.3.0'
+/software/R-3.3.0/bin/Rscript ~rw4/checkouts/team31/scripts/bubble_plot.R \
+--x_var='Gene' --y_var='Term ID' --y_labels 'Description' \
+--x_levels=Edc4,Bap1,Ift140,Psph,Dhx35,Gpr107,Ehmt1,Zfyve20,Brd2,Nek9,Supt3,Col4a3bp,Hira,Fcho2,Fam160a,Kif3b,Pigf,Morc2a,Dennd4c,Fryl,Mad2l2,H13,Ccdc6,Nadk2 \
+--size_var='Fold Enrichment' --fill_var='-log10(pvalue)' \
+--reverse_y \
+--width=12 --height=100 \
+--output_file plots/emap_results.mrna_abnormal.pdf \
+--output_data_file output/emap_results.mrna_abnormal.rda \
+output/emap_results.mrna_abnormal.tsv
+
 ```
+
+
+
 
 process EMAPA terms to collapse
 
