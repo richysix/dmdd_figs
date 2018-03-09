@@ -39,7 +39,7 @@ done
 Fig. 5d - Zkscan17 heatmap
 
 ```
-# genes to plot are in data/fig5d.genes.tsv
+# genes to plot are in data/fig5d_data_go.tsv
 mut=Zkscan17
 countsFile=$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv
 head -n1 $countsFile > output/fig5d.tsv
