@@ -39,26 +39,18 @@ if( verbose ){
       cmd_line_args$options[['directory']], "\n", sep=" " )
 }
 
-if (cmd_line_args$options[['directory']] == 'cwd') {
-  wd <- getwd()
-} else {
-  wd <- cmd_line_args$options[['directory']]
-}
-
-plots_dir <- file.path(wd, 'plots')
+plots_dir <- file.path(getwd(), 'plots')
 
 packages <- c('ggplot2', 'viridis', 'reshape2', 'ontologyIndex', 'ontologyPlot',
-              'plyr', 'svglite', 'GO.db', 'devtools', 'cowplot', 'ggdendro')
+              'plyr', 'svglite', 'GO.db', 'devtools', 'cowplot', 'ggdendro',
+              'ggrepel')
 for( package in packages ){
   library(package, character.only = TRUE)
 }
 # load biovisr and miscr. If not installed, install from github repo
 packages <- c('biovisr')
 for( package in packages ){
-  if(!require( package, character.only = TRUE )){
-    install_github(paste0('richysix/', package))
-    library( package, character.only = TRUE )
-  }
+  library( package, character.only = TRUE )
 }
 
 # GO enrichment summary
@@ -371,6 +363,149 @@ for ( domain in names(go_results_by_domain) ) {
               sep = "\t", row.names = FALSE, quote = FALSE)
 }
 
+#################################################################################
+
+
+filtering_data <- read.delim('data/go_results-filtering.tsv', header = TRUE)
+# set levels of Filtered
+filtering_data$Filtered <- factor(filtering_data$Filtered,
+                                  levels = c('unfiltered', 'filtered'))
+
+filtering_counts <-
+    ddply(filtering_data,
+          .(Gene, Comparison, Domain, Filtered), summarise,
+          num_sig_terms = length(GO.ID)
+         )
+
+filtering_counts_by_gene_by_domain <-
+  split(filtering_counts,
+        f = list(filtering_counts$Gene, filtering_counts$Domain))
+
+# If a mutant has no sig terms it won't appear in filtering_counts
+# Add a row with num_sig_terms = 0 for each of these
+filtering_counts_edited <-
+  do.call(rbind,
+    lapply(filtering_counts_by_gene_by_domain,
+            function(subset_by_gene_by_domain){
+              if (nrow(subset_by_gene_by_domain) < 2) {
+                by_gene_by_domain_list <- vector('list', length = 2)
+                i <- 1
+                for (filter_class in c("unfiltered", "filtered")) {
+                  if (any(subset_by_gene_by_domain$Filtered == filter_class)) {
+                    by_gene_by_domain_list[[i]] <- subset_by_gene_by_domain[ subset_by_gene_by_domain$Filtered == filter_class, ]
+                  } else {
+                    by_gene_by_domain_list[[i]] <-
+                      data.frame(
+                        Gene = subset_by_gene_by_domain$Gene[1],
+                        Comparison = subset_by_gene_by_domain$Comparison[1],
+                        Domain = subset_by_gene_by_domain$Domain[1],
+                        Filtered = filter_class,
+                        num_sig_terms = 0
+                      )
+                  }
+                  i <- i + 1
+                }
+                return(do.call(rbind, by_gene_by_domain_list))
+              } else {
+                return(subset_by_gene_by_domain)
+              }
+            }
+          )
+        )
+
+filtering_counts_w <- dcast(filtering_counts_edited, Gene + Domain ~ Filtered,
+                            value.var = 'num_sig_terms')
+
+# Plot Difference in sig genes between Filtered and unfiltered
+# read in sig genes file
+sig_genes_file <- cmd_line_args$args[5]
+sig_genes <- read.delim(file = sig_genes_file)
+
+# get sig_genes data for delayed mutants
+sig_genes_delayed <- 
+  do.call(rbind,
+          lapply(levels(filtering_counts_w$Gene),
+                 function(gene_name){
+                   return(sig_genes[ sig_genes$Gene == gene_name, ])
+                 })
+        )
+sig_genes_delayed <- sig_genes_delayed[ sig_genes_delayed$Set == 'ko_response', ]
+
+sig_genes_delayed_subset <-
+  do.call(rbind,
+    lapply(unique(as.character(sig_genes_delayed$Gene)),
+              function(gene_name, sig_genes_delayed) {
+                gene_subset <-
+                  sig_genes_delayed[ sig_genes_delayed$Gene == gene_name, ]
+                for (comp in c('hom_vs_het_wt', 'hom_vs_het',
+                                'het_vs_wt')) {
+                  sig_genes_delayed_count <-
+                    gene_subset[ gene_subset$Comparison == comp, ]
+                  if(nrow(sig_genes_delayed_count) == 2) {
+                    return(sig_genes_delayed_count)
+                  }
+                }
+              },
+              sig_genes_delayed
+    )
+  )
+
+sig_genes_delayed_subset$Type <- factor(sig_genes_delayed_subset$Type,
+                                        levels = c('unfiltered', 'filtered'))
+sig_genes_delayed_subset_w <- dcast(sig_genes_delayed_subset, Gene ~ Type,
+                            value.var = 'Count')
+
+filtering_genes_plot <- ggplot() +
+  geom_point(data = sig_genes_delayed_subset,
+             aes(x = Type, y = Count,
+                 colour = Gene)) +
+  geom_segment(data = sig_genes_delayed_subset_w,
+               aes(y = unfiltered, yend = filtered, colour = Gene,
+                   x = 'unfiltered', xend = 'filtered')) +
+  geom_text_repel(data = sig_genes_delayed_subset[ sig_genes_delayed_subset$Type == 'unfiltered', ],
+                  aes(x = Type, y = Count, label = Gene),
+                  xlim = c(NA, 1) )
+
+# print to pdf
+pdf(file = file.path('plots', 'filtering.pdf'))
+print(filtering_genes_plot)
+print(filtering_genes_plot + scale_y_log10())
+
+# subset each to BP
+for (domain in levels(filtering_counts_w$Domain)) {
+  filtering_counts_subset <- filtering_counts[ filtering_counts$Domain == domain, ]
+  filtering_counts_w_subset <- filtering_counts_w[ filtering_counts_w$Domain == domain, ]
+  
+  filtering_plot <- ggplot() +
+    geom_point(data = filtering_counts_subset,
+               aes(x = Filtered, y = num_sig_terms,
+                   colour = Gene)) +
+    geom_segment(data = filtering_counts_w_subset,
+                 aes(y = unfiltered, yend = filtered, colour = Gene,
+                     x = 'unfiltered', xend = 'filtered')) +
+    geom_text_repel(data = filtering_counts_subset[ filtering_counts_subset$Filtered == 'unfiltered', ],
+                    aes(x = Filtered, y = num_sig_terms, label = Gene),
+                    xlim = c(NA, 1) ) +
+    labs(title = paste0('Effect of Filtering on the number of GO enrichments (domain = ', domain, ')')) +
+    theme(axis.title.x = element_blank())
+  
+  print(filtering_plot)
+  print(filtering_plot + scale_y_log10())
+
+  # plot sig genes against sig terms
+  merged_data <- merge(sig_genes_delayed_subset, filtering_counts_subset,
+           by.x = c('Gene', 'Comparison', 'Type'),
+           by.y = c('Gene', 'Comparison', 'Filtered'))
+  scatter_plot <- ggplot(data = merged_data) +
+    geom_point(aes(x = Count, y = num_sig_terms, colour = Gene, shape = Type)) +
+    geom_smooth(aes(x = Count, y = num_sig_terms),
+                formula = y ~ x, method = 'lm') + 
+    scale_x_log10() + scale_y_log10()
+  print(scatter_plot)
+}
+dev.off()
+
+
 ################################################################################
 # EMAPA
 emap_results_file <- cmd_line_args$args[3]
@@ -390,9 +525,6 @@ duplicate_terms <- read.delim(file = edited_file)
 # LOAD root_df
 load(file.path('output', 'root_terms.rda'))
 
-# read in sig genes file
-sig_genes_file <- cmd_line_args$args[5]
-sig_genes <- read.delim(file = sig_genes_file)
 
 # calculate overlap by terms
 terms_overlap <- function(results, mut1, mut2){
@@ -431,13 +563,14 @@ for (results_set in names(emap_results_list)) {
     duplicate_terms[ duplicate_terms$to_use == 0, c('Term.ID', 'parent_id') ]
   to_remove <-
     Reduce('|', lapply(row.names(duplicates_to_remove),
-         function(x){
+         function(x, results_summarise_filtered){
           term1 <- as.character(duplicates_to_remove[x, 'Term.ID'])
           term2 <- as.character(duplicates_to_remove[x, 'parent_id'])
           to_remove <- results_summarise_filtered$Term.ID == term1 &
           results_summarise_filtered$parent_id == term2
           return(to_remove)
-        })
+        },
+        results_summarise_filtered)
     )
   results_summarise_filtered <-
     results_summarise_filtered[ !to_remove, ]
@@ -610,22 +743,22 @@ sig_genes_subset$y <- rep(0, nrow(sig_genes_subset))
 dendro_plot <- ggplot() +
   geom_point(data = delay_plot_data, aes(x = label, y = y, fill = Delay),
              size = 4, shape = 23) +
-  geom_segment(data = segment(tree_plot_data), size = 0.5, lineend = 'square',
+  geom_segment(data = segment(tree_plot_data), size = 0.3, lineend = 'square',
                aes(x = x, y = y, xend = xend, yend = yend)) +
   geom_text(data = sig_genes_subset, aes(x = Gene, y = y, label = Count),
-            size = 4.2, nudge_x = 0.3, nudge_y = -0.1, hjust = 1) +
+            size = 4.2, nudge_x = 0.4, nudge_y = 0.3,
+            angle = 90, hjust = 1) +
   scale_fill_manual(values = colour_palette) +
-  scale_y_reverse() + coord_flip() + 
   theme_void() + 
   theme(legend.title = element_text(size = 14),
         legend.text = element_text(size = 12),
-        legend.position = 'left')
+        legend.position = 'top')
 
 # plot both tree and bubble plot together
 save_plot(file.path(plots_dir, paste0(results_set, "-gene_list-overlaps.eps")),
           plot_grid(dendro_plot, clust_heatmap_plot,
-          nrow = 1, ncol = 2, rel_widths = c(1,2), align = 'h', axis = 'tb'),
-          ncol = 2, device = 'eps',
+          nrow = 2, ncol = 1, rel_heights = c(1,2), align = 'v', axis = 'tb'),
+          ncol = 1, device = 'eps',
           base_height = 8, base_aspect_ratio = 0.95)
 
 ################################################################################

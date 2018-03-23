@@ -27,6 +27,65 @@ grep -v '^Gene' data/go_results.tmp >> data/go_results.tsv
 rm data/go_results.tmp
 
 # data/go_results.tsv is one of the input files for fig4.R
+
+# get data on unfiltered GO results
+for domain in BP MF CC
+do
+cat output/KOs_delayed.txt | \
+perl get_go_results.pl \
+--dir $ROOT/lane-process --go_domain $domain \
+--baseline_file /dev/null \
+--shared_file /dev/null \
+--skip_baseline \
+--observed_threshold 1 --fe_threshold 1
+done > data/go_results-unfiltered.tmp
+GENE: Pdzk1 COMPARISON: hom_vs_het_wt - NO SIG DE GENES
+GENE: Smg1 COMPARISON: het_vs_wt - NO SIG DE GENES
+GENE: Kif18b COMPARISON: het_vs_wt - NO SIG DE GENES
+GENE: Lztr COMPARISON: hom_vs_het_wt - NO GO ENRICHMENTS
+GENE: Timmdc1 COMPARISON: het_vs_wt - NO GO ENRICHMENTS
+GENE: Coq4 COMPARISON: het_vs_wt - NO GO ENRICHMENTS
+GENE: Pdzk1 COMPARISON: hom_vs_het_wt - NO SIG DE GENES
+GENE: Smg1 COMPARISON: het_vs_wt - NO SIG DE GENES
+GENE: Kif18b COMPARISON: het_vs_wt - NO SIG DE GENES
+GENE: Lztr COMPARISON: hom_vs_het_wt - NO GO ENRICHMENTS
+GENE: Timmdc1 COMPARISON: het_vs_wt - NO GO ENRICHMENTS
+GENE: Pdzk1 COMPARISON: hom_vs_het_wt - NO SIG DE GENES
+GENE: Smg1 COMPARISON: het_vs_wt - NO SIG DE GENES
+GENE: Kif18b COMPARISON: het_vs_wt - NO SIG DE GENES
+GENE: Lztr COMPARISON: hom_vs_het_wt - NO GO ENRICHMENTS
+GENE: Oaz1 COMPARISON: hom_vs_het - NO GO ENRICHMENTS
+GENE: Otud7b COMPARISON: hom_vs_het_wt - NO GO ENRICHMENTS
+# cat together results and add column for Filtered vs Unfiltered
+head -n1 data/go_results-unfiltered.tmp | \
+perl -F"\t" -lane 'print join("\t", @F[0..2], "Filtered", @F[3..11]);' \
+ > data/go_results-filtering.tsv
+grep -v ^Gene data/go_results-unfiltered.tmp | perl -F"\t" -lane '
+print join("\t", @F[0..2], "unfiltered", @F[3..11])' >> data/go_results-filtering.tsv
+grep -f output/KOs_delayed.txt data/go_results.tsv | grep -v ^Gene | \
+perl -F"\t" -lane 'print join("\t", @F[0..2], "filtered", @F[3..11])' >> data/go_results-filtering.tsv
+# remove temp file
+rm data/go_results-unfiltered.tmp
+
+# Want to look through the enrichments and compare filtered to unfiltered for the most delayed mutants
+# for each one, assign it a number and cp the unfiltered GO and the filtered GO to a new directory
+grep -E 'Severe|Moderate' output/KOs_ordered_by_delay.txt | cut -f1 | \
+grep -v Ift140 | perl blind_go_results.pl \
+--dir /lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process \
+--results_dir deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers \
+--comparison hom_vs_het_wt --output_dir output/go_blind \
+--key_file output/go_blind/go_blind_key_file.tsv
+Set1: 264 970 703 931 774 630 285 761 92 353 197 446
+Set2: 518 65 328 292 670 940 457 721 806 517 283 971
+
+# go through enrichments
+# e.g.
+cut -f1-6 output/go_blind/971/BP.sig.tsv | \
+perl -F"\t" -lane 'next if $. == 1; print join("\t", @F, $F[3]/$F[4], );' | \
+sort -t$'\t' -gk6,6 | less
+
+
+
 ```
 
 

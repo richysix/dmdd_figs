@@ -15,6 +15,7 @@ use Data::Dumper;
 
 # get options
 my %options;
+my $check_baseline;
 get_and_check_options();
 
 # set directory to find DESeq results
@@ -45,57 +46,61 @@ while(<>){
     my $gene = $_;
     
     foreach my $comparison ( @comparisons ) {
-        # Check for baseline analysis. Add later
-        my $baseline_dir = 
-            File::Spec->catfile($options{'dir'}, $gene, $RESULTS_DIR,
-                $comparison . '.baseline-comp' );
-        if( -e $baseline_dir ){
-            foreach my $set ( @baseline_sets ){
-                my $go_results_file =
-                    File::Spec->catfile($baseline_dir, $set . '.fisher',
-                        $options{'go_domain'} . '.sig.tsv', );
-                
-                my $num_sig_terms = 0;
-                if( -e $go_results_file ){
-                    open my $go_fh, '<', $go_results_file;
-                    while( my $line = <$go_fh> ){
-                        next if $line =~ m/\A GO.ID/xms;
-                        $num_sig_terms++;
-                        my ($go_term, $description, $annotated, $significant,
-                            $expected, $pvalue, undef ) = split /\t/, $line;
-                        # filter for observed gene number and fold enrichment
-                        my ( $filter, $fe ) = filter_term( $significant, $expected, \%options, ); 
-                        next if $filter;
-                        
-                        if ($set eq 'ko_response'){
-                            $times_seen{$go_term}++;
-                            $description_for{$go_term} = $description;
+        
+        if( $check_baseline ) {
+            # Check for baseline analysis. Add later
+            my $baseline_dir = 
+                File::Spec->catfile($options{'dir'}, $gene, $RESULTS_DIR,
+                    $comparison . '.baseline-comp' );
+            if( -e $baseline_dir ){
+                foreach my $set ( @baseline_sets ){
+                    my $go_results_file =
+                        File::Spec->catfile($baseline_dir, $set . '.fisher',
+                            $options{'go_domain'} . '.sig.tsv', );
+                    
+                    my $num_sig_terms = 0;
+                    if( -e $go_results_file ){
+                        open my $go_fh, '<', $go_results_file;
+                        while( my $line = <$go_fh> ){
+                            next if $line =~ m/\A GO.ID/xms;
+                            $num_sig_terms++;
+                            my ($go_term, $description, $annotated, $significant,
+                                $expected, $pvalue, undef ) = split /\t/, $line;
+                            # filter for observed gene number and fold enrichment
+                            my ( $filter, $fe ) = filter_term( $significant, $expected, \%options, ); 
+                            next if $filter;
+                            
+                            if ($set eq 'ko_response'){
+                                $times_seen{$go_term}++;
+                                $description_for{$go_term} = $description;
+                            }
+                            
+                            # calculate -log10 pvalue and log10 fold enrichment
+                            # convert '< 1e-30' to number
+                            $pvalue = $pvalue eq '< 1e-30' ? 1e-30 : $pvalue;
+                            my $log_p = -log($pvalue) / log(10);
+                            my $log_fe = log($fe) / log(10);
+                            
+                            print {$baseline_fh}
+                                join("\t", $gene, $comparison, $set, $options{'go_domain'},
+                                           $go_term, $description, $annotated, $significant,
+                                           $expected, $pvalue, $log_p, $fe, $log_fe, ), "\n";
+                            if( $set eq 'ko_response' ){
+                                print join("\t", $gene, $comparison, $options{'go_domain'},
+                                           $go_term, $description, $annotated, $significant,
+                                           $expected, $pvalue, $log_p, $fe, $log_fe, ), "\n";
+                            }
                         }
-                        
-                        # calculate -log10 pvalue and log10 fold enrichment
-                        # convert '< 1e-30' to number
-                        $pvalue = $pvalue eq '< 1e-30' ? 1e-30 : $pvalue;
-                        my $log_p = -log($pvalue) / log(10);
-                        my $log_fe = log($fe) / log(10);
-                        
-                        print {$baseline_fh}
-                            join("\t", $gene, $comparison, $set, $options{'go_domain'},
-                                       $go_term, $description, $annotated, $significant,
-                                       $expected, $pvalue, $log_p, $fe, $log_fe, ), "\n";
-                        if( $set eq 'ko_response' ){
-                            print join("\t", $gene, $comparison, $options{'go_domain'},
-                                       $go_term, $description, $annotated, $significant,
-                                       $expected, $pvalue, $log_p, $fe, $log_fe, ), "\n";
-                        }
+                        close $go_fh;
                     }
-                    close $go_fh;
+                    if( $num_sig_terms == 0 && $set eq 'ko_response' ){
+                        warn join(q{ }, 'GENE:', $gene, 'COMPARISON:', $comparison,
+                                  '- NO GO ENRICHMENTS'), "\n";
+                    }
                 }
-                if( $num_sig_terms == 0 && $set eq 'ko_response' ){
-                    warn join(q{ }, 'GENE:', $gene, 'COMPARISON:', $comparison,
-                              '- NO GO ENRICHMENTS'), "\n";
-                }
+                # if we're using the baseline results don't get the unfiltered results
+                last; # go to next comparison
             }
-            last;
         }
         
         # Check existence of sig file
@@ -147,8 +152,11 @@ while(<>){
                 next if $filter;
                 
                 $times_seen{$go_term}++;
+                $description_for{$go_term} = $description;
                 
                 # calculate -log10 pvalue and log10 fold enrichment
+                # convert '< 1e-30' to number
+                $pvalue = $pvalue eq '< 1e-30' ? 1e-30 : $pvalue;
                 my $log_p = -log($pvalue) / log(10);
                 my $log_fe = log($fe) / log(10);
                 
@@ -252,6 +260,7 @@ sub get_and_check_options {
         'observed_threshold=i',
         'fe_threshold=f',
         'go_domain=s',
+        'skip_baseline',
         'help',
         'man',
         'debug+',
@@ -289,6 +298,8 @@ sub get_and_check_options {
     $options{'observed_threshold'} = $options{'observed_threshold'} ? $options{'observed_threshold'} : 2;
     $options{'fe_threshold'} = $options{'fe_threshold'} ? $options{'fe_threshold'} : 1;
     
+    # turn skip_baseline option into check baseline
+    $check_baseline = $options{'skip_baseline'} ? 0 : 1;
     
     print "Settings:\n", map { join(' - ', $_, defined $options{$_} ? $options{$_} : 'off'),"\n" } sort keys %options if $options{verbose};
 }
@@ -318,6 +329,7 @@ Get GO enrichment result for multiple analyses.
         --observed_threshold    minimum number of significant genes
         --fe_threshold          minimum fold enrichment
         --go_domain             GO domain (BP, MF, CC)                  default: BP
+        --skip_baseline         switch to skip looking for baseline results
         --help                  print this help message
         --man                   print the manual page
         --debug                 print debugging information
@@ -335,8 +347,9 @@ The DESeq results are expected to be in
 
     [working_directory]/[gene]/[results_dir]/[comparison].sig.tsv
 
-    see --dir, --comparison and --results_dir options
-
+    see --dir and --results_dir options
+    comparisons used are hom_vs_het_wt, het_vs_wt, hom_vs_het in that order.
+    Results are taken from the first results file that exists.
 
 =back
 
@@ -368,6 +381,10 @@ Name of results directory inside each directory in the list
 
 Gene Ontology domain to use (One of BP, MF or CC).
 default: BP
+
+=item B<--skip_baseline>
+
+Skip looking for baseline results
 
 =item B<--debug>
 

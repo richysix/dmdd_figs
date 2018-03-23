@@ -7,6 +7,7 @@ install.packages('seriation', lib = '.R/lib')
 install.packages('plyr', lib = '.R/lib')
 install.packages('RColorBrewer', lib = '.R/lib')
 install.packages('ggdendro', lib = '.R/lib')
+install.packages('ggrepel', lib = '.R/lib')
 
 source("https://bioconductor.org/biocLite.R")
 biocLite("SummarizedExperiment", lib = '.R/lib', lib.loc = '.R/lib')
