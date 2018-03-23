@@ -386,7 +386,12 @@ done > output/mrna_abnormal-sig_genes-upset.tmp
 /lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Mtor/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.baseline-comp/mrna_abnormal.sig_genes.txt: DOES NOT EXIST
 /lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Smg9/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.baseline-comp/mrna_abnormal.sig_genes.txt: NO SIG GENES
 
-# get gene lists from Ehmt1 Supt3 Zfyve20 Mad2l2 and Bap1 Hira intersection
+# picked 3 clusters from clustering by gene list.
+# Col4a3bp-Brd2
+# Mad2l2-Supt3-Ehmt1-Zfyve20
+# Bap1-Hira
+get gene lists for the 3 intersections
+grep -E 'Col4a3bp|Brd2' output/mrna_abnormal-sig_genes-upset.tmp > output/mrna_abnormal-sig_genes-BrCol-upset.tmp
 grep -E 'Ehmt1|Supt3|Zfyve20|Mad2l2' output/mrna_abnormal-sig_genes-upset.tmp > output/mrna_abnormal-sig_genes-EMSZ-upset.tmp
 grep -E 'Bap1|Hira' output/mrna_abnormal-sig_genes-upset.tmp > output/mrna_abnormal-sig_genes-BH-upset.tmp
 
@@ -398,7 +403,7 @@ names(data) <- c("gene", "mut", "present")
 data_matrix <- dcast(data, gene ~ mut, value.var = "present", fill = 0)
 write.table(data_matrix, file = Args[7], sep = "\t", quote = FALSE, row.names = FALSE)' > reshape-long_to_wide.R
 
-for set in BH EMSZ
+for set in BrCol BH EMSZ
 do
 /software/R-3.3.0/bin/Rscript reshape-long_to_wide.R output/mrna_abnormal-sig_genes-$set-upset.tmp output/mrna_abnormal-sig_genes-$set-upset.tsv
 done
@@ -410,7 +415,7 @@ intersect_all <- upset_wide[ rowSums(upset_wide[,seq(2,length(upset_wide),1)]) =
 write.table(as.data.frame(intersect_all$gene), file = Args[7], quote = FALSE,
 row.names = FALSE, col.names = FALSE)' > get_intersection_genes.R
 
-for set in BH EMSZ
+for set in BrCol BH EMSZ
 do
 /software/R-3.3.0/bin/Rscript get_intersection_genes.R \
 output/mrna_abnormal-sig_genes-$set-upset.tsv \
@@ -452,7 +457,7 @@ join -t$'\t' - output/mrna_abnormal-all_genes.txt  >> output/mrna_abnormal-geneU
 species=mus_musculus
 ensembl=88
 export R_LIBS_USER=/software/team31/R:.R/lib
-for set in BH EMSZ
+for set in BrCol BH EMSZ
 do
 rm output/mrna_abnormal-$set-intersection.fisher/topgo.[oe]
 bsub -o output/mrna_abnormal-$set-intersection.fisher/topgo.o \
@@ -662,7 +667,7 @@ EMAPA
 # Need an all list of just gene ids
 cut -f1 output/mrna_abnormal-geneU.tsv > output/mrna_abnormal-geneU-gene_ids_only.txt
 
-for set in BH EMSZ
+for set in BrCol BH EMSZ
 do
 mkdir output/mrna_abnormal-$set-intersection.emap
 bsub -o output/mrna_abnormal-$set-intersection.emap/emap.o \
@@ -682,11 +687,30 @@ bsub -o output/mrna_abnormal-$set-intersection.emap/emap.o \
 --comparison mrna_abnormal-$set-intersection"
 done
 
+# cat together results
+perl -le 'print join("\t", qw{Set Term.ID Description Annotated Expected Observed Fold.Enrichment Adjusted.p.value});' \
+ > output/mrna_abnormal-BrCol_BH_EMSZ-results.tsv
+for set in BrCol BH EMSZ
+do
+perl -F"\t" -lane 'next if $. == 1;
+print join("\t", "'$set'", @F)' \
+output/mrna_abnormal-$set-intersection.emap/results.tsv
+done >> output/mrna_abnormal-BrCol_BH_EMSZ-results.tsv
+for set in F
+do
+perl -F"\t" -lane 'next if $. == 1;
+print join("\t", "'$set'", @F)' \
+$ROOT/lane-process/Fcho2/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.baseline-comp/mrna_abnormal.emap/results.tsv
+done >> output/mrna_abnormal-BrCol_BH_EMSZ-results.tsv
+
+
+
 # collapse terms
-for set in BH EMSZ
+for set in BrCol BH EMSZ
 do
 for level in $(seq 3 4)
 do
+export R_LIBS_USER=.R/lib:/software/team31/R-3.3.0
 /software/R-3.3.0/bin/Rscript \
 ~/checkouts/team31/scripts/collapse_ontology_enrichment_results.R \
 --output_directory output --output_base mrna_abnormal-$set-intersection.emap/subtrees-level${level} \
@@ -713,6 +737,17 @@ done
 
 ```
 # plot terms vs collapsed term name as a bubble plot
+set=BrCol
+for level in $(seq 3 4)
+do
+/software/R-3.3.0/bin/Rscript bubble_plot.R --x_var='subtree_root_id' --y_var='Term.ID' \
+--size_var='Fold.Enrichment' --fill_var='log10.pvalue' \
+--y_labels=Description --x_labels=subtree_root_name --reverse_y \
+--output_file output/mrna_abnormal-$set-intersection.emap/subtrees-level${level}-bubble.svg \
+--output_type=svg --height 15 \
+output/mrna_abnormal-$set-intersection.emap/subtrees-level${level}-results.tsv
+done
+
 set=BH
 for level in $(seq 3 4)
 do
@@ -752,8 +787,8 @@ done
 # cat together results and plot bubble plot
 for level in $(seq 3 4)
 do
-echo -e "Set\tTerm.ID\tDescription\tCount\tmaxlog10p" > output/mrna_abnormal-BH_EMSZ-level${level}-results.tsv
-for set in BH EMSZ
+echo -e "Set\tTerm.ID\tDescription\tCount\tmaxlog10p" > output/mrna_abnormal-BrCol_BH_EMSZ-level${level}-results.tsv
+for set in BrCol BH EMSZ
 do
 grep -v '^Term.ID' output/mrna_abnormal-$set-intersection.emap/subtrees-level${level}-results.tsv | \
 perl -F"\t" -lane 'BEGIN{ %terms = ();} {
@@ -763,7 +798,7 @@ $terms{$F[7]}->{'maxlog10p'} = $F[10] > $terms{$F[7]}->{'maxlog10p'} ? $F[10] : 
 } END{ foreach $term (sort keys %terms ){
 print join("\t", "'$set'", $term, $terms{$term}->{'Description'},
 $terms{$term}->{'Count'}, $terms{$term}->{'maxlog10p'}, )} }' | \
-sort -t$'\t' -grk4,4 >> output/mrna_abnormal-BH_EMSZ-level${level}-results.tsv
+sort -t$'\t' -grk4,4 >> output/mrna_abnormal-BrCol_BH_EMSZ-level${level}-results.tsv
 done
 done
 
@@ -774,9 +809,9 @@ do
 --x_var='Set' --y_var='Term.ID' \
 --size_var='Count' --fill_var='maxlog10p' \
 --y_labels=Description --reverse_y \
---output_file plots/EMAPA-BH_vs_EMSZ-level${level}-collapsed.svg \
---output_type=svg \
-output/mrna_abnormal-BH_EMSZ-level${level}-results.tsv
+--width 10 --height 15 \
+--output_file=plots/EMAPA-BrCol_BH_vs_EMSZ-level${level}-collapsed.svg \
+output/mrna_abnormal-BrCol_BH_EMSZ-level${level}-results.tsv
 done
 
 # add in Fcho2
@@ -792,8 +827,8 @@ $terms{$F[7]}->{'maxlog10p'} = $F[10] > $terms{$F[7]}->{'maxlog10p'} ? $F[10] : 
 } END{ foreach $term (sort keys %terms ){
 print join("\t", "'$set'", $term, $terms{$term}->{'Description'},
 $terms{$term}->{'Count'}, $terms{$term}->{'maxlog10p'}, )} }' | \
-sort -t$'\t' -grk4,4 | cat output/mrna_abnormal-BH_EMSZ-level${level}-results.tsv - \
- > output/mrna_abnormal-F_BH_EMSZ-level${level}-results.tsv
+sort -t$'\t' -grk4,4 | cat output/mrna_abnormal-BrCol_BH_EMSZ-level${level}-results.tsv - \
+ > output/mrna_abnormal-BrCol_BH_EMSZ_F-level${level}-results.tsv
 done
 
 for level in $(seq 3 4)
@@ -802,15 +837,14 @@ do
 --x_var='Set' --y_var='Term.ID' \
 --size_var='Count' --fill_var='maxlog10p' \
 --y_labels=Description --reverse_y \
---output_file plots/EMAPA-F_vs_BH_vs_EMSZ-level${level}-collapsed.svg \
---output_type=svg \
-output/mrna_abnormal-F_BH_EMSZ-level${level}-results.tsv
+--output_file plots/EMAPA-BrCol_vs_BH_vs_EMSZ_vs_F-level${level}-collapsed.svg \
+output/mrna_abnormal-BrCol_BH_EMSZ_F-level${level}-results.tsv
 done
 
 # filter out terms that appear less than 3 times
 perl -F"\t" -lane 'if($F[3] > 2 | $. == 1){ print $_; }' \
-output/mrna_abnormal-F_BH_EMSZ-level4-results.tsv \
- > output/mrna_abnormal-F_BH_EMSZ-level4-results-filtered.tsv
+output/mrna_abnormal-BrCol_BH_EMSZ_F-level${level}-results.tsv \
+ > output/mrna_abnormal-BrCol_BH_EMSZ_F-level${level}-results-filtered.tsv
 
 for type in pdf svg eps
 do
@@ -818,9 +852,9 @@ do
 --x_var='Set' --y_var='Term.ID' \
 --size_var='Count' --fill_var='maxlog10p' \
 --y_labels=Description --reverse_y \
---output_file plots/EMAPA-F_vs_BH_vs_EMSZ-level4-collapsed.$type \
---output_type=$type --width 7 \
-output/mrna_abnormal-F_BH_EMSZ-level4-results-filtered.tsv
+--output_file plots/EMAPA-BrCol_vs_BH_vs_EMSZ_vs_F-level4-collapsed.$type \
+--width 10 \
+output/mrna_abnormal-BrCol_BH_EMSZ_F-level${level}-results-filtered.tsv
 done
 
 # make smaller one with no legend
@@ -830,9 +864,9 @@ do
 --x_var='Set' --y_var='Term.ID' \
 --size_var='Count' --fill_var='maxlog10p' \
 --y_labels=Description --reverse_y \
---output_file plots/EMAPA-F_vs_BH_vs_EMSZ-level4-collapsed-no_legend.$type \
---output_type=$type --width 5 \
-output/mrna_abnormal-F_BH_EMSZ-level4-results-filtered.tsv
+--output_file plots/EMAPA-BrCol_vs_BH_vs_EMSZ_vs_F-level4-collapsed-no_legend.$type \
+--width 5 \
+output/mrna_abnormal-BrCol_BH_EMSZ_F-level4-results-filtered.tsv
 done
 
 # make a version with sets on the y axis and terms on the x
