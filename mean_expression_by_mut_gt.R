@@ -21,7 +21,7 @@ cmd_line_args <- parse_args(
 #  options = list(directory = 'cwd',
 #                 verbose = FALSE ),
 #  args = c('output/all_samples_merged.counts.tsv',
-#           'output/all_mutants-samples.tsv',
+#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/samples-minus-outliers.txt',
 #           'output/KOs_ordered_by_delay.txt')
 #)
 
@@ -46,7 +46,14 @@ gene_expr_data_file <- cmd_line_args$args[1]
 gene_expr_data <- read.delim(gene_expr_data_file, check.names = FALSE)
 
 samples_file <- cmd_line_args$args[2]
-samples <- read.delim(samples_file, col.names = c('sample_name', 'Genotype', 'Gene'))
+samples <- read.delim(samples_file,
+                      col.names = c('sample_name', 'Genotype', 'Gender',
+                                    'Stage', 'Somite_number'))
+# Create gene column from sample_name
+samples$Gene <- gsub('_[a-z0-9]+', '', samples$sample_name)
+# remove Cenpl
+samples <- samples[ samples$Gene != 'Cenpl', ]
+
 # set levels of condition and reorder
 samples$Genotype <- factor(samples$Genotype,
                             levels = c('wt', 'het', 'hom'))
@@ -62,7 +69,7 @@ names(count_data) <- gsub(" count$", "", names(count_data))
 gene_annotation <- gene_expr_data[, !grepl(" count$", names(gene_expr_data))]
 
 # Subset and reorder count data
-count_data <- count_data[, samples$sample_name]
+count_data <- count_data[, as.character(samples$sample_name)]
 
 # split matrix by mut and gt
 mut_gt <- factor( paste(samples$Gene, samples$Genotype, sep = '.'),
@@ -74,6 +81,23 @@ mean_counts_by_mut_gt_list <- lapply(counts_by_mut_gt, colMeans)
 mean_counts_by_mut_gt <- do.call(cbind, mean_counts_by_mut_gt_list)
 row.names(mean_counts_by_mut_gt) <- gene_expr_data[['Gene ID']]
 
+# calc average somite number by mut and gt
+sample_info_by_mut_gt <- split.data.frame(samples, mut_gt)
+mean_somite_number <-
+  do.call(rbind,
+    lapply(sample_info_by_mut_gt,
+            function(sample_subset){
+              data.frame(
+                Gene = sample_subset$Gene[1],
+                Genotype = sample_subset$Genotype[1],
+                Condition = paste(sample_subset$Gene[1], sample_subset$Genotype[1], sep = '.'),
+                Mean_somite_number = mean(sample_subset$Somite_number,
+                                          na.rm = TRUE)
+              )
+            }
+          )
+  )
+
 # read in delayed info
 delayed_info <- read.delim(cmd_line_args$args[3], header = FALSE)
 names(delayed_info) <- c('Gene', 'Delay Category')
@@ -83,10 +107,9 @@ delayed_info[['Delay Category']] <-
           levels = rev(unique(delayed_info[['Delay Category']])) )
 
 # create samples file
-samples_merged <- merge(unique(samples[, c('Gene', 'Genotype')]), delayed_info)
-samples_merged$condition <- paste(samples_merged$Gene, samples_merged$Genotype, sep = '.')
+samples_merged <- merge(mean_somite_number, delayed_info)
 samples_sorted <- arrange(samples_merged, `Delay Category`)
-rownames(samples_sorted) <- samples_sorted$condition
+rownames(samples_sorted) <- samples_sorted$Condition
 write.table(samples_sorted,
             file = file.path(wd, 'output', 'samples_by_mut_by_gt.txt'),
             quote = FALSE, sep = "\t",

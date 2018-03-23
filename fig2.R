@@ -76,12 +76,8 @@ stage_boundaries <- c(4, 7, 12, 19, 29, 34)
 stage_labels <- c('TS12b', 'TS13', 'TS14', 'TS15', 'Other')
 
 # assign stage numbers with their TS
-# this issues a warning about introducing NAs by coercion. suppress it.
-sample_info$stage_as_number <-
-  suppressWarnings(as.integer( gsub('somites', '', sample_info$stage) ))
-
 sample_info$Theiler_stage <-
-  cut(sample_info$stage_as_number,
+  cut(sample_info$somite_number,
       breaks = stage_boundaries, labels = stage_labels)
 # 4 embryos are of Unknown stage. Put these in Other with the one TS16 (30s) embryo
 sample_info$Theiler_stage[is.na(sample_info$Theiler_stage)] <- 'Other'
@@ -309,7 +305,7 @@ ts_boundaries <- data.frame(
 )
 
 embryo_stage_by_gene_by_gt_plot <- ggplot(data = sample_info) +
-  geom_tile(aes(x = stage_as_number, y = gene_gt, fill = condition), alpha = 0.2) +
+  geom_tile(aes(x = somite_number, y = gene_gt, fill = condition), alpha = 0.2) +
   scale_fill_manual(values = c('firebrick2', 'green', 'steelblue3'),
                     guide = guide_legend(reverse = TRUE)) +
   geom_vline(data = ts_boundaries, aes(xintercept = Stage)) + 

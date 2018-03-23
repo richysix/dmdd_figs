@@ -38,8 +38,9 @@ sed -E 's/_(wt|het|hom)//' | sort -u | grep -v Sh3pxd2a_i )
 do
 cat $ROOT/lane-process/$mut/deseq2-baseline-grandhet-blacklist-adj-gt-adj-sex-stage-nicole-definite-maybe-outliers/samples.txt
 done | grep -vE 'condition|baseline' | \
-perl -lane 'BEGIN{print join("\t", "", qw{condition group stage} ); }
-{ print $_ }' > $ROOT/samples-minus-outliers.txt
+perl -F"\t" -lane 'BEGIN{print join("\t", "", qw{condition group stage somite_number} ); }
+{ $somite_num = $F[3]; $somite_num =~ s/somite[s]*//xms;
+print join("\t", @F, $somite_num, ); }' > $ROOT/samples-minus-outliers.txt
 ```
 
 Get log2 Fold Change for each gene in homs (vs het_wt) and hets (vs wt)
