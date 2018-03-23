@@ -878,8 +878,8 @@ done
 
 ```R
 # load plot object from rda file
-load('output/pca_plot.2018-02-23.rda')
-# plot_data <- pca_plot$data
+load('output/pca_plot.2018-03-14.rda')
+plot_data <- pca_plot$data
 colour_blind_palette <- 
    c( 'blue' = rgb(0,0.45,0.7),
       'yellow' = rgb(0.95, 0.9, 0.25),
@@ -900,5 +900,53 @@ ggplot(data = plot_data) +
             axis.text = element_text(size = 12),
             legend.text = element_text(size = 12),
             legend.title = element_text(size = 14))
+dev.off()
+
+for (gt in c('wt', 'het', 'hom')) {
+    postscript(file = file.path('plots', paste0('pca_plot-pc3_pc4-', gt, '-somite_number.eps') ),
+                width = 8, height = 7, horizontal = TRUE)
+    print(ggplot(data = plot_data[ plot_data$Genotype == gt, ]) +
+        geom_point(aes(x = PC3, y = PC4, fill = Mean_somite_number, shape = `Delay Category`), size = 4, stroke = 0.2) +
+        scale_shape_manual(values = c(21,22,23,24)) +
+        scale_fill_viridis() +
+        theme_minimal() +
+        theme(axis.title = element_text(size = 14),
+                axis.text = element_text(size = 12),
+                legend.text = element_text(size = 12),
+                legend.title = element_text(size = 14))
+                )
+    dev.off()
+}
+
+load('output/pca-all_genes-top50000-somite_number-pc3_pc2.rda')
+# plot
+plot_data <- pca_plot$data
+# plot homs separately from hets & wts
+# set limits to same for each plot
+min_x <- floor(min(plot_data$PC3))
+max_x <- ceiling(max(plot_data$PC3))
+min_y <- floor(min(plot_data$PC2))
+max_y <- ceiling(max(plot_data$PC2))
+
+# make new factor for hom vs het-wt
+plot_data$gt_group <- as.character(plot_data$condition)
+plot_data$gt_group[ plot_data$gt_group == 'wt' ] <- 'wt-het'
+plot_data$gt_group[ plot_data$gt_group == 'het' ] <- 'wt-het'
+plot_data$gt_group <- factor(plot_data$gt_group, level = c('hom', 'wt-het'))
+
+postscript(file = file.path('plots', paste0('pca-all_genes-top50000-somite_number-hom_vs_het_wt.eps') ),
+            width = 15, height = 7, paper = 'special')
+print(ggplot(data = plot_data) +
+    geom_point(aes(x = PC3, y = PC2, fill = somite_number, shape = condition), size = 4, stroke = 0.2) +
+    scale_fill_viridis(name = 'Somite Number', guide = guide_colourbar(order = 1) ) +
+    scale_shape_manual(values = c(21,22,23), name = 'Genotype', guide = guide_legend(order = 2)) +
+    facet_wrap( ~ gt_group, nrow = 1) +
+    theme_minimal() +
+    theme(axis.title = element_text(size = 14),
+            axis.text = element_text(size = 12),
+            strip.text = element_text(size = 12),
+            legend.text = element_text(size = 12),
+            legend.title = element_text(size = 14))
+            )
 dev.off()
 ```
