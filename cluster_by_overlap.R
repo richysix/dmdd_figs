@@ -113,7 +113,9 @@ for (cluster_method in cluster_methods) {
   # reorder matrix and plot
   jaccard_overlaps_clust <- jaccard_overlaps[ jaccard_clust$order, jaccard_clust$order ]
   # want to only plot half of the matrix
-  genes <- rownames(jaccard_overlaps_clust)
+  # reverse order to match tree for plot
+  genes <- rev(rownames(jaccard_overlaps_clust))
+
   n <- length(genes) - 1
   num_entries <- (n + 1)*n/2
   gene1 <- character(length = num_entries)
@@ -133,10 +135,10 @@ for (cluster_method in cluster_methods) {
       }
     }
   }
-  # need to add in the last gene against itself so that all the genes are on the y axis
+  # need to add in the first gene against itself so that all the genes appear on the x axis
   jaccard_overlaps_tophalf_m <- data.frame(
-    Gene1 = factor(c(gene1, genes[length(genes)]), levels = genes),
-    Gene2 = factor(c(gene2, genes[length(genes)]), levels = rev(genes)),
+    Gene1 = factor(c(gene1, genes[1]), levels = genes),
+    Gene2 = factor(c(gene2, genes[1]), levels = rev(genes)),
     Overlap = c(overlap, NA)
   )
   # plot heatmap
