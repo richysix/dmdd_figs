@@ -822,35 +822,41 @@ output/all_mutants-counts-files.txt \
  > output/all_samples_merged.counts.tsv
 
 # make merged samples file
-echo -e "\tcondition\tmutant" > output/all_mutants-samples.tsv
-base=$ROOT/lane-process
-for mut in $( grep -v Cenpl output/KOs_ordered_by_delay.txt )
+echo -e "\tcondition\tmutant" > $ROOT/mouse_dmdd_figs/output/all_samples-no_Cenpl.tsv
+for mut in $( grep -v Cenpl output/KOs_ordered_by_delay.txt | cut -f1 )
 do
-file=$base/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/samples.txt
+file=$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/samples.txt
 if [[ ! -e $file ]]; then
-  file=$base/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/samples.txt
-  if [[ ! -e $file ]]; then
-	file=$base/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/samples.txt
-	if [[ ! -e $file ]]; then
-      echo 1>&2 "$file DOES NOT EXIST"
-	else
-      cat $file
-	fi
-  else
-    cat $file
-  fi
+  echo 1>&2 "$file DOES NOT EXIST"
 else
   cat $file
 fi
 done | grep -v condition | perl -F"\t" -lane '$mutant = $F[0]; $mutant =~ s/_.* \z//xms;
 print join("\t", @F[0,1], $mutant)' \
- >> output/all_mutants-samples.tsv
+ >> $ROOT/mouse_dmdd_figs/output/all_samples-no_Cenpl.tsv
+
+# run PCA
+for genes in 50000
+do
+for transform in vst
+do
+bsub -q basement -o output/pca.ko_response.$genes.$transform.o -e output/pca.ko_response.$genes.$transform.e \
+-M20000 -R'select[mem>20000] rusage[mem=20000]' \
+"export R_LIBS_USER=/software/team31/R-3.3.0
+/software/R-3.3.0/bin/Rscript \
+~rw4/checkouts/bio-misc/pca_rnaseq.R \
+/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/output/all_samples_merged.counts.tsv \
+/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/output/all_samples-no_Cenpl.tsv \
+/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/plots/all_mutants-pca.pdf \
+/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/output/all_mutants.$transform.$genes $transform $genes"
+done
+done
 
 # also make count and samples file with mean count for each mut gt combo
 /software/R-3.3.0/bin/Rscript mean_expression_by_mut_gt.R \
 output/all_samples_merged.counts.tsv \
-output/all_mutants-samples.tsv \
-output/KOs_ordered_by_delay.txt \
+$ROOT/samples-minus-outliers.txt \
+output/KOs_ordered_by_delay.txt
 
 # run pca script
 for genes in 50000
