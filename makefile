@@ -50,15 +50,15 @@ data/root_terms.txt
 	/lustre/scratch117/maz/team31/projects/mouse_DMDD/emap/EMAPA_Nov_17_2017.obo \
 	data/root_terms.txt
 
-# Fig2
-plots/Sample_overview.eps: fig2.R \
+# Fig3 - sample overview
+plots/Sample_overview.eps: fig3.R \
 /lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/dmdd-genes.txt \
 /lustre/scratch117/maz/team31/projects/mouse_DMDD/samples-minus-outliers.txt \
 /lustre/scratch117/maz/team31/projects/mouse_DMDD/ko_expr/ko_expr.tsv \
 data/Mm_GRCm38_e88_baseline.rda data/sig_gene_counts.tsv \
 output/human-mim-edited.tsv
 	export R_LIBS_USER=.R/lib:/software/team31/R-3.3.0/:/software/team31/R; \
-	/software/R-3.3.0/bin/Rscript fig2.R \
+	/software/R-3.3.0/bin/Rscript fig3.R \
 	/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/dmdd-genes.txt \
 	/lustre/scratch117/maz/team31/projects/mouse_DMDD/samples-minus-outliers.txt \
 	/lustre/scratch117/maz/team31/projects/mouse_DMDD/ko_expr/ko_expr.tsv \
