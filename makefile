@@ -51,17 +51,20 @@ data/root_terms.txt
 	data/root_terms.txt
 
 # Fig2
-plots/Figure2.eps: fig2.R data/Mm_GRCm38_e88_baseline.rda \
+plots/Sample_overview.eps: fig2.R \
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/dmdd-genes.txt \
 /lustre/scratch117/maz/team31/projects/mouse_DMDD/samples-minus-outliers.txt \
-/lustre/scratch117/maz/team31/projects/mouse_DMDD/ko_expr/ko_expr.tsv 
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/ko_expr/ko_expr.tsv \
+data/Mm_GRCm38_e88_baseline.rda data/sig_gene_counts.tsv \
+output/human-mim-edited.tsv
 	export R_LIBS_USER=.R/lib:/software/team31/R-3.3.0/:/software/team31/R; \
 	/software/R-3.3.0/bin/Rscript fig2.R \
+	/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/dmdd-genes.txt \
 	/lustre/scratch117/maz/team31/projects/mouse_DMDD/samples-minus-outliers.txt \
 	/lustre/scratch117/maz/team31/projects/mouse_DMDD/ko_expr/ko_expr.tsv \
 	data/Mm_GRCm38_e88_baseline.rda \
 	data/sig_gene_counts.tsv \
-	output/human-mim-edited.tsv \
-	data/Dr_GRCz10_e90_baseline.rda
+	output/human-mim-edited.tsv
 
 # get data from OMIM
 output/human-mim.tsv: get_mim_data.R \

@@ -21,12 +21,12 @@ cmd_line_args <- parse_args(
 #cmd_line_args <- list(
 #  options = list(directory = 'cwd',
 #                 verbose = FALSE ),
-#  args = c('/lustre/scratch117/maz/team31/projects/mouse_DMDD/samples-minus-outliers.txt',
+#  args = c('/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/dmdd-genes.txt',
+#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/samples-minus-outliers.txt',
 #           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/ko_expr/ko_expr.tsv',
 #           'data/Mm_GRCm38_e88_baseline.rda',
 #           'data/sig_gene_counts.tsv',
-#           'output/human-mim-edited.tsv',
-#           'data/Dr_GRCz10_e90_baseline.rda'
+#           'output/human-mim-edited.tsv'
 #          )
 #)
 
@@ -61,10 +61,18 @@ for( package in packages ){
 if (debug) {
   cat('LOAD SAMPLE INFO...\n')
 }
+# load gene info
+gene_file <- cmd_line_args$args[1]
+gene_info <- read.delim(gene_file)
+# construct named vector of gene names for directory names
+gene_name_for_dir <- gene_info$Gene.Name
+names(gene_name_for_dir) <- gene_info$Dir
+
 # load sample info
-sample_file <- cmd_line_args$args[1]
+sample_file <- cmd_line_args$args[2]
 sample_info <- read.table(file = sample_file, sep = "\t", header = TRUE, row.names = 1 )
 sample_info$gene <- gsub('_[a-z0-9]+', '', row.names(sample_info))
+
 # remove Cenpl
 sample_info <- sample_info[ sample_info$gene != 'Cenpl', ]
 # set levels of gt
@@ -108,8 +116,8 @@ write.table(delayed_genes, file = file.path(wd, 'output', 'KOs_delayed.txt'),
 # output delayed order
 delay <- factor(rep('None', nrow(stage_count)),
                 levels = c('Severe', 'Moderate', 'Slight', 'None'))
-for ( delay_categoy in c('Slight', 'Moderate', 'Severe')) {
-  delay[ stage_count[[delay_categoy]] > 0 ] <- delay_categoy
+for ( delay_category in c('Slight', 'Moderate', 'Severe')) {
+  delay[ stage_count[[delay_category]] > 0 ] <- delay_category
 }
 write.table(data.frame(stage_count$gene, delay = delay),
             file = file.path(wd, 'output', 'KOs_ordered_by_delay.txt'),
@@ -146,7 +154,7 @@ if (debug) {
 pdf(file = file.path(plots_dir, 'embryo_stage_colour.pdf'),
     width = 2, height = 5 )
 print(embryo_stage_plot)
-dev.off()
+invisible(dev.off())
 
 # make zeros appear as white
 # convert zeros to NA
@@ -166,12 +174,12 @@ embryo_stage_zero_white_plot <- ggplot(data = stage_count_na_m) +
 pdf(file = file.path(plots_dir, 'embryo_stage_colour_zero_white.pdf'),
     width = 2, height = 5 )
 print(embryo_stage_zero_white_plot)
-dev.off()
+invisible(dev.off())
 
 postscript(file = file.path(plots_dir, 'embryo_stage_colour_zero_white.eps'),
     width = 2, height = 5 )
 print(embryo_stage_zero_white_plot)
-dev.off()
+invisible(dev.off())
 
 # also plot number of embryos as size of box
 # split by delay_type
@@ -254,12 +262,15 @@ stage_count.for_tiles <- do.call(rbind, stage_count.for_tiles_list)
 # plot with stage as bar length and gt as colour
 ## TO DO: Add annotations at top for Delay category, somite numbers,
 ##        Theiler Stage and dpc
+# convert gene (directory) name to correct e88 gene name
+gene_names <- gene_name_for_dir[ rev(as.character(stage_count$gene)) ]
+
 embryo_stage_size_colour_plot <- ggplot(data = stage_count.for_tiles) + 
   geom_rect( aes( xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = condition)) +
   geom_vline(data = stage_separators, aes(xintercept = raw)) +
   scale_y_continuous(expand = c(0,0),
                      breaks = seq(0.5,length(stage_count$gene) - 0.5,1),
-                     labels = rev(stage_count$gene) ) +
+                     labels =  gene_names) +
   scale_fill_manual(values = c('firebrick2', 'steelblue3', 'green'),
                     guide = 'none') +  
   theme_void() + theme( axis.text.y = element_text(size = 8, colour = 'black',
@@ -282,12 +293,12 @@ gt_legend <- get_gg_legend(embryo_stage_size_colour_plot_plus_legend)
 pdf(file = file.path(plots_dir, 'embryo_stage_size_colour.pdf'),
     width = 4, height = 8 )
 print(embryo_stage_size_colour_plot_plus_legend)
-dev.off()
+invisible(dev.off())
 # and plot legend separately
 postscript(file = file.path(plots_dir, 'embryo_stage_size_colour.legend.eps'),
            width = 6, height = 4)
 grid.draw(gt_legend)
-dev.off()
+invisible(dev.off())
 
 # plot x position as stage
 # order levels of gene_gt by delay and condition
@@ -317,14 +328,14 @@ embryo_stage_by_gene_by_gt_plot <- ggplot(data = sample_info) +
 pdf(file = file.path(plots_dir, 'embryo_stage_by_gene_by_gt.pdf'),
     width = 2, height = 5 )
 print(embryo_stage_by_gene_by_gt_plot)
-dev.off()
+invisible(dev.off())
 
 if (debug) {
   cat('KO EXPRESSION PLOT...\n')
 }
 
 # expression of the knocked out gene in homs and hets
-ko_expr_file <- cmd_line_args$args[2]
+ko_expr_file <- cmd_line_args$args[3]
 ko_expr <- read.table(ko_expr_file, sep = "\t", header = FALSE )
 names(ko_expr) <- c('gene_id', 'symbol', 'comparison', 'log2fc')
 ko_expr$gt <- factor( gsub('_vs_.*', '', ko_expr$comparison),
@@ -402,6 +413,7 @@ embryo_ko_expr_plot <- ggplot(data = ko_expr) +
 # get legend for plotting separately
 embryo_ko_expr_plot_plus_legend <-
   embryo_ko_expr_plot +
+    scale_y_discrete(labels = gene_names) +
     scale_fill_gradient2(
       na.value = 'grey 80',
       guide = guide_colourbar(title = expression(paste(log[2], "[Fold Change]", sep = '') ) ) ) +
@@ -419,12 +431,12 @@ ko_legend <- get_gg_legend(embryo_ko_expr_plot_plus_legend)
 pdf(file = file.path(plots_dir, 'embryo_ko_expr_plot.pdf'),
     width = 4, height = 8)
 print(embryo_ko_expr_plot_plus_legend)
-dev.off()
+invisible(dev.off())
 # and plot legend separately
 postscript(file = file.path(plots_dir, 'embryo_ko_expr_plot.legend.eps'),
            width = 6, height = 4)
 grid.draw(ko_legend) 
-dev.off()
+invisible(dev.off())
 
 if (debug) {
   cat('BASELINE EXPRESSION PLOT...\n')
@@ -433,7 +445,7 @@ if (debug) {
 ## BASELINE
 # heatmap for expression of the knocked out genes in baseline
 # load baseline data
-load(cmd_line_args$args[3])
+load(cmd_line_args$args[4])
 
 # get gene_ids in the same order as the heatmap
 id_for <- as.character(unique(ko_expr$gene_id))
@@ -477,7 +489,7 @@ mouse_baseline_heatmap <-
 
 pdf(file = file.path(plots_dir, 'mouse_baseline_heatmap.pdf'))
 print(mouse_baseline_heatmap)
-dev.off()
+invisible(dev.off())
 
 # do average per Theiler stage
 baseline_counts_by_theiler_stage <-
@@ -511,6 +523,7 @@ mouse_baseline_ts_heatmap <-
 # get legend for plotting separately
 mouse_baseline_ts_heatmap_plus_legend <-
   mouse_baseline_ts_heatmap +
+    scale_y_discrete(labels = gene_names) +
     scale_fill_distiller(
       limits = c(-max_fill, max_fill), type= 'div',
       palette = "RdBu",
@@ -531,13 +544,13 @@ mouse_baseline_legend <- get_gg_legend(mouse_baseline_ts_heatmap_plus_legend)
 pdf(file = file.path(plots_dir, 'mouse_baseline_theiler_stage_heatmap.pdf'),
     width = 5, height = 8)
 print(mouse_baseline_ts_heatmap_plus_legend)
-dev.off()
+invisible(dev.off())
 
 # and plot legend separately
 postscript(file = file.path(plots_dir, 'mouse_baseline_theiler_stage_heatmap.legend.eps'),
            width = 6, height = 4)
 grid.draw(mouse_baseline_legend) 
-dev.off()
+invisible(dev.off())
 
 # log10 heatmap
 mean_counts_ts_df <- data.frame(
@@ -562,14 +575,14 @@ mouse_baseline_ts_log10_heatmap <-
 pdf(file = file.path(plots_dir, 'mouse_baseline_theiler_stage_log10_heatmap.pdf'),
     width = 2, height = 8)
 print(mouse_baseline_ts_log10_heatmap)
-dev.off()
+invisible(dev.off())
 
 if (debug) {
   cat('SIG GENES PLOT...\n')
 }
 
 # numbers of significant genes
-sig_genes_file <- cmd_line_args$args[4]
+sig_genes_file <- cmd_line_args$args[5]
 sig_genes <- read.delim(sig_genes_file)
 # subset to ko_response and remove hom_vs_het
 sig_genes <- sig_genes[ sig_genes$Set == 'ko_response' &
@@ -612,6 +625,7 @@ sig_genes_log10_heatmap <- ggplot(data = sig_genes) +
 # get legend for plotting separately
 sig_genes_log10_heatmap_plus_legend <-
   sig_genes_log10_heatmap +
+    scale_y_discrete(labels = gene_names) +
     scale_fill_viridis(direction = -1, na.value = 'grey 90',
     guide = guide_colourbar(title =
               expression(paste(log[10], "[Sig genes count]", sep = '') ) ) ) +
@@ -631,20 +645,20 @@ pdf(file = file.path(plots_dir, 'sig_genes_heatmap.pdf'),
 print(sig_genes_log10_heatmap_plus_legend)
 print(sig_genes_heatmap)
 print(sig_genes_heatmap + scale_fill_viridis(direction = 1, na.value = 'grey 85'))
-dev.off()
+invisible(dev.off())
 
 # and plot legend separately
 postscript(file = file.path(plots_dir, 'sig_genes_heatmap.legend.eps'),
            width = 6, height = 4)
 grid.draw(sig_genes_log10_legend) 
-dev.off()
+invisible(dev.off())
 
 if (debug) {
   cat('OMIM DATA TABLE PLOT...\n')
 }
 
 # plot MIM data as graphical table
-mim_data_file <- cmd_line_args$args[5]
+mim_data_file <- cmd_line_args$args[6]
 mim_data <- read.delim(mim_data_file)
 mim_data$Dir <- factor(mim_data$Dir, levels = rev(stage_count$gene))
 
@@ -654,7 +668,8 @@ mim_reformatted <- do.call(rbind,
                         data.frame(
                           x = 1,
                           gene = x$Dir[1],
-                          mim = paste(x$mim_short, collapse = '; ')
+                          mim = paste(x$mim_short[ order(x$mim_short) ],
+                                      collapse = '; ')
                         )
                       }
                     )
@@ -667,28 +682,29 @@ mim_table_plot <- ggplot( data = mim_reformatted ) +
 
 pdf(file = file.path(plots_dir, 'MIM-table.pdf'))
 print(mim_table_plot +
+      scale_y_discrete(labels = gene_names) +
       theme(axis.text.y = element_text(colour = 'black', size = 10,
                                        angle = 0, debug = FALSE) )
      )
-dev.off()
-
-# Zfish expression
-# load(cmd_line_args$args[6])
+invisible(dev.off())
 
 if (debug) {
   cat('COMPOSITE FIGURE...\n')
 }
 
 # make composite figure
-save_plot(file.path(plots_dir, "Figure2.eps"),
+save_plot(file.path(plots_dir, "Sample_overview.eps"),
           plot_grid(embryo_stage_size_colour_plot, embryo_ko_expr_plot,
           sig_genes_log10_heatmap, mouse_baseline_ts_heatmap, mim_table_plot,
           ncol = 5, rel_widths = c(12,3,4,6,4), align = 'h' ),
           ncol = 5, device = 'eps',
-          base_height = 7.7, base_aspect_ratio = 0.2 )
+          base_height = 9, base_width = 1.54 )
 
 # save plot objects
 save.image(file = file.path(wd, 'output', 'fig2.RData'))
 #object_to_save = c('embryo_stage_size_colour_plot', 'embryo_ko_expr_plot',
 #                   'mouse_baseline_ts_heatmap', 'sig_genes_heatmap')
 #save(list = object_to_save, file = file.path(wd, 'output', 'fig1.RData'))
+
+# remove Rplots.pdf file
+unlink('Rplots.pdf')

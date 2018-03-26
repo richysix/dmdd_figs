@@ -33,6 +33,11 @@ done
 Get stage information for each Line
 
 ```bash
+# lane-process/dmdd-genes.txt has the mapping of directory names to
+# gene names and Ensembl IDs
+$ROOT/lane-process/dmdd-genes.txt
+
+# get individual sample info
 for mut in $( cut -f2 $ROOT/lane-process/dmdd/deseq2/samples.txt  | grep _ | \
 sed -E 's/_(wt|het|hom)//' | sort -u | grep -v Sh3pxd2a_i )
 do
@@ -46,9 +51,6 @@ print join("\t", @F, $somite_num, ); }' > $ROOT/samples-minus-outliers.txt
 Get log2 Fold Change for each gene in homs (vs het_wt) and hets (vs wt)
 
 ```bash
-# lane-process/dmdd-genes.txt has the mapping of directory names to
-# gene names and Ensembl IDs
-
 # get log2fc for hom_vs_het_wt if it exists, then hom_vs_wt, then hom_vs_het
 mkdir ko_expr
 cat /dev/null > ko_expr/ko_expr.tsv
