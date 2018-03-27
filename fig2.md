@@ -1,10 +1,138 @@
-# Fig.4
+# Fig.2
 
 ```bash
 # set up working directory
 # change this if you are trying recreate the analysis
 # everything else should then be relative to this directory
 export ROOT=/lustre/scratch117/maz/team31/projects/mouse_DMDD
+```
+
+## Delay PCA
+
+```
+# make a merged count file for all genes
+# first create the list of all files
+for mut in $( grep -v Cenpl output/KOs_ordered_by_delay.txt )
+do
+dir=$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers
+file=$dir/hom_vs_het_wt.tsv
+if [[ ! -e $file ]]; then
+  file=$dir/het_vs_wt.tsv
+  if [[ ! -e $file ]]; then
+	file=$dir/hom_vs_het.tsv
+	if [[ ! -e $file ]]; then
+      echo 1>&2 "$file DOES NOT EXIST"
+	else
+      echo $file
+	fi
+  else
+    echo $file
+  fi
+else
+  echo $file
+fi
+done | grep -v '^Gene' | \
+sort -u > $ROOT/mouse_dmdd_figs/output/all_mutants-counts-files.txt
+
+# run script to make count file
+perl ~/checkouts/team31/scripts/merge_deseq_counts.pl --normalised \
+/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/output/all_mutants-counts-files.txt \
+ > /nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/output/all_samples_merged-norm_counts.tsv
+
+# make merged samples file
+echo -e "\tcondition\tmutant" > $ROOT/mouse_dmdd_figs/output/all_samples-no_Cenpl.tsv
+for mut in $( grep -v Cenpl output/KOs_ordered_by_delay.txt | cut -f1 )
+do
+file=$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/samples.txt
+if [[ ! -e $file ]]; then
+  echo 1>&2 "$file DOES NOT EXIST"
+else
+  cat $file
+fi
+done | grep -v condition | perl -F"\t" -lane '$mutant = $F[0]; $mutant =~ s/_.* \z//xms;
+print join("\t", @F[0,1], $mutant)' \
+ >> $ROOT/mouse_dmdd_figs/output/all_samples-no_Cenpl.tsv
+
+# run PCA
+for genes in 50000 # uses all genes
+do
+for transform in vst
+do
+bsub -q basement -o output/pca.ko_response.$genes.$transform.o -e output/pca.ko_response.$genes.$transform.e \
+-M20000 -R'select[mem>20000] rusage[mem=20000]' \
+"export R_LIBS_USER=/software/team31/R-3.3.0
+/software/R-3.3.0/bin/Rscript \
+~rw4/checkouts/bio-misc/pca_rnaseq.R \
+/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/output/all_samples_merged.counts.tsv \
+/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/output/all_samples-no_Cenpl.tsv \
+/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/plots/all_mutants-pca.pdf \
+/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/output/all_mutants.$transform.$genes $transform $genes"
+done
+done
+
+```
+
+Produce PCA plot using shiny app and save as rda file.
+Edit plot in interactive R session.
+
+```R
+library('ggplot2')
+library('viridis')
+load('output/pca-all_genes-top50000-somite_number-pc3_pc2.rda')
+# plot
+plot_data <- pca_plot$data
+# remove samples with NA as somite number
+plot_data <- plot_data[ !is.na(plot_data$somite_number), ]
+
+# plot homs separately from hets & wts
+# set limits to same for each plot
+min_x <- floor(min(plot_data$PC3))
+max_x <- ceiling(max(plot_data$PC3))
+min_y <- floor(min(plot_data$PC2))
+max_y <- ceiling(max(plot_data$PC2))
+
+# make new factor for hom vs het-wt
+plot_data$gt_group <- as.character(plot_data$condition)
+plot_data$gt_group[ plot_data$gt_group == 'wt' ] <- 'wt-het'
+plot_data$gt_group[ plot_data$gt_group == 'het' ] <- 'wt-het'
+plot_data$gt_group <- factor(plot_data$gt_group, level = c('hom', 'wt-het'))
+
+postscript(file = file.path('plots', paste0('pca-all_genes-top50000-somite_number-hom_vs_het_wt.eps') ),
+            width = 15, height = 7, paper = 'special')
+print(ggplot(data = plot_data) +
+    geom_point(aes(x = PC3, y = PC2, fill = somite_number, shape = condition), size = 4, stroke = 0.2) +
+    scale_fill_viridis(name = 'Somite Number', guide = guide_colourbar(order = 1) ) +
+    scale_shape_manual(values = c(21,22,23), name = 'Genotype', guide = guide_legend(order = 2)) +
+    facet_wrap( ~ gt_group, nrow = 1) +
+    theme_minimal() +
+    theme(axis.title = element_text(size = 14),
+            axis.text = element_text(size = 12),
+            strip.text = element_text(size = 12),
+            legend.text = element_text(size = 12),
+            legend.title = element_text(size = 14))
+            )
+dev.off()
+
+# plot PC values against somite_number
+pdf(file = file.path('plots', 'pca-all_genes-top50000-pcs_vs_somite_number.pdf'))
+for (pc in paste0('PC', 1:8)) {
+    cor_plot <- ggplot(data = plot_data,
+                        aes_(x = as.name(pc), y = quote(somite_number))) +
+        geom_point() +
+        geom_smooth(method = "lm")
+    print(cor_plot)
+}
+dev.off()
+
+# test all components for relationship with somite number
+sink('output/pca-all_genes-top50000-pcs_vs_somite_number.txt')
+for (pc in paste0('PC', 1:8)) {
+    pc_somite_lm <- lm(somite_number ~ get(pc), data = plot_data)
+    cat(pc, ' vs somite number\n')
+    print(summary(pc_somite_lm))
+    cat('\n')
+}
+sink()
 ```
 
 Get GO results
@@ -975,77 +1103,3 @@ done
 # Save plot object as Rdata file
 ```
 
-```R
-# load plot object from rda file
-load('output/pca_plot.2018-03-14.rda')
-plot_data <- pca_plot$data
-colour_blind_palette <- 
-   c( 'blue' = rgb(0,0.45,0.7),
-      'yellow' = rgb(0.95, 0.9, 0.25),
-      'sky_blue' = rgb(0.35, 0.7, 0.9),
-      'purple' = rgb(0.8, 0.6, 0.7)
-)
-names(colour_palette) <- levels(plot_data$`Delay Category`)
-# print as eps file
-postscript(file = 'plots/pca_plot.2018-02-23-pc3-pc4-no_names-edited.eps',
-            width = 8, height = 7, horizontal = TRUE)
-ggplot(data = plot_data) +
-    geom_point(aes(x = PC3, y = PC4, fill = `Delay Category`, shape = Genotype), size = 4, stroke = 0.2) +
-    scale_shape_manual(values = c(21,22,23)) +
-    scale_fill_manual(values = colour_palette,
-    guide = guide_legend(override.aes = list(shape = 21),order = 1) ) +
-    theme_minimal() +
-    theme(axis.title = element_text(size = 14),
-            axis.text = element_text(size = 12),
-            legend.text = element_text(size = 12),
-            legend.title = element_text(size = 14))
-dev.off()
-
-for (gt in c('wt', 'het', 'hom')) {
-    postscript(file = file.path('plots', paste0('pca_plot-pc3_pc4-', gt, '-somite_number.eps') ),
-                width = 8, height = 7, horizontal = TRUE)
-    print(ggplot(data = plot_data[ plot_data$Genotype == gt, ]) +
-        geom_point(aes(x = PC3, y = PC4, fill = Mean_somite_number, shape = `Delay Category`), size = 4, stroke = 0.2) +
-        scale_shape_manual(values = c(21,22,23,24)) +
-        scale_fill_viridis() +
-        theme_minimal() +
-        theme(axis.title = element_text(size = 14),
-                axis.text = element_text(size = 12),
-                legend.text = element_text(size = 12),
-                legend.title = element_text(size = 14))
-                )
-    dev.off()
-}
-
-load('output/pca-all_genes-top50000-somite_number-pc3_pc2.rda')
-# plot
-plot_data <- pca_plot$data
-# plot homs separately from hets & wts
-# set limits to same for each plot
-min_x <- floor(min(plot_data$PC3))
-max_x <- ceiling(max(plot_data$PC3))
-min_y <- floor(min(plot_data$PC2))
-max_y <- ceiling(max(plot_data$PC2))
-
-# make new factor for hom vs het-wt
-plot_data$gt_group <- as.character(plot_data$condition)
-plot_data$gt_group[ plot_data$gt_group == 'wt' ] <- 'wt-het'
-plot_data$gt_group[ plot_data$gt_group == 'het' ] <- 'wt-het'
-plot_data$gt_group <- factor(plot_data$gt_group, level = c('hom', 'wt-het'))
-
-postscript(file = file.path('plots', paste0('pca-all_genes-top50000-somite_number-hom_vs_het_wt.eps') ),
-            width = 15, height = 7, paper = 'special')
-print(ggplot(data = plot_data) +
-    geom_point(aes(x = PC3, y = PC2, fill = somite_number, shape = condition), size = 4, stroke = 0.2) +
-    scale_fill_viridis(name = 'Somite Number', guide = guide_colourbar(order = 1) ) +
-    scale_shape_manual(values = c(21,22,23), name = 'Genotype', guide = guide_legend(order = 2)) +
-    facet_wrap( ~ gt_group, nrow = 1) +
-    theme_minimal() +
-    theme(axis.title = element_text(size = 14),
-            axis.text = element_text(size = 12),
-            strip.text = element_text(size = 12),
-            legend.text = element_text(size = 12),
-            legend.title = element_text(size = 14))
-            )
-dev.off()
-```
