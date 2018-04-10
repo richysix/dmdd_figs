@@ -45,13 +45,17 @@ fi
 done | grep -v '^Gene' | \
 sort -u > $ROOT/mouse_dmdd_figs/output/all_mutants-counts-files.txt
 
-# run script to make count file
-perl ~/checkouts/team31/scripts/merge_deseq_counts.pl --normalised \
-/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/output/all_mutants-counts-files.txt \
- > /nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/output/all_samples_merged-norm_counts.tsv
+# run script to make count files
+perl ~/checkouts/team31/scripts/merge_deseq_counts.pl \
+output/all_mutants-counts-files.txt \
+ > output/all_samples_merged-counts.tsv
 
-# make merged samples file
-echo -e "\tcondition\tmutant" > $ROOT/mouse_dmdd_figs/output/all_samples-no_Cenpl.tsv
+perl ~/checkouts/team31/scripts/merge_deseq_counts.pl --normalised \
+output/all_mutants-counts-files.txt \
+ > output/all_samples_merged-norm_counts.tsv
+
+# make samples file containing just genotype and mutant name for PCA script
+echo -e "\tcondition\tmutant" > $ROOT/mouse_dmdd_figs/output/samples-gt-ko-no_Cenpl.txt
 for mut in $( grep -v Cenpl output/KOs_ordered_by_delay.txt | cut -f1 )
 do
 file=$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/samples.txt
@@ -62,22 +66,22 @@ else
 fi
 done | grep -v condition | perl -F"\t" -lane '$mutant = $F[0]; $mutant =~ s/_.* \z//xms;
 print join("\t", @F[0,1], $mutant)' \
- >> $ROOT/mouse_dmdd_figs/output/all_samples-no_Cenpl.tsv
+ >> $ROOT/mouse_dmdd_figs/output/samples-gt-ko-no_Cenpl.txt
 
 # run PCA
 for genes in 50000 # uses all genes
 do
 for transform in vst
 do
-bsub -q basement -o output/pca.ko_response.$genes.$transform.o -e output/pca.ko_response.$genes.$transform.e \
--M20000 -R'select[mem>20000] rusage[mem=20000]' \
+bsub -o output/pca.$genes.$transform.o -e output/pca.$genes.$transform.e \
+-M6000 -R'select[mem>6000] rusage[mem=6000]' \
 "export R_LIBS_USER=/software/team31/R-3.3.0
 /software/R-3.3.0/bin/Rscript \
 ~rw4/checkouts/bio-misc/pca_rnaseq.R \
-/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/output/all_samples_merged.counts.tsv \
-/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/output/all_samples-no_Cenpl.tsv \
-/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/plots/all_mutants-pca.pdf \
-/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/output/all_mutants.$transform.$genes $transform $genes"
+output/all_samples_merged-counts.tsv \
+output/samples-gt-ko-no_Cenpl.txt \
+plots/all_mutants-pca.pdf \
+output/all_mutants.$transform.$genes $transform $genes"
 done
 done
 
@@ -111,7 +115,7 @@ plot_data$gt_group <- factor(plot_data$gt_group, level = c('hom', 'wt-het'))
 postscript(file = file.path('plots', paste0('pca-all_genes-top50000-somite_number-hom_vs_het_wt.eps') ),
             width = 15, height = 7, paper = 'special')
 print(ggplot(data = plot_data) +
-    geom_point(aes(x = PC3, y = PC2, fill = somite_number, shape = condition), size = 4, stroke = 0.2) +
+    geom_point(aes(x = PC3, y = PC2, fill = somite_number, shape = condition), size = 2, stroke = 0.2) +
     scale_fill_viridis(name = 'Somite Number', guide = guide_colourbar(order = 1) ) +
     scale_shape_manual(values = c(21,22,23), name = 'Genotype', guide = guide_legend(order = 2)) +
     facet_wrap( ~ gt_group, nrow = 1) +
@@ -144,6 +148,10 @@ for (pc in paste0('PC', 1:8)) {
     cat('\n')
 }
 sink()
+
+# calculate Pearson cor coefficient for PC3
+cor(plot_data$somite_number, plot_data$PC3, method = 'spearman')
+[1] -0.8648007
 ```
 
 Get GO results
@@ -222,8 +230,6 @@ Set2: 518 65 328 292 670 940 457 721 806 517 283 971
 cut -f1-6 output/go_blind/971/BP.sig.tsv | \
 perl -F"\t" -lane 'next if $. == 1; print join("\t", @F, $F[3]/$F[4], );' | \
 sort -t$'\t' -gk6,6 | less
-
-
 
 ```
 
@@ -588,8 +594,8 @@ done | grep -v '^Gene' | perl -F"\t" -lane 'if($F[1] ne "NA"){ print $F[0] }' | 
 sort -u > output/mrna_abnormal-all_genes.txt
 
 # get genes from an all.tsv file for topgo
-head -n1 output/all_samples_merged.counts.tsv > output/mrna_abnormal-geneU.tsv
-sort -t$'\t' -k1,1 output/all_samples_merged.counts.tsv | \
+head -n1 output/all_samples_merged-counts.tsv > output/mrna_abnormal-geneU.tsv
+sort -t$'\t' -k1,1 output/all_samples_merged-counts.tsv | \
 join -t$'\t' - output/mrna_abnormal-all_genes.txt  >> output/mrna_abnormal-geneU.tsv
 
 # run topgo
@@ -1021,96 +1027,3 @@ output/mrna_abnormal-F_BH_EMSZ-level4-results-filtered.tsv
 done
 
 ```
-
-PCA
-
-```
-# first create the list of all files
-base=$ROOT/lane-process
-for mut in $( grep -v Cenpl output/KOs_ordered_by_delay.txt )
-do
-file=$base/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.tsv
-if [[ ! -e $file ]]; then
-  file=$base/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/het_vs_wt.tsv
-  if [[ ! -e $file ]]; then
-	file=$base/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het.tsv
-	if [[ ! -e $file ]]; then
-      echo 1>&2 "$file DOES NOT EXIST"
-	else
-      echo $file
-	fi
-  else
-    echo $file
-  fi
-else
-  echo $file
-fi
-done | grep -v '^Gene' | \
-sort -u > output/all_mutants-counts-files.txt
-
-# make count file
-perl ~/checkouts/team31/scripts/merge_deseq_counts.pl \
-output/all_mutants-counts-files.txt \
- > output/all_samples_merged.counts.tsv
-
-# make merged samples file
-echo -e "\tcondition\tmutant" > $ROOT/mouse_dmdd_figs/output/all_samples-no_Cenpl.tsv
-for mut in $( grep -v Cenpl output/KOs_ordered_by_delay.txt | cut -f1 )
-do
-file=$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/samples.txt
-if [[ ! -e $file ]]; then
-  echo 1>&2 "$file DOES NOT EXIST"
-else
-  cat $file
-fi
-done | grep -v condition | perl -F"\t" -lane '$mutant = $F[0]; $mutant =~ s/_.* \z//xms;
-print join("\t", @F[0,1], $mutant)' \
- >> $ROOT/mouse_dmdd_figs/output/all_samples-no_Cenpl.tsv
-
-# run PCA
-for genes in 50000
-do
-for transform in vst
-do
-bsub -q basement -o output/pca.ko_response.$genes.$transform.o -e output/pca.ko_response.$genes.$transform.e \
--M20000 -R'select[mem>20000] rusage[mem=20000]' \
-"export R_LIBS_USER=/software/team31/R-3.3.0
-/software/R-3.3.0/bin/Rscript \
-~rw4/checkouts/bio-misc/pca_rnaseq.R \
-/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/output/all_samples_merged.counts.tsv \
-/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/output/all_samples-no_Cenpl.tsv \
-/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/plots/all_mutants-pca.pdf \
-/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd/output/all_mutants.$transform.$genes $transform $genes"
-done
-done
-
-# also make count and samples file with mean count for each mut gt combo
-/software/R-3.3.0/bin/Rscript mean_expression_by_mut_gt.R \
-output/all_samples_merged.counts.tsv \
-$ROOT/samples-minus-outliers.txt \
-output/KOs_ordered_by_delay.txt
-
-# run pca script
-for genes in 50000
-do
-for transform in vst
-do
-bsub -o output/pca.mean_by_mut_gt.$genes.$transform.o \
--e output/pca.mean_by_mut_gt.$genes.$transform.e \
--M5000 -R'select[mem>5000] rusage[mem=5000]' \
-"export R_LIBS_USER=/software/team31/R-3.3.0
-/software/R-3.3.0/bin/Rscript \
-~rw4/checkouts/bio-misc/pca_rnaseq.R \
-output/mean_by_mut_gt.counts.tsv \
-output/samples_by_mut_by_gt.txt \
-plots/mean_by_mut_gt-pca.pdf \
-output/mean_by_mut_gt.$transform.$genes $transform $genes 1 0.001"
-done
-done
-```
-
-```
-# Output plot from pca_plot Shiny app
-# Save plot object as Rdata file
-```
-
