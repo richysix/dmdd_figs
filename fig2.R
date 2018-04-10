@@ -43,12 +43,12 @@ plots_dir <- file.path(getwd(), 'plots')
 
 packages <- c('ggplot2', 'viridis', 'reshape2', 'ontologyIndex', 'ontologyPlot',
               'plyr', 'svglite', 'GO.db', 'devtools', 'cowplot', 'ggdendro',
-              'ggrepel')
+              'ggrepel', 'grid')
 for( package in packages ){
   library(package, character.only = TRUE)
 }
 # load biovisr and miscr. If not installed, install from github repo
-packages <- c('biovisr')
+packages <- c('biovisr', 'miscr')
 for( package in packages ){
   library( package, character.only = TRUE )
 }
@@ -518,13 +518,27 @@ emap_results$Gene <- droplevels(emap_results$Gene)
 # split by results set
 emap_results_list <- split(emap_results, emap_results$Set)
 
+# LOAD root_df
+load(file.path('output', 'root_terms.rda'))
+
 # read in edited file
 edited_file <- cmd_line_args$args[4]
 duplicate_terms <- read.delim(file = edited_file)
 
-# LOAD root_df
-load(file.path('output', 'root_terms.rda'))
+duplicates_to_remove <-
+  duplicate_terms[ duplicate_terms$to_use == 0, c('Term.ID', 'parent_id') ]
 
+to_remove <-
+  Reduce('|', lapply(row.names(duplicates_to_remove),
+       function(x, root_df){
+        term1 <- as.character(duplicates_to_remove[x, 'Term.ID'])
+        term2 <- as.character(duplicates_to_remove[x, 'parent_id'])
+        to_remove <- root_df$Term.ID == term1 & root_df$parent_id == term2
+        return(to_remove)
+      },
+      root_df)
+  )
+root_df <- root_df[ !to_remove, ]
 
 # calculate overlap by terms
 terms_overlap <- function(results, mut1, mut2){
@@ -542,6 +556,17 @@ names(plot_list) <- names(emap_results_list)
 clust_objs <- vector('list', length = length(emap_results_list))
 names(clust_objs) <- names(emap_results_list)
 
+# calculate maximum log10(pvalue)
+max_log10_pvalue <- 0
+max_pvalue_set <- ''
+for (set in names(emap_results_list)) {
+  current_max <- max( emap_results_list[[set]][['X.log10.pvalue.']] )
+  if (current_max > max_log10_pvalue) {
+    max_log10_pvalue <- current_max
+    max_pvalue_set <- set
+  }
+}
+
 for (results_set in names(emap_results_list)) {
   if (debug) {
     cat(results_set, "\n")
@@ -556,24 +581,6 @@ for (results_set in names(emap_results_list)) {
   # remove NAs
   results_summarise_filtered <-
       results_summarise[ !is.na(results_summarise$name), ]
-  #nrow(results_summarise_filtered)
-  #[1] 3613
-  # remove duplicate parent terms
-  duplicates_to_remove <-
-    duplicate_terms[ duplicate_terms$to_use == 0, c('Term.ID', 'parent_id') ]
-  to_remove <-
-    Reduce('|', lapply(row.names(duplicates_to_remove),
-         function(x, results_summarise_filtered){
-          term1 <- as.character(duplicates_to_remove[x, 'Term.ID'])
-          term2 <- as.character(duplicates_to_remove[x, 'parent_id'])
-          to_remove <- results_summarise_filtered$Term.ID == term1 &
-          results_summarise_filtered$parent_id == term2
-          return(to_remove)
-        },
-        results_summarise_filtered)
-    )
-  results_summarise_filtered <-
-    results_summarise_filtered[ !to_remove, ]
   
   # aggregate terms that have the same parent id
   results_aggregated <-
@@ -660,22 +667,14 @@ for (results_set in names(emap_results_list)) {
     bubble_plot(results_aggregated, x = 'Gene',
       y = 'parent_id', size = 'num_sig_terms',
       fill = 'max_log10_p', y_labels = levels(results_aggregated$parent_name),
-      stroke = 0.2)
-  emapa_bubble_plot <- emapa_bubble_plot +
-        labs(fill = expression(paste('Max(-', log[10], '[pvalue])', sep = '')),
-             size = 'Number of Significant Terms') +
-        theme_void() +
-        theme(
-          axis.text.x = element_text(size = 12, colour = 'black', angle = 90,
-                                              hjust = 0, debug = FALSE),
-          axis.text.y = element_text(size = 12, colour = 'black', angle = 0,
-                                              hjust = 1, debug = FALSE),
-          panel.grid.major = element_line(colour = 'grey80', linetype = 'dotted'),
-          legend.title = element_text(size = 14),
-          legend.text = element_text(size = 12),
-          legend.position = 'bottom', legend.direction = 'horizontal',
-          legend.box = 'vertical' )
-        
+      stroke = 0.2) +
+      scale_fill_viridis(limits = c(1,max_log10_pvalue),
+                          direction = -1) +
+      theme(legend.title = element_text(size = 14),
+            legend.text = element_text(size = 12),
+            legend.position = 'bottom', legend.direction = 'horizontal',
+            legend.box = 'vertical' )
+  
   plot_list[[results_set]] <- emapa_bubble_plot
   
   postscript(file = file.path(plots_dir,
@@ -684,6 +683,37 @@ for (results_set in names(emap_results_list)) {
   print(emapa_bubble_plot)
   dev.off()
 }
+
+# get legend of max p set
+overall_legend <- get_gg_legend(plot_list[[max_pvalue_set]])
+
+plot_list <- lapply(plot_list,
+                    function(plot){
+                      plot + 
+                        labs(fill = expression(paste('Max(-', log[10], '[pvalue])', sep = '')),
+                             size = 'Number of Significant Terms') +
+                        theme_void() +
+                        theme(
+                          axis.text.x = element_text(size = 12, colour = 'black', angle = 90,
+                                                              hjust = 0, debug = FALSE),
+                          axis.text.y = element_text(size = 12, colour = 'black', angle = 0,
+                                                              hjust = 1, debug = FALSE),
+                          panel.grid.major = element_line(colour = 'grey80', linetype = 'dotted'),
+                          legend.title = element_text(size = 14),
+                          legend.text = element_text(size = 12),
+                          legend.position = 'none')
+                    })
+
+# plot
+save_plot(file.path(plots_dir, paste0("emap-bubble_plots-by_results_set.eps")),
+          plot_grid(plotlist = plot_list,
+          nrow = 2, ncol = 2, align = 'vh', axis = 'tblr'),
+          nrow = 2, ncol = 2, device = 'eps',
+          base_width = 7.5, base_height = 6)
+postscript(file = file.path(plots_dir, paste0("emap-bubble_plots-by_results_set-legend.eps")),
+           width = 7.5, height = 2, paper = 'special', horizontal = FALSE)
+grid.draw(overall_legend)
+dev.off()
 
 # Gene list overlaps
 # plot tree and overlap matrix for mrna_abnormal
