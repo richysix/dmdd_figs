@@ -25,11 +25,11 @@ data/sig_gene_counts.tsv output/mrna_abnormal-jaccard-all.rda
 
 # Mean counts by KO gene and genotype for PCA
 output/mean_by_mut_gt.counts.tsv output/samples_by_mut_by_gt.txt: \
-mean_expression_by_mut_gt.R output/all_samples_merged.counts.tsv \
+mean_expression_by_mut_gt.R output/all_samples_merged-counts.tsv \
 /lustre/scratch117/maz/team31/projects/mouse_DMDD/samples-minus-outliers.txt \
 output/KOs_ordered_by_delay.txt
 	/software/R-3.3.0/bin/Rscript mean_expression_by_mut_gt.R \
-	output/all_samples_merged.counts.tsv \
+	output/all_samples_merged-counts.tsv \
 	/lustre/scratch117/maz/team31/projects/mouse_DMDD/samples-minus-outliers.txt \
 	output/KOs_ordered_by_delay.txt
 

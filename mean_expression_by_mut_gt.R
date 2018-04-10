@@ -20,7 +20,7 @@ cmd_line_args <- parse_args(
 #cmd_line_args <- list(
 #  options = list(directory = 'cwd',
 #                 verbose = FALSE ),
-#  args = c('output/all_samples_merged.counts.tsv',
+#  args = c('output/all_samples_merged-counts.tsv',
 #           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/samples-minus-outliers.txt',
 #           'output/KOs_ordered_by_delay.txt')
 #)
