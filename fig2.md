@@ -5,6 +5,17 @@
 # change this if you are trying recreate the analysis
 # everything else should then be relative to this directory
 export ROOT=/lustre/scratch117/maz/team31/projects/mouse_DMDD
+
+# get individual sample info
+for mut in $( cut -f2 $ROOT/lane-process/dmdd/deseq2/samples.txt  | grep _ | \
+sed -E 's/_(wt|het|hom)//' | sort -u | grep -vE 'Sh3pxd2a_i|Cenpl' )
+do
+cat $ROOT/lane-process/$mut/deseq2-baseline-grandhet-blacklist-adj-gt-adj-sex-stage-nicole-definite-maybe-outliers/samples.txt
+done | grep -vE 'condition|baseline' | \
+perl -F"\t" -lane 'BEGIN{print join("\t", "", qw{condition group stage somite_number mutant} ); }
+{ $mutant = $F[0]; $mutant =~ s/_.* \z//xms;
+$somite_num = $F[3]; $somite_num =~ s/somite[s]*//xms;
+print join("\t", @F, $somite_num, $mutant, ); }' > $ROOT/mouse_dmdd_figs/output/samples-gt-gender-stage-ko-no_Cenpl.txt
 ```
 
 ## Delay PCA
