@@ -98,4 +98,31 @@ data/fig5d_data_go.tsv output/fig5d-heatmap.rda
 
 ```
 
+Fig 5f
+Count Plots
 
+```
+# make count file for plots
+# Alas2 = ENSMUSG00000025270
+# Hbb-y = ENSMUSG00000052187
+mut=Nadk2
+countsFile=$ROOT/lane-process/$mut/deseq2-baseline-grandhet-blacklist-adj-gt-adj-sex-stage-nicole-definite-maybe-outliers/hom_vs_het_wt.tsv
+
+head -n1 $countsFile > output/fig5f-counts.tsv
+grep -E 'ENSMUSG000000(25270|52187)' $countsFile >> output/fig5f-counts.tsv
+
+# samples file
+# make new samples file with categories baseline, het_wt and hom to match plots in fig. 2
+# one of the "wts" is actually a het, but this doesn't matter as we are combining hets and wts into het_wt.
+perl -F"\t" -lane 'if($. == 1){print join("\t", @F, "category"); }
+else{ $category = $F[1] eq "het" ? "het_wt" : $F[1] eq "wt" ? "het_wt" : $F[1];
+print join("\t", @F, $category, ); }' \
+$ROOT/lane-process/$mut/deseq2-baseline-grandhet-blacklist-adj-gt-adj-sex-stage-nicole-definite-maybe-outliers/samples.txt \
+ > output/Nadk2-samples.txt
+
+# rerun counts script
+Rscript ~rw4/checkouts/bio-misc/graph_rnaseq_counts.R output/fig5f-counts.tsv \
+output/Nadk2-samples.txt \
+plots/fig5f.eps default category stage
+
+```
