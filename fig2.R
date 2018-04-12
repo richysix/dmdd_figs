@@ -13,7 +13,7 @@ option_list <- list(
 
 cmd_line_args <- parse_args(
   OptionParser(
-    option_list=option_list, prog = 'fig4.R',
+    option_list=option_list, prog = 'fig2.R',
     usage = "Usage: %prog [options] input_file" ),
   positional_arguments = 6
 )
@@ -793,7 +793,7 @@ save_plot(file.path(plots_dir, paste0(results_set, "-gene_list-overlaps.eps")),
 
 ################################################################################
 # save plot objects
-save.image(file = file.path(wd, 'output', 'fig4.RData'))
+save.image(file = file.path(wd, 'output', 'fig2.RData'))
 
 ################################################################################
 
