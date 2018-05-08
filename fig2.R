@@ -3,8 +3,6 @@
 library('optparse')
 
 option_list <- list(
-  make_option(c("-d", "--directory"), type="character", default='cwd',
-              help="Working directory [default %default]" ),
   make_option("--debug", action="store_true", default=FALSE,
               help="Working directory [default %default]" ),
   make_option(c("-v", "--verbose"), action="store_true", default=FALSE,
@@ -15,7 +13,7 @@ cmd_line_args <- parse_args(
   OptionParser(
     option_list=option_list, prog = 'fig2.R',
     usage = "Usage: %prog [options] input_file" ),
-  positional_arguments = 6
+  positional_arguments = 7
 )
 
 #cmd_line_args <- list(
@@ -23,10 +21,11 @@ cmd_line_args <- parse_args(
 #                 debug = TRUE,
 #                 verbose = FALSE ),
 #  args = c('data/go_results.tsv',
+#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/dmdd-genes.txt',
 #           'output/KOs_ordered_by_delay.txt',
+#           'data/sig_gene_counts.tsv',
 #           'data/emap_results.all.tsv',
 #           'output/duplicated_terms-edited.tsv',
-#           'data/sig_gene_counts.tsv',
 #           'output/mrna_abnormal-jaccard-all.rda'
 # )
 #)
@@ -35,11 +34,9 @@ debug <- cmd_line_args$options[['debug']]
 verbose <- cmd_line_args$options[['verbose']]
 
 if( verbose ){
-  cat( "Working directory:",
-      cmd_line_args$options[['directory']], "\n", sep=" " )
 }
 
-plots_dir <- file.path(getwd(), 'plots')
+plots_dir <- file.path('plots')
 
 packages <- c('ggplot2', 'viridis', 'reshape2', 'ontologyIndex', 'ontologyPlot',
               'plyr', 'svglite', 'GO.db', 'devtools', 'cowplot', 'ggdendro',
@@ -57,8 +54,15 @@ for( package in packages ){
 go_results_file <- cmd_line_args$args[1]
 go_results <- read.delim(go_results_file)
 
+# load gene info
+gene_file <- cmd_line_args$args[2]
+gene_info <- read.delim(gene_file)
+# construct named vector of gene names for directory names
+gene_name_for_dir <- as.character(gene_info$Gene.Name)
+names(gene_name_for_dir) <- gene_info$Dir
+
 # read in KO ordering
-ko_order_file <- cmd_line_args$args[2]
+ko_order_file <- cmd_line_args$args[3]
 ko_order <- read.table(ko_order_file)
 names(ko_order) <- c('Gene', 'Delay Category')
 
@@ -224,16 +228,19 @@ for ( domain in names(go_results_by_domain) ) {
             top_terms_by_shared$Term[ top_terms_by_shared[['GO.ID']] == id ][1]
           })
   
+  gene_name_labels <- gene_name_for_dir[ rev(as.character(levels(top_terms_by_shared$Gene))) ]
+  
   top_shared_go_results_plot <-
     bubble_plot(top_terms_by_shared,
                 x = 'Gene', y = 'GO.ID', size = 'Fold.Enrichment',
-                fill = 'X.log10.pvalue.', x_labels = NULL,
+                fill = 'X.log10.pvalue.', x_labels = gene_name_labels,
                 y_labels = term_labels )
-    
+  
   postscript(file = file.path(plots_dir,
                     paste('top_shared_go_results', domain, 'eps', sep = ".")),
-              width = 8, height = 10, paper = 'special')
-  print(top_shared_go_results_plot)
+              width = 8, height = 10, paper = 'special', horizontal = FALSE)
+  print(top_shared_go_results_plot + theme_bubble(base_size = 12) +
+        theme(axis.text.x = element_text(face = 'italic')))
   dev.off()
   
   postscript(file = file.path(plots_dir,
@@ -260,7 +267,7 @@ for ( domain in names(go_results_by_domain) ) {
   # output plot data as table
   # write to file
   write.table(top_shared_terms_table,
-              file = file.path(wd, 'output',
+              file = file.path('output',
                                paste('top_50_go_p', domain, 'tsv', sep = ".")),
               sep = "\t", row.names = FALSE, quote = FALSE)
 }
@@ -358,7 +365,7 @@ for ( domain in names(go_results_by_domain) ) {
   # output plot data as table
   # write to file
   write.table(top_results[['data']],
-              file = file.path(wd, 'output',
+              file = file.path('output',
                                paste('top_50_go_fe', domain, 'tsv', sep = ".")),
               sep = "\t", row.names = FALSE, quote = FALSE)
 }
@@ -418,7 +425,7 @@ filtering_counts_w <- dcast(filtering_counts_edited, Gene + Domain ~ Filtered,
 
 # Plot Difference in sig genes between Filtered and unfiltered
 # read in sig genes file
-sig_genes_file <- cmd_line_args$args[5]
+sig_genes_file <- cmd_line_args$args[4]
 sig_genes <- read.delim(file = sig_genes_file)
 
 # get sig_genes data for delayed mutants
@@ -508,7 +515,7 @@ dev.off()
 
 ################################################################################
 # EMAPA
-emap_results_file <- cmd_line_args$args[3]
+emap_results_file <- cmd_line_args$args[5]
 emap_results <- read.delim(file = emap_results_file)
 # order genes by delay order
 emap_results$Gene <- factor(emap_results$Gene,
@@ -522,7 +529,7 @@ emap_results_list <- split(emap_results, emap_results$Set)
 load(file.path('output', 'root_terms.rda'))
 
 # read in edited file
-edited_file <- cmd_line_args$args[4]
+edited_file <- cmd_line_args$args[6]
 duplicate_terms <- read.delim(file = edited_file)
 
 duplicates_to_remove <-
@@ -720,7 +727,7 @@ dev.off()
 results_set <- 'mrna_abnormal'
   
 # load cluster and heatmap plot and output both together with annotations
-load(cmd_line_args$args[6])
+load(cmd_line_args$args[7])
 tree_plot_data <- dendro_data(jaccard_clust)
 delay_plot_data <- label(tree_plot_data)
 delay_plot_data$y <- rep(-0.1, nrow(delay_plot_data))
@@ -793,7 +800,7 @@ save_plot(file.path(plots_dir, paste0(results_set, "-gene_list-overlaps.eps")),
 
 ################################################################################
 # save plot objects
-save.image(file = file.path(wd, 'output', 'fig2.RData'))
+save.image(file = file.path('output', 'fig2.RData'))
 
 ################################################################################
 
