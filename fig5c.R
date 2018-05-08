@@ -11,12 +11,13 @@ cmd_line_args <- parse_args(
   OptionParser(
     option_list=option_list, prog = 'fig5c.R',
     usage = "Usage: %prog [options] input_file" ),
-  positional_arguments = 2
+  positional_arguments = 3
 )
 
 #cmd_line_args <- list(
 #  options = list(verbose = FALSE),
-#  args = c('data/fig5c_repeats_de.tsv',    
+#  args = c('data/fig5c_repeats_de_all.tsv',
+#           'data/fig5c_repeats_de.tsv',    
 #           'data/fig5c_repeats_location.tsv')
 #)
 
@@ -33,36 +34,81 @@ colour_palette <-
     'red'   = '#C1504D',
     'green' = '#9FC257')
 
-# read in data and set levels of Family factor
-repeats_de <- read.delim(file = cmd_line_args$args[1])
-repeats_de$Family <- factor(repeats_de$Family, levels = rev(unique(repeats_de$Family)))
+# read in data
+repeats_de_all <- read.delim(file = cmd_line_args$args[1])
 
+# test for enrichment
+test_enrichment <- function(i, data_subset, total_repeats) {
+    binom_res <- binom.test(data_subset$de[i], sum(data_subset$de),
+                            p = data_subset$repeats[i]/total_repeats[full_length],
+                            alternative = 'greater')
+    return(binom_res$p.value)
+}
+
+total_repeats <- c(all = 3765374, full_length = 24162)
+#total_repeats_de <- c(all = 1293, full_length = 592)
+pvals <- vector('list', length = nlevels(repeats_de_all$full_length))
+list_index <- 1
+for (full_length in levels(repeats_de_all$full_length)) {
+    data_subset <- repeats_de_all[ repeats_de_all$full_length == full_length, ]
+    pvals[[list_index]] <- sapply(1:nrow(data_subset), test_enrichment,
+                          data_subset, total_repeats )
+    list_index <- list_index + 1
+}
+
+# adjust p values with Benjamini-Hochberg
+padj_list <- lapply(pvals, p.adjust, method = "BH")
+
+repeats_de_all$p.value <- do.call(c, pvals)
+repeats_de_all$padj <- do.call(c, padj_list)
+
+# read in data and set levels of Family factor
+repeats_de <- read.delim(file = cmd_line_args$args[2])
+repeats_de$Group <- factor(repeats_de$Group, levels = unique(repeats_de$Group))
+
+repeats_de_merged <- merge(repeats_de, repeats_de_all, all.x = TRUE)
+
+# subset to repeats with padj < 0.05 and full_length == 'all'
+# find the families that are sig in all and subset to those families
+sig_repeats <- as.character(repeats_de_merged$Family[ repeats_de_merged$padj < 0.05 &
+                                         !is.na(repeats_de_merged$padj) &
+                                         repeats_de_merged$full_length == 'all' ])
+repeats_de_sig <- do.call(rbind,
+                          lapply(sig_repeats,
+                                 function(name){ repeats_de_merged[ repeats_de_merged$Family == name, ] }
+                                 )
+                        )
+
+repeats_de_sig <- repeats_de_sig[ order(repeats_de_sig$Group,
+                                                repeats_de_sig$padj), ]
+repeats_de_sig$Family <- factor(repeats_de_sig$Family,
+                                levels = as.character(rev(unique(repeats_de_sig$Family))) )
 # melt data
-repeats_de_m <- melt(repeats_de[, !grepl('padj', names(repeats_de))],
-                        id.vars = c('Family', 'full_length'),
-                        variable.name = 'category', value.name = 'count')
+repeats_de_sig_m <- melt(repeats_de_sig[ , c('Group', 'Family', 'full_length', 'notDE', 'DE')],
+                            id.vars = c('Group', 'Family', 'full_length'),
+                            variable.name = 'category', value.name = 'count')
 
 # set levels of factors
-repeats_de_m$category <- factor(repeats_de_m$category, levels = c('DE', 'notDE'))
+repeats_de_sig_m$category <- factor(repeats_de_sig_m$category, levels = c('DE', 'notDE'))
 
 # create colour palette for DE vs notDE
 category_palette <- colour_palette[c('red', 'blue')]
-names(category_palette) <- levels(repeats_de_m$category)
+names(category_palette) <- levels(repeats_de_sig_m$category)
 
-# create df for labels
-repeats_de$total <- repeats_de$notDE + repeats_de$DE
+## create df for labels
+#repeats_de$total <- repeats_de$notDE + repeats_de$DE
 
 # create df for lines
 lines_df <- data.frame(
-    'posn' = seq(0.5, nlevels(repeats_de$Family) - 0.5, 1)
+    'posn' = seq(0.5, nlevels(repeats_de_sig_m$Family) - 0.5, 1)
 )
 
 # get max count to set limits on full-length plot
-max_y <- ceiling( max( repeats_de$total, na.rm = TRUE ) / 1000 ) * 1000
-all_bar_plot <- ggplot(data = repeats_de_m[repeats_de_m$full_length == "all", ]) +
+max_y <- ceiling( max( repeats_de_sig$repeats, na.rm = TRUE ) / 1000 ) * 1000
+all_bar_plot <- ggplot(data = repeats_de_sig_m[ repeats_de_sig_m$full_length == 'all', ]) +
                     geom_col(aes(x = Family, y = count, fill = category)) +
-                    geom_text(data = repeats_de[ repeats_de$full_length == "all", ],
-                                aes(x = Family, y = total, label = DE),
+                    geom_text(data = repeats_de_sig[ repeats_de_sig$full_length == 'all', ],
+                                aes(x = Family, y = repeats, label = DE),
                                 hjust = 0, nudge_y = 100) +
                     geom_vline(data = lines_df, aes(xintercept = posn),
                                linetype = 5, colour = 'grey80') +
@@ -82,17 +128,17 @@ invisible(dev.off())
 
 # To make the x scales match up for the all and full-length repeats plots
 # remove the y axis labels and make a separate plot of the just the y axis labels
-y_labels_plot <- ggplot(data = repeats_de_m[repeats_de_m$full_length == "all", ]) +
+y_labels_plot <- ggplot(data = repeats_de_sig_m[ repeats_de_sig_m$full_length == 'all', ]) +
     geom_text(aes(x = full_length, y = Family, label = NA)) +
     theme_void() +
     theme(axis.text.y = element_text(colour = 'black', size = 12,
                                         angle = 0, debug = FALSE))
 
 # plot of full_length data
-full_length_bar_plot <- ggplot(data = repeats_de_m[repeats_de_m$full_length == "full_length", ]) +
+full_length_bar_plot <- ggplot(data = repeats_de_sig_m[ repeats_de_sig_m$full_length == 'full_length', ]) +
                 geom_col(aes(x = Family, y = count, fill = category)) +
-                geom_text(data = repeats_de[ repeats_de$full_length == "full_length", ],
-                            aes(x = Family, y = total, label = DE),
+                geom_text(data = repeats_de_sig[ repeats_de_sig$full_length == 'full_length', ],
+                            aes(x = Family, y = repeats, label = DE),
                             hjust = 0, nudge_y = 100) +
                 geom_vline(data = lines_df, aes(xintercept = posn),
                            linetype = 5, colour = 'grey80') +
@@ -124,7 +170,7 @@ full_length_bar_plot <- full_length_bar_plot +
 
 
 # add in adjusted pvalues for enrichment tests
-all_padj_data <- repeats_de[ repeats_de$full_length == "all", c("Family", "padj")]
+all_padj_data <- repeats_de_sig[ repeats_de_sig$full_length == "all", c("Family", "padj")]
 # format numbers
 all_padj_data$padj_formatted <- sprintf('%.1e', all_padj_data$padj)
 all_padj_data$padj_formatted[ all_padj_data$padj_formatted == '0.0e+00' ] <- '0'
@@ -143,7 +189,8 @@ print(all_pvalue_plot)
 invisible(dev.off())
 
 # same for full_length ones
-full_length_padj_data <- repeats_de[ repeats_de$full_length == "full_length", c("Family", "padj")]
+full_length_padj_data <- repeats_de_sig[ repeats_de_sig$full_length == "full_length", c("Family", "padj")]
+full_length_padj_data$padj[ full_length_padj_data$padj >= 0.05 ] <- NA
 full_length_padj_data$padj_formatted <- sprintf('%.1e', full_length_padj_data$padj)
 full_length_padj_data$padj_formatted[ full_length_padj_data$padj_formatted == '0.0e+00' ] <- '0'
 full_length_padj_data$padj_formatted[ full_length_padj_data$padj_formatted == "NA" ] <- NA
@@ -170,9 +217,12 @@ invisible(dev.off())
 
 # exon, intron, intergenic plot
 # read in data and set levels of Family
-repeats_location <- read.delim(file = cmd_line_args$args[2])
+repeats_location <- read.delim(file = cmd_line_args$args[3])
+# subset to significant families
+rownames(repeats_location) <- repeats_location$Family
+repeats_location <- repeats_location[sig_repeats, ]
 repeats_location$Family <- factor(repeats_location$Family,
-                                  levels = rev(unique(repeats_location$Family)))
+                                  levels = levels(repeats_de_sig$Family) )
 # melt
 repeats_location_m <- melt(repeats_location, id.vars = 'Family',
                            variable.name = 'Location',
@@ -219,7 +269,7 @@ repeats_location_plot <- repeats_location_plot +
                                     legend.position = 'none')
 
 # make version of the location plot with a break in the axis
-# artificially set the 2 large values to something else
+# artificially set the largest value to something else
 # then break the axis in Illustrator
 repeats_location_m$count[ repeats_location_m$Family == 'L1MdGf_I' &
                             repeats_location_m$Location == 'intergenic' ] <- 125
