@@ -13,14 +13,24 @@ cmd_line_args <- parse_args(
   OptionParser(
     option_list=option_list, prog = 'fig1.R',
     usage = "Usage: %prog [options] input_file" ),
-  positional_arguments = 2
+  positional_arguments = 4
 )
 
 #cmd_line_args <- list(
-#  options = list(directory = '/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd',
+#  options = list(directory = 'cwd',
+#                 verbose = FALSE ),
+#  args = c('/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2-4567_somites-unstranded/counts.txt',
+#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2-4567_somites-unstranded/samples.txt',
+#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/all-unstranded.tsv',
+#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2-unstranded/samples.txt' )
+#)
+
+#cmd_line_args <- list(
+#  options = list(directory = 'cwd',
 #                 verbose = FALSE ),
 #  args = c('data/Mm_GRCm38_e88_baseline.rda',
-#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/all.tsv' )
+#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2/counts.txt',
+#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2/samples.txt' )
 #)
 
 if (cmd_line_args$options[['directory']] == 'cwd') {
@@ -42,74 +52,62 @@ for( package in packages ){
 
 ################################################################################
 ## baseline data
-load(cmd_line_args$args[1])
-counts <- assays(Mm_GRCm38_e88_baseline)$counts[ ,
-              grepl('^[567]somites_[0-9]$', colnames(Mm_GRCm38_e88_baseline)) ]
+#load(cmd_line_args$args[1])
+#we_count_data <- assays(Mm_GRCm38_e88_baseline)$counts[ ,
+#                          grepl('^[4567]somites_[0-9]$', colnames(Mm_GRCm38_e88_baseline)) ]
 
-# subset to 5, 6 and 7 somites and drop levels
-sample_info <-
-  colData(Mm_GRCm38_e88_baseline)[
-            grepl('^[567]somites_[0-9]$', colnames(Mm_GRCm38_e88_baseline)), ]
-sample_info <- droplevels(sample_info)
+## subset to 5, 6 and 7 somites and drop levels
+#sample_info <-
+#  colData(Mm_GRCm38_e88_baseline)[
+#            grepl('^[4567]somites_[0-9]$', colnames(Mm_GRCm38_e88_baseline)), ]
+#sample_info <- droplevels(sample_info)
+#sample_info$type <- rep('Whole Embryo', nrow(sample_info))
 
-# split matrix by stage
-counts_by_stage <- split.data.frame(t(counts), sample_info$condition)
-# sum columns
-sum_counts_by_stage_list <- lapply(counts_by_stage, colSums)
+we_count_file <- cmd_line_args$args[1]
+we_count_data <- read.delim(we_count_file, row.names = 1, check.names = FALSE)
 
-sum_counts_by_stage <- do.call(cbind, sum_counts_by_stage_list)
-row.names(sum_counts_by_stage) <- rowData(Mm_GRCm38_e88_baseline)$Gene.ID
-
-samples_by_stage <- data.frame(
-  row.names = colnames(sum_counts_by_stage),
-  condition = colnames(sum_counts_by_stage),
-  Type      = rep('Whole Embryo', ncol(sum_counts_by_stage))
-)
-
+we_samples_file <- cmd_line_args$args[2]
+we_sample_info <- read.delim(we_samples_file, row.names = 1)
 
 ################################################################################
 # tissue data
-tissue_count_file <- cmd_line_args$args[2]
-tissue_count_data <- read.delim(tissue_count_file)
+tissue_count_file <- cmd_line_args$args[3]
+tissue_data <- read.delim(tissue_count_file, row.names = 1)
+tissue_count_data <- tissue_data[, grepl('count$', colnames(tissue_data))]
+colnames(tissue_count_data) <- gsub('.count$', '', colnames(tissue_count_data))
 
-# subset to count columns
-tissue_counts <- tissue_count_data[ , grepl('count$', colnames(tissue_count_data)) &
-                                      !grepl('normalised', colnames(tissue_count_data)) ]
-names(tissue_counts) <- gsub('.count$', '', names(tissue_counts))
-rownames(tissue_counts) <- tissue_count_data[['Gene.ID']]
+tissue_annotation_data <- cbind('Gene ID' = rownames(tissue_data),
+                                tissue_data[, !grepl('count$', colnames(tissue_data))] )
 
-tissue_samples <- data.frame(
-  row.names = c('Head', 'Heart', 'Somites', 'PSC', 'CEM', 'Carcass'),
-  condition = c('Head', 'Heart', 'Somites', 'PSC', 'CEM', 'Carcass'),
-  Type = rep('Tissue', 6)
-)
-
-# Subset and reorder count data
-tissue_counts <- tissue_counts[, row.names(tissue_samples)]
+tissue_sample_file <- cmd_line_args$args[4]
+tissue_sample_info <- read.delim(tissue_sample_file, row.names = 1)
+tissue_sample_info$condition <- factor(tissue_sample_info$condition,
+                                       levels = tissue_sample_info$condition)
 
 ################################################################################
 # merge counts together
-merged_counts <- merge(sum_counts_by_stage, tissue_counts, by = "row.names")
+merged_counts <- merge(we_count_data, tissue_count_data, by = "row.names")
 rownames(merged_counts) <- merged_counts[, 'Row.names']
 merged_counts <- merged_counts[ , !grepl('Row.names', colnames(merged_counts)) ]
 
 # make merged samples df
-merged_samples <- rbind(samples_by_stage, tissue_samples)
+#merged_samples <- rbind(sample_info[, c('condition', 'type')], tissue_sample_info)
+merged_samples <- rbind(we_sample_info, tissue_sample_info)
 
 # make DESeq2 object and normalise
 dds <- DESeqDataSetFromMatrix(merged_counts, merged_samples, design = ~ 1)
 dds <- estimateSizeFactors(dds)
-mcols(dds) <- rowData(Mm_GRCm38_e88_baseline)
+mcols(dds) <- tissue_annotation_data
 
 norm_counts <- counts(dds, normalized = TRUE)
 
 # count (protein-coding) genes expressed at >= 10 counts
 norm_counts_protein <- norm_counts[ mcols(dds)$Biotype == 'protein_coding', ]
 
-we_gt10 <- as.data.frame(norm_counts_protein[, merged_samples$Type == 'Whole Embryo'] >= 10)
+we_gt10 <- as.data.frame(norm_counts_protein[, merged_samples$type == 'Whole Embryo'] >= 10)
 we_gt10_genes <- rownames(norm_counts_protein)[ Reduce('|', we_gt10) ]
 
-tissue_gt10 <- as.data.frame(norm_counts_protein[, merged_samples$Type == 'Tissue'] >= 10)
+tissue_gt10 <- as.data.frame(norm_counts_protein[, merged_samples$type == 'Tissue'] >= 10)
 tissue_gt10_genes <- rownames(norm_counts_protein)[ Reduce('|', tissue_gt10) ]
 
 venn_numbers <- data.frame(
@@ -124,16 +122,21 @@ print(venn_numbers)
 
 # plot heatmap of tissue only genes
 tissue_only_genes <- setdiff(tissue_gt10_genes, we_gt10_genes)
-
 tissue_only_counts <- norm_counts[tissue_only_genes, ]
 
 # sort by row sums
 row_sums <- rowSums(tissue_only_counts)
 tissue_only_counts <- tissue_only_counts[names(sort(row_sums)), ]
 
-# mean center and scale, melt
-#tissue_only_counts_scaled <- t(scale(t(tissue_only_counts)))
-tissue_only_counts_m <- melt(tissue_only_counts)
+# calculate mean by stage for whole embryo samples for heatmap
+# split matrix by stage
+counts_by_stage <- split.data.frame(t(tissue_only_counts), merged_samples$condition)
+# sum columns
+mean_counts_by_stage_list <- lapply(counts_by_stage, colMeans)
+mean_counts_by_stage <- do.call(cbind, mean_counts_by_stage_list)
+
+# melt
+tissue_only_counts_m <- melt(mean_counts_by_stage)
 colnames(tissue_only_counts_m) <- c('Gene', 'Sample', 'Norm_counts')
 # reverse levels of Gene for plot
 tissue_only_counts_m$Gene <-
@@ -153,7 +156,7 @@ tissue_only_counts_m$Expr_group <-
 tissue_vs_WE_heatmap <-
   ggplot(data = tissue_only_counts_m) +
     geom_tile(aes(x = Sample, y = Gene, fill = Expr_group)) +
-    scale_fill_viridis(discrete=TRUE, name = 'Counts') +
+    scale_fill_viridis(discrete=TRUE, name = 'Normalised\nCounts') +
     scale_x_discrete(position = 'top') + 
     theme_void() +
     theme( axis.text = element_text(colour = 'black', angle = 45,
@@ -168,7 +171,7 @@ dev.off()
 
 # save an eps as well
 postscript(file = file.path(plots_dir, 'tissue_vs_WE_heatmap.eps'),
-    width = 6, height = 9, paper = "special")
+    width = 6, height = 9, paper = "special", horizontal = FALSE)
 print(tissue_vs_WE_heatmap)
 dev.off()
 
@@ -183,6 +186,23 @@ names(highly_expressed) <- c('Sample', '>= 50')
 
 write.table(highly_expressed,
             file = file.path('output', 'highly_expressed-tissues.tsv'),
+            quote = FALSE, sep = "\t", row.names = FALSE,
+            col.names = TRUE)
+
+# find out how many genes have at least one tissue with >= 50 counts
+tissue_only_gt50 <- as.data.frame(tissue_only_counts[, merged_samples$type == 'Tissue'] >= 50)
+tissue_only_gt50_genes <- rownames(tissue_only_counts)[ Reduce('|', tissue_only_gt50) ]
+
+all_tissues_gt50_genes <- rownames(tissue_only_counts)[ Reduce('&', tissue_only_gt50) ]
+
+# output normalised counts of tissue only genes
+colnames(mean_counts_by_stage) <- gsub('$', ' normalised count', colnames(mean_counts_by_stage))
+
+tissue_only_counts_with_anno <- cbind(as.data.frame(rowData(dds[rownames(mean_counts_by_stage),])),
+                                      mean_counts_by_stage)
+
+write.table(tissue_only_counts_with_anno,
+            file = file.path('output', 'tissue_only-counts.tsv'),
             quote = FALSE, sep = "\t", row.names = FALSE,
             col.names = TRUE)
 
