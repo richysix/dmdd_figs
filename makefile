@@ -6,22 +6,18 @@ output/duplicated_terms.tsv \
 output/mrna_abnormal-jaccard-all.rda \
 output/mean_by_mut_gt.counts.tsv output/samples_by_mut_by_gt.txt \
 plots/mrna_abnormal.emap_aggregated_summary.eps \
-plots/mrna_abnormal-gene_list-overlaps.eps
+plots/mrna_abnormal-gene_list-overlaps.eps \
+plots/morc2a-repeats.eps
 
-# Fig4
-plots/mrna_abnormal.emap_aggregated_summary.eps \
-plots/mrna_abnormal-gene_list-overlaps.eps: fig4.R \
-data/go_results.tsv output/KOs_ordered_by_delay.txt \
-data/emap_results.all.tsv output/duplicated_terms-edited.tsv \
-data/sig_gene_counts.tsv output/mrna_abnormal-jaccard-all.rda
-	export R_LIBS_USER=.R/lib:/software/team31/R:/software/team31/R-3.3.0; \
-	/software/R-3.3.0/bin/Rscript fig4.R \
-	data/go_results.tsv \
-	output/KOs_ordered_by_delay.txt \
-	data/emap_results.all.tsv \
-	output/duplicated_terms-edited.tsv \
-	data/sig_gene_counts.tsv \
-	output/mrna_abnormal-jaccard-all.rda
+# fig5c
+plots/morc2a-repeats.eps: \
+data/fig5c_repeats_de_all.tsv \
+data/fig5c_repeats_de.tsv \
+data/fig5c_repeats_location.tsv
+	/software/R-3.3.0/bin/Rscript fig5c.R \
+	data/fig5c_repeats_de_all.tsv \
+	data/fig5c_repeats_de.tsv \
+	data/fig5c_repeats_location.tsv
 
 # Mean counts by KO gene and genotype for PCA
 output/mean_by_mut_gt.counts.tsv output/samples_by_mut_by_gt.txt: \
@@ -72,12 +68,32 @@ output/human-mim.tsv: get_mim_data.R \
 	/software/R-3.3.0/bin/Rscript get_mim_data.R \
 	/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/dmdd-genes.txt
 
+# Fig2
+plots/mrna_abnormal.emap_aggregated_summary.eps \
+plots/mrna_abnormal-gene_list-overlaps.eps: fig2.R \
+data/go_results.tsv /lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/dmdd-genes.txt \
+output/KOs_ordered_by_delay.txt data/sig_gene_counts.tsv \
+data/emap_results.all.tsv output/duplicated_terms-edited.tsv \
+output/mrna_abnormal-jaccard-all.rda
+	export R_LIBS_USER=.R/lib:/software/team31/R:/software/team31/R-3.3.0; \
+	/software/R-3.3.0/bin/Rscript fig2.R \
+	data/go_results.tsv \
+	/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/dmdd-genes.txt \
+	output/KOs_ordered_by_delay.txt \
+	data/sig_gene_counts.tsv \
+	data/emap_results.all.tsv \
+	output/duplicated_terms-edited.tsv \
+	output/mrna_abnormal-jaccard-all.rda
+
 # suppl fig1 - tissues vs whole embryos
 plots/tissue_vs_WE_heatmap.eps output/highly_expressed-tissues.tsv: \
-fig1.R data/Mm_GRCm38_e88_baseline.rda /lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/all.tsv
+fig1.R data/Mm_GRCm38_e88_baseline.rda \
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2/counts.txt \
+/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2/samples.txt
 	export R_LIBS_USER=.R/lib:/software/team31/R-3.3.0/:/software/team31/R; \
 	/software/R-3.3.0/bin/Rscript fig1.R data/Mm_GRCm38_e88_baseline.rda \
-	/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/all.tsv
+	/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2/counts.txt \
+	/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2/samples.txt
 
 # baseline data
 data/Mm_GRCm38_e88_baseline.rda: baseline.R /lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/baseline-grandhet/all.tsv \
