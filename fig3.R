@@ -65,7 +65,7 @@ if (debug) {
 gene_file <- cmd_line_args$args[1]
 gene_info <- read.delim(gene_file)
 # construct named vector of gene names for directory names
-gene_name_for_dir <- gene_info$Gene.Name
+gene_name_for_dir <- as.character(gene_info$Gene.Name)
 names(gene_name_for_dir) <- gene_info$Dir
 
 # load sample info
@@ -78,6 +78,34 @@ sample_info <- sample_info[ sample_info$gene != 'Cenpl', ]
 # set levels of gt
 sample_info$condition <- factor(sample_info$condition,
                                 levels = c('hom', 'het', 'wt'))
+
+# calculate percentage of hom embryos that are delayed (< 20 somites)
+pc_delayed_homs <- sum( sample_info$somite_number[ sample_info$condition == 'hom'] < 20, na.rm = TRUE) / nrow(sample_info[ sample_info$condition == 'hom', ]) * 100
+print(sprintf('%.1f%% of homs are delayed\n', pc_delayed_homs))
+
+# calculate mean number of embryos per condition per expt
+sample_info_by_expt <- split(sample_info, sample_info$gene)
+median_homs_by_expt <- median(sapply(sample_info_by_expt,
+                            function(df){
+                              num_homs <- sum(df$condition == 'hom')
+                              if (num_homs == 0) {
+                                return(NA)
+                              } else {
+                                return(num_homs)
+                              }
+                            }), na.rm = TRUE)
+
+median_sibs_by_expt <- median(sapply(sample_info_by_expt,
+                            function(df){
+                              num_homs <- sum(df$condition == 'hom')
+                              num_sibs <- sum(df$condition != 'hom')
+                              if (num_homs == 0) {
+                                return(NA)
+                              } else {
+                                return(num_sibs)
+                              }
+                            }), na.rm = TRUE)
+print(sprintf('The median number of homs and sibs per expt are %d and %d respectively\n', median_homs_by_expt, median_sibs_by_expt))
 
 # label with Theiler stage
 stage_boundaries <- c(4, 7, 12, 19, 29, 34)
@@ -260,8 +288,6 @@ for ( i in seq_len(length(stage_count_by_gt.m_by_type))) {
 stage_count.for_tiles <- do.call(rbind, stage_count.for_tiles_list)
 
 # plot with stage as bar length and gt as colour
-## TO DO: Add annotations at top for Delay category, somite numbers,
-##        Theiler Stage and dpc
 # convert gene (directory) name to correct e88 gene name
 gene_names <- gene_name_for_dir[ rev(as.character(stage_count$gene)) ]
 
@@ -274,7 +300,7 @@ embryo_stage_size_colour_plot <- ggplot(data = stage_count.for_tiles) +
   scale_fill_manual(values = c('firebrick2', 'steelblue3', 'green'),
                     guide = 'none') +  
   theme_void() + theme( axis.text.y = element_text(size = 8, colour = 'black',
-                                                   angle = 0, debug = FALSE) )
+                                                   face = 'italic', angle = 0, debug = FALSE) )
 
 # get legend for plotting separately
 embryo_stage_size_colour_plot_plus_legend <-
@@ -397,11 +423,18 @@ mean_count_by_gt$Mean.Count <- round(mean_count_by_gt$Mean.Count)
 
 # subset to wt only
 wt_mean_count <- mean_count_by_gt[ mean_count_by_gt$gt == 'wt', ]
+# add in means for Ift140 and Oaz1
+mean_count <- rbind(wt_mean_count,
+                    mean_count_by_gt[ mean_count_by_gt$symbol == 'Ift140' &
+                                     mean_count_by_gt$gt == 'het', ],
+                    mean_count_by_gt[ mean_count_by_gt$symbol == 'Oaz1' &
+                                     mean_count_by_gt$gt == 'het', ]
+                   )
 
 # heatmap
 embryo_ko_expr_plot <- ggplot(data = ko_expr) + 
   geom_tile(aes(x = gt, y = symbol, fill = log2fc )) +
-  geom_text(data = wt_mean_count,
+  geom_text(data = mean_count,
             aes(x = gt, y = symbol, label = Mean.Count),
             size = 2, hjust = 0.5 ) +
   scale_x_discrete(position = 'top') +
