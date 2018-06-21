@@ -25,14 +25,6 @@ cmd_line_args <- parse_args(
 #           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2-unstranded/samples.txt' )
 #)
 
-#cmd_line_args <- list(
-#  options = list(directory = 'cwd',
-#                 verbose = FALSE ),
-#  args = c('data/Mm_GRCm38_e88_baseline.rda',
-#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2/counts.txt',
-#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2/samples.txt' )
-#)
-
 if (cmd_line_args$options[['directory']] == 'cwd') {
   wd <- getwd()
 } else {
@@ -120,6 +112,11 @@ venn_numbers <- data.frame(
 )
 print(venn_numbers)
 
+write.table(venn_numbers,
+            file = file.path('output', 'tissue_vs_WE_Venn_numbers.tsv'),
+            quote = FALSE, sep = "\t", row.names = FALSE,
+            col.names = TRUE)
+
 # plot heatmap of tissue only genes
 tissue_only_genes <- setdiff(tissue_gt10_genes, we_gt10_genes)
 tissue_only_counts <- norm_counts[tissue_only_genes, ]
@@ -184,16 +181,21 @@ highly_expressed <-
   )
 names(highly_expressed) <- c('Sample', '>= 50')
 
-write.table(highly_expressed,
-            file = file.path('output', 'highly_expressed-tissues.tsv'),
-            quote = FALSE, sep = "\t", row.names = FALSE,
-            col.names = TRUE)
-
 # find out how many genes have at least one tissue with >= 50 counts
 tissue_only_gt50 <- as.data.frame(tissue_only_counts[, merged_samples$type == 'Tissue'] >= 50)
 tissue_only_gt50_genes <- rownames(tissue_only_counts)[ Reduce('|', tissue_only_gt50) ]
 
 all_tissues_gt50_genes <- rownames(tissue_only_counts)[ Reduce('&', tissue_only_gt50) ]
+
+highly_expressed <- rbind(highly_expressed,
+                          data.frame( 'Sample' = c('Any tissue', 'All tissues'),
+                                     '>= 50' = c(length(tissue_only_gt50_genes), length(all_tissues_gt50_genes)),
+                                     check.names = FALSE
+                                    ))
+write.table(highly_expressed,
+            file = file.path('output', 'highly_expressed-tissues.tsv'),
+            quote = FALSE, sep = "\t", row.names = FALSE,
+            col.names = TRUE)
 
 # output normalised counts of tissue only genes
 colnames(mean_counts_by_stage) <- gsub('$', ' normalised count', colnames(mean_counts_by_stage))
