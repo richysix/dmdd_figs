@@ -9,16 +9,16 @@ option_list <- list(
 
 cmd_line_args <- parse_args(
   OptionParser(
-    option_list=option_list, prog = 'fig5c.R',
+    option_list=option_list, prog = 'fig5d.R',
     usage = "Usage: %prog [options] input_file" ),
   positional_arguments = 3
 )
 
 #cmd_line_args <- list(
 #  options = list(verbose = FALSE),
-#  args = c('data/fig5c_repeats_de_all.tsv',
-#           'data/fig5c_repeats_de.tsv',    
-#           'data/fig5c_repeats_location.tsv')
+#  args = c('data/fig5d_repeats_de_all.tsv',
+#           'data/fig5d_repeats_de.tsv',    
+#           'data/fig5d_repeats_location.tsv')
 #)
 
 if( cmd_line_args$options[['verbose']] ){
@@ -32,13 +32,15 @@ for( package in packages ){
 colour_palette <- 
   c('blue'  = '#A1BAE2',
     'red'   = '#C1504D',
-    'green' = '#9FC257')
+    'purple' = '#CC99B3',
+    'vermillion' = '#CC6600',
+    'blue_green' = '#009980')
 
 # read in data
 repeats_de_all <- read.delim(file = cmd_line_args$args[1])
 
 # test for enrichment
-test_enrichment <- function(i, data_subset, total_repeats) {
+test_enrichment <- function(i, data_subset, total_repeats, full_length) {
     binom_res <- binom.test(data_subset$de[i], sum(data_subset$de),
                             p = data_subset$repeats[i]/total_repeats[full_length],
                             alternative = 'greater')
@@ -52,7 +54,7 @@ list_index <- 1
 for (full_length in levels(repeats_de_all$full_length)) {
     data_subset <- repeats_de_all[ repeats_de_all$full_length == full_length, ]
     pvals[[list_index]] <- sapply(1:nrow(data_subset), test_enrichment,
-                          data_subset, total_repeats )
+                          data_subset, total_repeats, full_length )
     list_index <- list_index + 1
 }
 
@@ -65,7 +67,6 @@ repeats_de_all$padj <- do.call(c, padj_list)
 # read in data and set levels of Family factor
 repeats_de <- read.delim(file = cmd_line_args$args[2])
 repeats_de$Group <- factor(repeats_de$Group, levels = unique(repeats_de$Group))
-
 repeats_de_merged <- merge(repeats_de, repeats_de_all, all.x = TRUE)
 
 # subset to repeats with padj < 0.05 and full_length == 'all'
@@ -83,6 +84,12 @@ repeats_de_sig <- repeats_de_sig[ order(repeats_de_sig$Group,
                                                 repeats_de_sig$padj), ]
 repeats_de_sig$Family <- factor(repeats_de_sig$Family,
                                 levels = as.character(rev(unique(repeats_de_sig$Family))) )
+
+# write out repeat families that are enriched
+write.table(repeats_de_sig, file = file.path('output', 'repeats-enriched_families.tsv'),
+            sep = "\t",  quote = FALSE, row.names = FALSE)
+
+
 # melt data
 repeats_de_sig_m <- melt(repeats_de_sig[ , c('Group', 'Family', 'full_length', 'notDE', 'DE')],
                             id.vars = c('Group', 'Family', 'full_length'),
@@ -122,7 +129,7 @@ all_bar_plot <- ggplot(data = repeats_de_sig_m[ repeats_de_sig_m$full_length == 
                           axis.ticks.x = element_line(colour = 'black'),
                           legend.position = 'none')
 
-pdf(file = file.path('plots', 'fig5c-all_repeats_de.pdf'))
+pdf(file = file.path('plots', 'fig5d-all_repeats_de.pdf'))
 print(all_bar_plot)
 invisible(dev.off())
 
@@ -132,7 +139,7 @@ y_labels_plot <- ggplot(data = repeats_de_sig_m[ repeats_de_sig_m$full_length ==
     geom_text(aes(x = full_length, y = Family, label = NA)) +
     theme_void() +
     theme(axis.text.y = element_text(colour = 'black', size = 12,
-                                        angle = 0, debug = FALSE))
+                                    angle = 0, hjust = 1, debug = FALSE))
 
 # plot of full_length data
 full_length_bar_plot <- ggplot(data = repeats_de_sig_m[ repeats_de_sig_m$full_length == 'full_length', ]) +
@@ -146,12 +153,12 @@ full_length_bar_plot <- ggplot(data = repeats_de_sig_m[ repeats_de_sig_m$full_le
                 scale_fill_manual(values = category_palette) +
                 coord_flip()
                 
-pdf(file = file.path('plots', 'fig5c-full_length-repeats_de.pdf'))
+pdf(file = file.path('plots', 'fig5d-full_length-repeats_de.pdf'))
 print(full_length_bar_plot)
 invisible(dev.off())
 
 # remove legend and plot separately
-repeats_legend <- get_gg_legend(full_length_bar_plot)
+repeats_legend <- get_gg_legend(full_length_bar_plot + theme(legend.position = 'top', legend.direction = 'horizontal'))
 
 # plot legend
 postscript(file = file.path('plots', 'repeats_de-legend.eps'),
@@ -173,18 +180,18 @@ full_length_bar_plot <- full_length_bar_plot +
 all_padj_data <- repeats_de_sig[ repeats_de_sig$full_length == "all", c("Family", "padj")]
 # format numbers
 all_padj_data$padj_formatted <- sprintf('%.1e', all_padj_data$padj)
-all_padj_data$padj_formatted[ all_padj_data$padj_formatted == '0.0e+00' ] <- '0'
+all_padj_data$padj_formatted[ all_padj_data$padj_formatted == '0.0e+00' ] <- '< 5e-324'
 all_padj_data$x = factor(rep('all', nrow(all_padj_data)))
 
 all_pvalue_plot <- ggplot(data = all_padj_data) +
                     geom_tile(aes(x = x, y = Family), fill = 'grey90') +
                     geom_text(aes(x = x, y = Family, label = padj_formatted),
-                              hjust = 1, nudge_x = 0.25) +
+                              hjust = 1, nudge_x = 0.45) +
                     geom_hline(data = lines_df, aes(yintercept = posn),
                                linetype = 5, colour = 'grey80') +
                     theme_void()
 
-pdf(file = file.path('plots', 'fig5c-all-pvalues.pdf'))
+pdf(file = file.path('plots', 'fig5d-all-pvalues.pdf'))
 print(all_pvalue_plot)
 invisible(dev.off())
 
@@ -192,7 +199,7 @@ invisible(dev.off())
 full_length_padj_data <- repeats_de_sig[ repeats_de_sig$full_length == "full_length", c("Family", "padj")]
 full_length_padj_data$padj[ full_length_padj_data$padj >= 0.05 ] <- NA
 full_length_padj_data$padj_formatted <- sprintf('%.1e', full_length_padj_data$padj)
-full_length_padj_data$padj_formatted[ full_length_padj_data$padj_formatted == '0.0e+00' ] <- '0'
+full_length_padj_data$padj_formatted[ full_length_padj_data$padj_formatted == '0.0e+00' ] <- '< 5e-324'
 full_length_padj_data$padj_formatted[ full_length_padj_data$padj_formatted == "NA" ] <- NA
 full_length_padj_data$x = factor(rep('full_length', nrow(full_length_padj_data)))
 
@@ -206,12 +213,12 @@ fill_palette <- c('fill' = 'grey90', 'empty' = 'white')
 full_length_pvalue_plot <- ggplot(data = full_length_padj_data) +
                                 geom_tile(aes(x = x, y = Family, fill = fill_colour)) +
                                 geom_text(aes(x = x, y = Family, label = padj_formatted),
-                                          hjust = 1, nudge_x = 0.25) +
+                                          hjust = 1, nudge_x = 0.45) +
                                 scale_fill_manual(values = fill_palette) +
                                 theme_void() +
                                 theme(legend.position = 'none')
 
-pdf(file = file.path('plots', 'fig5c-full_length-pvalues.pdf'))
+pdf(file = file.path('plots', 'fig5d-full_length-pvalues.pdf'))
 print(full_length_pvalue_plot)
 invisible(dev.off())
 
@@ -232,9 +239,9 @@ repeats_location_m$Location <- factor(repeats_location_m$Location,
                                     levels = rev(levels(repeats_location_m$Location)))
 
 # create colour palette for Location
-location_palette <- colour_palette[c('blue', 'red', 'green')]
+location_palette <- colour_palette[c('purple', 'vermillion', 'blue_green')]
 names(location_palette) <- levels(repeats_location_m$Location)
-
+   
 # create repeats location plot
 repeats_location_plot <- ggplot(data = repeats_location_m,
                                 aes(x = Family, y = count, fill = Location)) +
@@ -246,16 +253,16 @@ repeats_location_plot <- ggplot(data = repeats_location_m,
                             scale_y_log10(position = 'right') +
                             coord_flip()
 
-pdf(file = file.path('plots', 'fig5c-all-location.pdf'))
+pdf(file = file.path('plots', 'fig5d-all-location.pdf'))
 print(repeats_location_plot)
 invisible(dev.off())
 
 # remove legend and plot at the end
-location_legend <- get_gg_legend(repeats_location_plot)
+location_legend <- get_gg_legend(repeats_location_plot + theme(legend.position = 'top', legend.direction = 'horizontal'))
 
 # plot legend
 postscript(file = file.path('plots', 'repeats_location-legend.eps'),
-    width = 2, height = 2, paper = 'special', horizontal = FALSE)
+    width = 4, height = 2, paper = 'special', horizontal = FALSE)
 grid.draw(location_legend) 
 invisible(dev.off())
 
@@ -276,13 +283,13 @@ repeats_location_m$count[ repeats_location_m$Family == 'L1MdGf_I' &
 
 repeats_location_plot_broken_axis <-
     ggplot(data = repeats_location_m) +
-        geom_tile(aes(x = Family, y = count, fill = Location),
-                    height = 4, position = position_dodge()) +
+        geom_col(aes(x = Family, y = count, fill = Location),
+                    position = position_dodge()) +
         geom_vline(data = lines_df, aes(xintercept = posn),
                     linetype = 5, colour = 'grey80') +
         scale_fill_manual(values = location_palette,
                             guide = guide_legend(reverse = TRUE)) +
-        scale_y_continuous(position = 'right') +
+        scale_y_continuous(position = 'right', breaks = c(0,50,100) ) +
         coord_flip() +
         theme_void() +
         theme(axis.text.x = element_text(colour = 'black', size = 12,
@@ -292,7 +299,7 @@ repeats_location_plot_broken_axis <-
                 legend.position = 'none')
 
 
-postscript(file = file.path('plots', 'fig5c-all-location.eps'),
+postscript(file = file.path('plots', 'fig5d-all-location.eps'),
            width = 2, height = 9, paper = 'special', horizontal = FALSE)
 print(repeats_location_plot_broken_axis)
 invisible(dev.off())
@@ -303,9 +310,9 @@ save_plot(file.path('plots', "morc2a-repeats.eps"),
           plot_grid(y_labels_plot, all_bar_plot, all_pvalue_plot,
                     repeats_location_plot_broken_axis, full_length_bar_plot,
                     full_length_pvalue_plot,
-                    ncol = 6, rel_widths = c(3,6,2,4,6,2), align = 'h' ),
+                    ncol = 6, rel_widths = c(6,9,3,6,9,3), align = 'h' ),
           ncol = 6, device = 'eps',
-          base_height = 9, base_width = 2)
+          base_height = 9, base_width = 1.5)
 
-
+#c(3,6,3,4,6,3)
 
