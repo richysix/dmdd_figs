@@ -1027,3 +1027,132 @@ output/mrna_abnormal-F_BH_EMSZ-level4-results-filtered.tsv
 done
 
 ```
+
+# No delay genes
+```
+# get genes from the No Delay set for each mutant line and produce count plots
+mkdir plots/no_delay
+export R_LIBS_USER=/software/team31/R-3.3.0
+for mut in $( grep -v None output/KOs_ordered_by_delay.txt | cut -f1 )
+do
+for comparison in hom_vs_het_wt het_vs_wt hom_vs_het
+do
+# get genes from no delay file
+delay_file=$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/$comparison.baseline-comp/mrna_as_wt.sig.tsv
+if [[ -e $delay_file ]]; then
+  lines=$(wc -l $delay_file | awk '{print $1}')
+  if [[ $lines -eq 1 ]]; then
+    echo "$delay_file: NO SIG GENES" 1>&2
+  else
+  samples_file=$ROOT/lane-process/$mut/deseq2-baseline-grandhet-blacklist-adj-gt-adj-sex-stage-nicole-definite-maybe-outliers/samples.txt
+  count_plots_file=$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/$comparison.baseline-comp/mrna_as_wt.sig.counts.pdf
+  /software/R-3.3.0/bin/Rscript \
+  ~is1/checkouts/bio-misc/graph_rnaseq_counts.R \
+  $delay_file $samples_file \
+  $count_plots_file default condition stage
+  fi
+  break
+fi
+done
+done
+
+for mut in $( grep -v None output/KOs_ordered_by_delay.txt | cut -f1 )
+do
+for comparison in hom_vs_het_wt het_vs_wt hom_vs_het
+do
+# get genes from no delay file
+delay_file=$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/$comparison.baseline-comp/mrna_as_wt.sig.tsv
+if [[ -e $delay_file ]]; then
+  lines=$(wc -l $delay_file | awk '{print $1}')
+  if [[ $lines -eq 1 ]]; then
+    echo "$delay_file: NO SIG GENES" 1>&2
+  else
+  cut -f1,3,4,10,11 $delay_file | sed -e 's|^|'$mut'\t|'
+  fi
+  break
+fi
+done
+done > output/no_delay/all-no_delay-genes.tsv
+
+# how many times do genes appear in the No Delay list
+cut -f2 output/no_delay/all-no_delay-genes.tsv | sort | uniq -c | sort -grk1,1 | grep -v Gene | awk '{print $1}' | sort | uniq -c | sort -grk2,2
+      3 12
+      5 11
+      5 10
+     24 9
+     53 8
+    106 7
+    221 6
+    437 5
+    760 4
+   1341 3
+   2381 2
+   4335 1
+
+# take genes that appear more than 6 times and run topGO
+cut -f2 output/no_delay/all-no_delay-genes.tsv | sort | uniq -c | grep -v Gene | \
+awk '{if($1 > 6){print $2}}' > output/no_delay/most_common-no_delay-genes.txt
+
+# get file of all genes tested for DE in any of the lines
+for mut in $( grep -v None output/KOs_ordered_by_delay.txt | cut -f1 )
+do
+echo "$mut" 1>&2
+for comparison in hom_vs_het_wt het_vs_wt hom_vs_het
+do
+# get genes from no delay file
+file=$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/$comparison.baseline-comp/mrna_as_wt.tsv
+if [[ -e $file ]]; then
+perl -F"\t" -lane 'next if $F[2] eq "NA"; print join("\t", @F[0,9,10]); ' $file
+break
+fi
+done
+done | sort -u | grep -v ^Gene > output/no_delay/most_common-no_delay-all_genes.txt
+
+# run topGO
+export R_LIBS_USER=/software/team31/R
+species=mus_musculus
+ensembl=88
+dir=output/no_delay/most_common-no_delay
+mkdir $dir.fisher
+bsub -o $dir.fisher/topgo.o -e $dir.fisher/topgo.e \
+-R'select[mem>2000] rusage[mem=2000]' -M2000 \
+perl -I /software/team31/packages/topgo-wrapper/lib \
+/software/team31/packages/topgo-wrapper/script/run_topgo.pl \
+--dir $dir.fisher \
+--input_file output/no_delay/all_genes.txt \
+--genes_of_interest_file $dir-genes.txt \
+--gene_field 1 \
+--name_field 2 \
+--description_field 3 \
+--go_terms_file /software/team31/packages/topgo-wrapper/data/${species}_e${ensembl}_go.txt \
+--output_sig_level 0.05
+
+# make files for Enrichment Map
+cd output/no_delay/most_common-no_delay.fisher/
+# Enrichment file: modify GO results file
+perl -F"\t" -lane 'next if $. == 1; if($F[5] < 0.05 && $F[3]/$F[4] > 1 && $F[3] > 9){print join("\t", @F); }' BP.all.tsv | \
+perl -F"\t" -lane 'BEGIN{ print join("\t", qw{GO.ID Term p.Val FDR Phenotype});}
+{ next if m/\A GO.ID/xms;
+$phenotype = $F[3] > $F[4] ? 1 : -1;
+print join("\t", @F[0,1,5], "", $phenotype * -(log($F[5])/log(10)) );
+}' > BP.sig.enrich.txt
+
+# Gene set
+sort -t$'\t' -k1,1 BP.all.tsv | \
+join -t$'\t' /lustre/scratch117/maz/team31/resources/go/go_2_description.BP.tsv - | \
+cut -f1,2,9 | tr ',' '\t' > BP.gmt 
+
+# count plots
+mut=Fcho2
+delay_file=$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.baseline-comp/mrna_as_wt.sig.tsv
+grep -E '^Gene|ENSMUSG00000034486|ENSMUSG00000045092|ENSMUSG00000030170|ENSMUSG00000020717' \
+$delay_file > output/no_delay/no_delay-counts.tsv
+samples_file=$ROOT/lane-process/$mut/deseq2-baseline-grandhet-blacklist-adj-gt-adj-sex-stage-nicole-definite-maybe-outliers/samples.txt
+count_plots_file=plots/no_delay/no_delay.eps
+/software/R-3.3.0/bin/Rscript \
+~rw4/checkouts/bio-misc/graph_rnaseq_counts.R \
+output/no_delay/no_delay-counts.tsv $samples_file \
+$count_plots_file default condition stage
+
+```
+
