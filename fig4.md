@@ -9,33 +9,89 @@ KO response plot
 plot is produced by fig2.R
 
 Fig. 4b - Heatmap
-Table (fig4_table.txt) is copied from an Excel file
-Convert table to long format for heatmap script
 
+Get genes that appear in four or more mutants
 ```
-perl -F"\t" -lane 'if($. == 1){
-print join("\t", qw{Gene KO log2fc});
-for($i = 1; $i < scalar @F; $i++){
-  $col_header[$i] = $F[$i];
-} }
-else{
-  for($i = 1; $i < scalar @col_header; $i++){
-    $value = $F[$i] eq "" ? "NA" : $F[$i];
-	print join("\t", $F[0], $col_header[$i], $value,);
-  }
-}' data/fig4b_table.txt > output/fig4b_table.tsv
-```
-
-output as pdf, svg and eps
-```
-for suffix in pdf eps svg
+# create a file of which genes are DE in which lines
+base=/lustre/scratch117/maz/team31/projects/mouse_DMDD
+for mut in $( cut -f1 output/KOs_ordered_by_delay.txt )
 do
-export R_LIBS_USER='.R/lib'
-/software/R-3.3.0/bin/Rscript \
-fig4.R --output_file plots/fig4b-heatmap-truncated.$suffix \
-output/fig4b_table.tsv
+for comparison in hom_vs_het_wt het_vs_wt hom_vs_het
+do
+file=$base/figshare/mutant_response/$mut-deseq2-blacklist-adj-gt-adj-sex-outliers-$comparison-mutant_response.sig.tsv
+if [[ -e $file ]]; then
+  lines=$(wc -l $file | awk '{print $1}')
+  if [[ $lines -eq 1 ]]; then
+    echo "$file: NO SIG GENES" 1>&2
+  else
+    grep ENSMUSG $file | \
+    perl -F"\t" -lane 'print join("\t", $F[0], "'$mut'", "1");'
+  fi
+  break
+fi
+done
+done > output/mutant_response-sig_genes-upset.tmp
+
+# subset to ciliopathy mutants
+grep -E 'B9d2|Cc2d2a|Kif3b|Kifap3|Nek9|Rpgripl1|Ift140' output/mutant_response-sig_genes-upset.tmp > output/mutant_response-sig_genes-BCIKKNR-upset.tmp
+
+# reshape from long format to wide
+for set in BCIKKNR
+do
+/software/R-3.3.0/bin/Rscript reshape-long_to_wide.R output/mutant_response-sig_genes-$set-upset.tmp output/mutant_response-sig_genes-$set-upset.tsv
 done
 
+# get genes that are DE in at least 4 lines
+/software/R-3.3.0/bin/Rscript get_intersection_genes.R \
+output/mutant_response-sig_genes-$set-upset.tsv \
+output/mutant_response-sig_genes-BCIKKNR-intersection-4.txt \
+4
+
+# get log2fc data
+echo -e "Line\tGene ID\tGene Name\tlog2fc\tClass" > data/fig4b_log2fc.tsv
+for mut in B9d2 Cc2d2a Rpgripl1 Kif3b Kifap3 Ift140 Nek9
+do
+for gene in $( cat output/mutant_response-sig_genes-BCIKKNR-intersection-4.txt )
+do
+line=$(grep $gene $ROOT/figshare/mutant_response/$mut*tsv)
+num_lines=$(echo $line | grep -c ^ENS)
+if [[ $num_lines -eq 0 ]];then
+  echo -e "$mut\t$gene\tNA\tNA\tNA"
+else
+echo $line | perl -lane 'BEGIN{
+%class_for = (
+Cyp26c1 => "Downstream of Shh signalling",
+Dmrt2 => "Shh signalling interactors",
+Emx2 => "Downstream of Shh signalling",
+Foxa1 => "Downstream of Shh signalling",
+Foxa2 => "Downstream of Shh signalling",
+Gli1 => "Downstream of Shh signalling",
+Gm3764 => "Novel",
+Gm38103 => "Novel",
+"Mir9-3hg" => "Downstream of Shh signalling",
+"Nkx2-1" => "Downstream of Shh signalling",
+"Nkx2-2" => "Downstream of Shh signalling",
+"Nkx2-9" => "Downstream of Shh signalling",
+Pax6 => "Downstream of Shh signalling",
+Phox2b => "Downstream of Shh signalling",
+Pitx2 => "Downstream of Shh signalling",
+Shh => "Downstream of Shh signalling",
+Slit1 => "Downstream of Shh signalling",
+Sox21 => "Novel",
+Stmn2 => "Shh signalling interactors",
+Tbx15 => "Downstream of Shh signalling",
+Wnt8b => "Shh signalling interactors",
+); }
+{ print join("\t", "'$mut'", @F[0,9,3], $class_for{$F[9]}, ); }'
+fi
+done
+done >> data/fig4b_log2fc.tsv
+```
+
+Produce heatmap
+```
+/software/R-3.3.0/bin/Rscript fig4.R \
+data/fig4b_log2fc.tsv
 ```
 
 Fig. 4d - Zkscan17 heatmap
