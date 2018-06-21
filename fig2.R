@@ -122,13 +122,21 @@ top_shared_terms <- function(go_results, num_terms) {
 }
 
 # calculate overlap by terms
-terms_overlap <- function(results, mut1, mut2, term_col_name) {
-  jaccard_index =
-    length( intersect(results[ results$Gene == mut1, term_col_name ],
-                            results[ results$Gene == mut2, term_col_name ]) ) /
-    length( union(results[ results$Gene == mut2, term_col_name ],
-                  results[ results$Gene == mut1, term_col_name ]) )
-  return( jaccard_index )
+terms_overlap <- function(results, mut1, mut2, term_col_name, method = 'jaccard') {
+  if (method == 'jaccard') {
+    overlap_index =
+      length( intersect(results[ results$Gene == mut1, term_col_name ],
+                              results[ results$Gene == mut2, term_col_name ]) ) /
+      length( union(results[ results$Gene == mut2, term_col_name ],
+                    results[ results$Gene == mut1, term_col_name ]) )
+  } else {
+    overlap_index =
+      length( intersect(results[ results$Gene == mut1, term_col_name ],
+                              results[ results$Gene == mut2, term_col_name ]) ) /
+      min( length( results[ results$Gene == mut2, term_col_name ]),
+            length( results[ results$Gene == mut1, term_col_name ]) )
+  }
+  return( overlap_index )
 }
 
 # use hierarchical clustering to order by the overlap in terms
