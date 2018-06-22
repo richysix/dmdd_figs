@@ -116,8 +116,13 @@ inset_box <- data.frame(
 )
 
 # set colour palette
-repeat_type_palette <- c('#4e80bd', '#c04f4c', '#9bbb58', '#8164a2')
-names(repeat_type_palette) <- levels(repeats_by_line_by_type_subset$Type)
+repeat_type_palette <- c('DNA' = '#4e80bd',
+                         'LINE' = '#c04f4c',
+                         'LTR' = '#9bbb58',
+                         'SINE' = '#8164a2',
+                         'Other' = unname(colour_blind_palette['orange'])
+                         )
+#names(repeat_type_palette) <- levels(repeats_by_line_by_type_subset$Type)
 
 repeats_by_line_by_type_plot <-
   ggplot(data = repeats_by_line_by_type_subset) +
@@ -231,9 +236,9 @@ repeats_de <- repeats_de[ order(repeats_de$Type, repeats_de$Family, -repeats_de$
 repeats_de$Name <- factor(repeats_de$Name,
                           levels = unique(as.character(repeats_de$Name)))
 
-# colour palette
-type_palette <- colour_blind_palette[c('vermillion', 'blue_green', 'purple', 'blue', 'orange')]
-names(type_palette) <- c('DNA', 'LINE', 'LTR', 'SINE', 'Other')
+## colour palette
+#type_palette <- colour_blind_palette[c('vermillion', 'blue_green', 'purple', 'blue', 'orange')]
+#names(type_palette) <- c('DNA', 'LINE', 'LTR', 'SINE', 'Other')
 
 # calculate boxes to highlight L1MdGf_I, MMERGLN-int and MMETn-int
 round_to <- 500
@@ -261,11 +266,11 @@ repeat_length_plot <- ggplot(data = repeats_de) +
                   ymin = length_start, ymax = length_end),
               fill = 'grey90') + 
     geom_point(aes(x = Name, y = Length, colour = Type)) +
-    geom_hline(yintercept = 4000, linetype = 'longdash', colour = 'firebrick3') +
+    geom_hline(yintercept = 4000, linetype = 'longdash', colour = 'black') +
     labs(x = 'Repeat Element', y = 'Repeat Length (bases)') +
     scale_y_continuous(expand = c(0.01,0) ) +
     scale_x_discrete(expand = c(0,15)) +
-    scale_colour_manual(values = type_palette) +
+    scale_colour_manual(values = repeat_type_palette) +
     theme_minimal() +
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
