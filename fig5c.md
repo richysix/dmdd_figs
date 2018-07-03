@@ -23,7 +23,7 @@ uniq -c | awk 'BEGIN{OFS = "\t"} {print $2, $1}' > output/fig5c-num_repeats_de-i
 
 # pvalue and log2fc of genes with repeats in introns in de
 grep -Ff output/fig5c-genes-repeats-intron-de_dhx35.txt \
-$ROOT/lane-process/Dhx35/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.tsv | \
+$ROOT/lane-process/Dhx35/deseq2-notranscriptome-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.tsv | \
 cut -f 1,3,4 | sort -k1,1 > output/fig5c-genes_with_repeats_in_de-pval-log2fc.tsv
 
 # two genes are missing because they are blacklisted
