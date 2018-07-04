@@ -19,10 +19,10 @@ cmd_line_args <- parse_args(
 #cmd_line_args <- list(
 #  options = list(directory = 'cwd',
 #                 verbose = FALSE ),
-#  args = c('/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2-4567_somites-unstranded/counts.txt',
-#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2-4567_somites-unstranded/samples.txt',
-#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/all-unstranded.tsv',
-#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2-unstranded/samples.txt' )
+#  args = c('data/PRJEB4513-E8.25/4567_somites-counts.tsv',
+#           'data/PRJEB4513-E8.25/4567_somites-samples.tsv',
+#           'data/PRJEB4513-E8.25/tissues-counts.tsv',
+#           'data/PRJEB4513-E8.25/tissues-samples.tsv' )
 #)
 
 if (cmd_line_args$options[['directory']] == 'cwd') {

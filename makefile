@@ -130,10 +130,10 @@ fig1.R data/Mm_GRCm38_e88_baseline.rda \
 /lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2/samples.txt
 	export R_LIBS_USER=.R/lib:/software/team31/R-3.3.0/:/software/team31/R; \
 	/software/R-3.3.0/bin/Rscript fig1.R \
-	/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2-4567_somites-unstranded/counts.txt \
-	/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2-4567_somites-unstranded/samples.txt \
-	/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/all-unstranded.tsv \
-	/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2-unstranded/samples.txt
+	data/PRJEB4513-E8.25/4567_somites-counts.tsv \
+	data/PRJEB4513-E8.25/4567_somites-samples.tsv \
+	data/PRJEB4513-E8.25/tissues-counts.tsv \
+	data/PRJEB4513-E8.25/tissues-samples.tsv
 
 # baseline data
 data/Mm_GRCm38_e88_baseline.rda: baseline.R /lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/baseline-grandhet/all.tsv \
