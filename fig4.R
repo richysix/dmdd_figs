@@ -96,7 +96,7 @@ print(heatmap_plot)
 dev.off()
 
 postscript(file = sub('svg$', 'eps', cmd_line_args$options[['output_file']]),
-           horizontal = FALSE, width = 7, height = 8.5)
+           horizontal = FALSE, width = 7, height = 4)
 print(heatmap_plot)
 dev.off()
 
