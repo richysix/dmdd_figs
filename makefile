@@ -1,6 +1,6 @@
 outputs: setup.done \
 plots/tissue_vs_WE_heatmap.eps output/highly_expressed-tissues.tsv \
-output/tissue_vs_WE_Venn_numbers.tsv \
+output/tissue_vs_WE_Venn_numbers.tsv output/tissue_only-counts.tsv \
 output/human-mim.tsv \
 plots/emap-bubble_plots-by_results_set.eps \
 output/duplicated_terms.tsv \
@@ -124,7 +124,7 @@ output/mrna_abnormal-jaccard-all.rda
 
 # suppl fig1 - tissues vs whole embryos
 plots/tissue_vs_WE_heatmap.eps output/highly_expressed-tissues.tsv \
-output/tissue_vs_WE_Venn_numbers.tsv: \
+output/tissue_vs_WE_Venn_numbers.tsv output/tissue_only-counts.tsv: \
 fig1.R data/Mm_GRCm38_e88_baseline.rda \
 /lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2/counts.txt \
 /lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2/samples.txt
