@@ -135,8 +135,3 @@ fig1.R data/Mm_GRCm38_e88_baseline.rda \
 	data/PRJEB4513-E8.25/tissues-counts.tsv \
 	data/PRJEB4513-E8.25/tissues-samples.tsv
 
-# baseline data
-data/Mm_GRCm38_e88_baseline.rda: baseline.R /lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/baseline-grandhet/all.tsv \
-/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/baseline-grandhet/deseq2/samples.txt
-	/software/R-3.3.0/bin/Rscript baseline.R
-
