@@ -1,4 +1,4 @@
-outputs: data/Mm_GRCm38_e88_baseline.rda \
+outputs: setup.done \
 plots/tissue_vs_WE_heatmap.eps output/highly_expressed-tissues.tsv \
 output/tissue_vs_WE_Venn_numbers.tsv \
 output/human-mim.tsv \
@@ -135,3 +135,5 @@ fig1.R data/Mm_GRCm38_e88_baseline.rda \
 	data/PRJEB4513-E8.25/tissues-counts.tsv \
 	data/PRJEB4513-E8.25/tissues-samples.tsv
 
+setup.done: setup.R
+	/software/R-3.3.0/bin/Rscript setup.R
