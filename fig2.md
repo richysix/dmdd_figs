@@ -2,7 +2,7 @@
 
 ```bash
 # set up working directory
-# change this if you are trying recreate the analysis
+# change this if you are trying to recreate the analysis
 # everything else should then be relative to this directory
 export ROOT=/lustre/scratch117/maz/team31/projects/mouse_DMDD
 
@@ -79,12 +79,11 @@ bsub -o output/pca.$genes.$transform.o -e output/pca.$genes.$transform.e \
 /software/R-3.3.0/bin/Rscript \
 ~rw4/checkouts/bio-misc/pca_rnaseq.R \
 output/all_samples_merged-counts.tsv \
-output/samples-gt-ko-no_Cenpl.txt \
+output/samples-gt-gender-stage-ko-no_Cenpl.txt \
 plots/all_mutants-pca.pdf \
 output/all_mutants.$transform.$genes $transform $genes"
 done
 done
-
 ```
 
 Produce PCA plot using shiny app and save as rda file.
@@ -152,6 +151,47 @@ sink()
 # calculate Pearson cor coefficient for PC3
 cor(plot_data$somite_number, plot_data$PC3, method = 'spearman')
 [1] -0.8648007
+
+# load PC3 data
+pc3_var <- read.delim(file.path('output', 'all_mutants.vst.50000-PC3.tsv'), check.names = FALSE)
+pc3_var <- pc3_var[ , c('Gene ID', '% variance explained', 'Name', 'Description',
+                        'Chr', 'Start', 'End', 'Strand', 'Biotype')]
+pdf(file = file.path('plots', 'all_mutants.vst.50000-PC3.variance-explained.pdf'))
+ggplot(data = pc3_var, aes(x = 1:nrow(pc3_var), y = cumsum(`% variance explained`), group = 1) ) +
+ geom_line() + labs(x = 'Gene', y = 'Cumulative % Var explained') +
+ theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+dev.off()
+pc_threshold <- 50
+cutoff <- which(cumsum(pc3_var[['% variance explained']]) > pc_threshold)[1]
+top_genes <- pc3_var[ 1:cutoff, ]
+write.table(top_genes, file = file.path('output', 'pc3-top_genes.tsv'),
+quote = FALSE, row.names = FALSE, sep = "\t")
+
+# load VST transformed data
+library('DESeq2')
+dds <- readRDS(file.path('output', 'all_mutants.vst.50000.dds.rds'))
+# subset counts to PC3 genes and redo PCA
+pc3_gene_ids <- as.character(top_genes[['Gene ID']])
+pca <- prcomp(t(assay(dds)[pc3_gene_ids, ]))
+propVarPC <- pca$sdev^2 / sum( pca$sdev^2 )
+aload <- abs(pca$rotation)
+propVarRegion <- sweep(aload, 2, colSums(aload), "/")
+
+# output PC coordinates
+varPCThreshold <- 1
+lastSigPC <- sum(propVarPC * 100 >= varPCThreshold)
+x <- pca$x[,1:lastSigPC]
+outputBase <- 'output/all_mutants.vst.topPC3_genes'
+write.table( x, file=paste0(outputBase, "-PCs.tsv"), quote=FALSE, sep="\t" )
+
+# subset counts to NOT PC3 genes
+not_pc3_genes <- !(row.names(dds) %in% pc3_gene_ids)
+pca_not_pc3_genes <- prcomp(t(assay(dds)[not_pc3_genes, ]))
+propVarPC <- pca_not_pc3_genes$sdev^2 / sum( pca_not_pc3_genes$sdev^2 )
+lastSigPC <- sum(propVarPC * 100 >= varPCThreshold)
+x <- pca_not_pc3_genes$x[,1:lastSigPC]
+outputBase <- 'output/all_mutants.vst.bottomPC3_genes'
+write.table( x, file=paste0(outputBase, "-PCs.tsv"), quote=FALSE, sep="\t" )
 ```
 
 Get GO results
