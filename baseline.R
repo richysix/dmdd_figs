@@ -1,5 +1,34 @@
 .libPaths('./.R/lib')
 
+library('optparse')
+
+option_list <- list(
+  make_option("--output_file", type="character", default='Mm_baseline_data.rda',
+              help="Working directory [default %default]" ),
+  make_option("--ensembl_version", type="integer", default=88,
+              help="Working directory [default %default]" ),
+  make_option(c("-v", "--verbose"), action="store_true", default=FALSE,
+              help="Print extra output [default]")
+)
+
+cmd_line_args <- parse_args(
+  OptionParser(
+    option_list=option_list, prog = 'baseline.R',
+    usage = "Usage: %prog [options] countFile sampleFile\n",
+    description = paste("Create SummarizedExperiment object for baseline data",
+                   "from a count and sample file")
+  ),
+  positional_arguments = 2
+)
+
+#cmd_line_args <- list(
+#  options = list(output_file = 'Mm_GRCm38_e90_baseline_data.rda',
+#                 ensembl_version = 90,
+#                 verbose = FALSE ),
+#  args = c('/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/baseline-grandhet/baseline-90.tsv',
+#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/mouse_dmdd_figs/baseline-samples.txt')
+#)
+
 # load packages
 packages <- c('SummarizedExperiment')
 for( package in packages ){
@@ -9,13 +38,9 @@ for( package in packages ){
 }
 
 # load baseline data
-baseline_count_file <-
-    '/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/baseline-grandhet/all.tsv'
-baseline_counts <- read.delim(baseline_count_file, check.names = FALSE)
+baseline_counts <- read.delim(cmd_line_args$args[1], check.names = FALSE)
 
-baseline_sample_file <-
-    '/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/baseline-grandhet/deseq2/samples.txt'
-baseline_samples <- read.delim(baseline_sample_file, row.names = 1)
+baseline_samples <- read.delim(cmd_line_args$args[2], row.names = 1)
 # order levels of condition
 baseline_samples$condition <-
     factor(baseline_samples$condition,
