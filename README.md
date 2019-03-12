@@ -15,6 +15,19 @@ Create output and plots directories and ordered sample informtaion file
 Rscript setup.R data/counts/samples-gt-gender-stage-somites.txt
 ```
 
+## Suppl Fig 1
+
+The data for the heatmap in Supplementary Figure 1 are provided in
+data/PRJEB4513-E8.25/. The heatmap can be created by running the fig1.R script.
+
+```
+Rscript fig1.R \
+data/PRJEB4513-E8.25/4567_somites-counts.tsv \
+data/PRJEB4513-E8.25/4567_somites-samples.tsv \
+data/PRJEB4513-E8.25/tissues-counts.tsv \
+data/PRJEB4513-E8.25/tissues-samples.tsv
+```
+
 <h3 id="packages">Required R packages</h3>
 
 To install the required packages, if not already installed, run packages_install.R

@@ -44,17 +44,7 @@ for( package in packages ){
 
 ################################################################################
 ## baseline data
-#load(cmd_line_args$args[1])
-#we_count_data <- assays(Mm_GRCm38_e88_baseline)$counts[ ,
-#                          grepl('^[4567]somites_[0-9]$', colnames(Mm_GRCm38_e88_baseline)) ]
-
-## subset to 5, 6 and 7 somites and drop levels
-#sample_info <-
-#  colData(Mm_GRCm38_e88_baseline)[
-#            grepl('^[4567]somites_[0-9]$', colnames(Mm_GRCm38_e88_baseline)), ]
-#sample_info <- droplevels(sample_info)
-#sample_info$type <- rep('Whole Embryo', nrow(sample_info))
-
+# 4, 5, 6 and 7 somites data
 we_count_file <- cmd_line_args$args[1]
 we_count_data <- read.delim(we_count_file, row.names = 1, check.names = FALSE)
 
