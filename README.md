@@ -11,7 +11,8 @@ To get the packages for R see the [Required R packages](#packages)
 Create output and plots directories and ordered sample informtaion file
 
 ```
-Rscript setup.R data/counts/samples-gt-gender-stage-somites.txt
+Rscript setup.R data/counts/samples-gt-gender-stage-somites.txt \
+data/Mm_GRCm38_e88_baseline.rds
 ```
 
 ## Suppl Fig 1

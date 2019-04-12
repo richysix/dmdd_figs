@@ -6,13 +6,13 @@ option_list <- list(
 cmd_line_args <- parse_args(
   OptionParser(
     option_list=option_list, prog = 'setup.R',
-    usage = "Usage: %prog [options] samples_file" ),
-  positional_arguments = 1
+    usage = "Usage: %prog [options] samples_file baseline_rds_file" ),
+  positional_arguments = 2
 )
 
-packages <- c('plyr')
+packages <- c('plyr', 'SummarizedExperiment')
 for( package in packages ){
-  library(package, character.only = TRUE)
+  suppressPackageStartupMessages(library(package, character.only = TRUE))
 }
 
 # setup directories
@@ -78,6 +78,32 @@ write.table(data.frame(stage_count$gene, delay = delay),
 # output sample info with gene and Theiler Stage
 write.table(sample_info,
             file = file.path(wd, 'output', 'sample_info.txt'),
+            quote = FALSE, sep = "\t",
+            row.names = TRUE, col.names = NA)
+
+# load baseline rds file and make all.tsv file and samples file
+Mm_baseline <- readRDS(cmd_line_args$args[2])
+counts <- assays(Mm_baseline)[['counts']]
+colnames(counts) <- sub("$", " count", colnames(counts))
+normalised_counts <- assays(Mm_baseline)[['normalised_counts']]
+colnames(normalised_counts) <- sub("$", " normalised count", colnames(normalised_counts))
+
+all_data <- data.frame(
+  rowData(Mm_baseline),
+  counts,
+  normalised_counts,
+  check.names = FALSE
+)
+
+write.table(all_data,
+            file = file.path(wd, 'output', 'Mm_GRCm38_e88_baseline.tsv'),
+            quote = FALSE, sep = "\t",
+            row.names = FALSE, col.names = TRUE)
+
+sample_data <- colData(Mm_baseline)
+sample_data <- sample_data[ , !grepl("sample_id", colnames(sample_data)) ]
+write.table(sample_data,
+            file = file.path(wd, 'output', 'samples-Mm_GRCm38_e88_baseline.txt'),
             quote = FALSE, sep = "\t",
             row.names = TRUE, col.names = NA)
 
