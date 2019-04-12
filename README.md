@@ -2,8 +2,7 @@
 
 Notes to recreate the analysis in Collins et al. 2019
 
-Each individual step is detailed below. Once the input files are created,
-you can run all the R scripts in order by typing `make`
+Each individual step is detailed below.
 
 ## Setup
 
@@ -27,6 +26,18 @@ data/PRJEB4513-E8.25/4567_somites-samples.tsv \
 data/PRJEB4513-E8.25/tissues-counts.tsv \
 data/PRJEB4513-E8.25/tissues-samples.tsv
 ```
+
+Download counts for all 73 lines
+```
+# The quickest way is to download the compressed archive
+# You'll need tar to extract the file
+# Alternatively the files can be download from doi.org/10.6084/m9.figshare.6819611
+curl -LO https://ndownloader.figshare.com/files/14151989
+mv 14151989 data/collins_2019_counts_all.tgz
+cd data
+tar -xzvf collins_2019_counts_all.tgz
+```
+
 
 <h3 id="packages">Required R packages</h3>
 
