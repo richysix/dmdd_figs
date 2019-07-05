@@ -6,13 +6,30 @@ Each individual step is detailed below.
 
 ## Setup
 
-To get the packages for R see the [Required R packages](#packages)
+To get the packages for R see the [Required R packages](#packages) section
 
-Create output and plots directories and ordered sample informtaion file
+Create output and plots directories and ordered sample information file
 
 ```
 Rscript setup.R data/counts/samples-gt-gender-stage-somites.txt \
 data/Mm_GRCm38_e88_baseline.rds
+```
+
+## Fig. 1d
+
+The data for the Novel genes heatmap in Fig. 1d are included in the data/ folder
+(data/346-from-all-novel-blacklist-header.tsv).
+The heatmap was generated using this datafile and the baseline samples files
+`output/samples-Mm_GRCm38_e88_baseline.txt` using the
+[geneExpr](https://richysix.shinyapps.io/geneexpr/) Shiny App.
+The `Max Scaled` Transformation option was used and the heatmap was clustered by
+Genes. Five of the genes have zero variance in their counts and so will produce
+the error below when clustering. This removes these genes from the heatmap.
+```
+Clustering error
+Some of the genes that you are trying to cluster have zero variance across the
+selected samples and have been removed:
+XLOC_012085, XLOC_014947, XLOC_018956, XLOC_020760, XLOC_044545
 ```
 
 ## Suppl Fig 1
