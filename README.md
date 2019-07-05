@@ -56,6 +56,10 @@ cd data
 tar -xzvf collins_2019_counts_all.tgz
 ```
 
+# Fig.2
+
+The commands to create the files needed by the fig2 script are in fig2.md
+
 
 <h3 id="packages">Required R packages</h3>
 
