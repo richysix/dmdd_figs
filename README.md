@@ -2,6 +2,10 @@
 
 Notes to recreate the analysis in Collins et al. 2019
 
+These notes start from the processed count files. These were produced by mapping
+the reads to GRCm38 using TopHat2 and counted against Ensembl version 88 annotation
+using htseq-count.
+
 Each individual step is detailed below.
 
 ## Setup
