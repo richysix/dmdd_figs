@@ -17,3 +17,32 @@ print join("\t", $group, @F[0..3]);' data/fig5d_repeats_de.tmp > data/fig5d_repe
 rm data/fig5d_repeats_de.tmp
 ```
 
+Download Dhx35/Morc2a data
+
+```
+curl -LO https://ndownloader.figshare.com/files/11865374
+mkdir data/notranscriptome-repeats
+mv 11865374 data/notranscriptome-repeats/notranscriptome-repeats_data.tgz
+cd data/notranscriptome-repeats
+tar -xzvf notranscriptome-repeats_data.tgz
+cd ../../
+```
+
+Make sig files for heatmap
+
+```
+# L1MdGf_I
+grep -E 'L1MdGf_I:|adjp' data/notranscriptome-repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
+awk '{print $1 "\t" $0}' | sed -e 's|^Name|Gene ID|' > output/L1MdGf_I_hom_vs_het_wt.sig.tsv
+
+# MMERGLN-int
+grep -E 'MMERGLN-int:|adjp' data/notranscriptome-repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
+awk '{print $1 "\t" $0}' | sed -e 's|^Name|Gene ID|' > output/MMERGLN-int_hom_vs_het_wt.sig.tsv
+
+# MMETn-int
+grep -E 'MMETn-int:|adjp' data/notranscriptome-repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
+awk '{print $1 "\t" $0}' | sed -e 's|^Name|Gene ID|' > output/MMETn-int_hom_vs_het_wt.sig.tsv
+
+# samples file
+grep -E 'condition|Morc2a' data/counts/samples-gt-gender-stage-somites.txt > output/Morc2a-samples.txt
+```
