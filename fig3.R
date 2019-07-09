@@ -431,6 +431,8 @@ mean_count <- rbind(wt_mean_count,
                                      mean_count_by_gt$gt == 'het', ]
                    )
 
+write.table(mean_count, file = file.path('output', 'mean_expr_wt.tsv'),
+            quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 # heatmap
 embryo_ko_expr_plot <- ggplot(data = ko_expr) + 
   geom_tile(aes(x = gt, y = symbol, fill = log2fc )) +
@@ -478,6 +480,7 @@ if (debug) {
 ## BASELINE
 # heatmap for expression of the knocked out genes in baseline
 # load baseline data
+# loads object called Mm_baseline
 load(cmd_line_args$args[4])
 
 # get gene_ids in the same order as the heatmap
@@ -538,6 +541,10 @@ mean_counts_ts_scaled_df <- data.frame(
   mean_counts_ts_scaled,
   check.names = FALSE
 )
+
+write.table(mean_counts_ts_scaled_df, file = file.path('output', 'mean_expr_by_TS_baseline.tsv'),
+            quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+
 mean_counts_ts_scaled_m <- melt(mean_counts_ts_scaled_df, id.vars = c('gene_name'),
                              variable.name = 'Stage')
 
@@ -734,7 +741,7 @@ save_plot(file.path(plots_dir, "Sample_overview.eps"),
           base_height = 9, base_width = 1.54 )
 
 # save plot objects
-save.image(file = file.path(wd, 'output', 'fig2.RData'))
+save.image(file = file.path(wd, 'output', 'fig3.RData'))
 #object_to_save = c('embryo_stage_size_colour_plot', 'embryo_ko_expr_plot',
 #                   'mouse_baseline_ts_heatmap', 'sig_genes_heatmap')
 #save(list = object_to_save, file = file.path(wd, 'output', 'fig1.RData'))
