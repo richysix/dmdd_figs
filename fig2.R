@@ -246,14 +246,15 @@ for ( domain in names(go_results_by_domain) ) {
   
   postscript(file = file.path(plots_dir,
                     paste('top_shared_go_results', domain, 'eps', sep = ".")),
-              width = 8, height = 10, paper = 'special', horizontal = FALSE)
+              width = 8.25, height = 14.7, paper = 'special', horizontal = FALSE)
   print(top_shared_go_results_plot + theme_bubble(base_size = 12) +
         theme(axis.text.x = element_text(face = 'italic')))
   dev.off()
   
   postscript(file = file.path(plots_dir,
                     paste('top_shared_go_results-no-y-text', domain, 'eps', sep = ".")),
-              width = 5.6, height = 10, paper = 'special')
+              #width = 5.6, height = 10, paper = 'special')
+              width = 5, height = 14.7, paper = 'special', horizontal = FALSE)
   print(top_shared_go_results_plot +
           theme(axis.text.y = element_blank(),
                 axis.text.x = element_text(colour = 'black'),
@@ -263,6 +264,7 @@ for ( domain in names(go_results_by_domain) ) {
   dev.off()
   
   # make table to reflect the plot
+  # pvalues
   top_shared_terms_table <- dcast(top_terms_by_shared, GO.ID + Term ~ Gene,
                                   value.var = 'X.log10.pvalue.')
   top_shared_terms_table <- merge(data.frame( GO.ID = names(go_term_counts),
@@ -277,6 +279,23 @@ for ( domain in names(go_results_by_domain) ) {
   write.table(top_shared_terms_table,
               file = file.path('output',
                                paste('top_50_go_p', domain, 'tsv', sep = ".")),
+              sep = "\t", row.names = FALSE, quote = FALSE)
+  
+  # fold enrichment
+  top_shared_terms_table_fe <- dcast(top_terms_by_shared, GO.ID + Term ~ Gene,
+                                  value.var = 'Fold.Enrichment')
+  top_shared_terms_table_fe <- merge(data.frame( GO.ID = names(go_term_counts),
+                                             Count = as.integer(go_term_counts) ),
+                                  top_shared_terms_table_fe)
+  # sort by Occurence
+  top_shared_terms_table_fe <-
+    top_shared_terms_table_fe[ order(top_shared_terms_table_fe$Count, decreasing = TRUE), ]
+  
+  # output plot data as table
+  # write to file
+  write.table(top_shared_terms_table_fe,
+              file = file.path('output',
+                               paste('top_50_go_fe', domain, 'tsv', sep = ".")),
               sep = "\t", row.names = FALSE, quote = FALSE)
 }
 
@@ -379,149 +398,10 @@ for ( domain in names(go_results_by_domain) ) {
 }
 
 #################################################################################
-
-
-filtering_data <- read.delim('data/go_results-filtering.tsv', header = TRUE)
-# set levels of Filtered
-filtering_data$Filtered <- factor(filtering_data$Filtered,
-                                  levels = c('unfiltered', 'filtered'))
-
-filtering_counts <-
-    ddply(filtering_data,
-          .(Gene, Comparison, Domain, Filtered), summarise,
-          num_sig_terms = length(GO.ID)
-         )
-
-filtering_counts_by_gene_by_domain <-
-  split(filtering_counts,
-        f = list(filtering_counts$Gene, filtering_counts$Domain))
-
-# If a mutant has no sig terms it won't appear in filtering_counts
-# Add a row with num_sig_terms = 0 for each of these
-filtering_counts_edited <-
-  do.call(rbind,
-    lapply(filtering_counts_by_gene_by_domain,
-            function(subset_by_gene_by_domain){
-              if (nrow(subset_by_gene_by_domain) < 2) {
-                by_gene_by_domain_list <- vector('list', length = 2)
-                i <- 1
-                for (filter_class in c("unfiltered", "filtered")) {
-                  if (any(subset_by_gene_by_domain$Filtered == filter_class)) {
-                    by_gene_by_domain_list[[i]] <- subset_by_gene_by_domain[ subset_by_gene_by_domain$Filtered == filter_class, ]
-                  } else {
-                    by_gene_by_domain_list[[i]] <-
-                      data.frame(
-                        Gene = subset_by_gene_by_domain$Gene[1],
-                        Comparison = subset_by_gene_by_domain$Comparison[1],
-                        Domain = subset_by_gene_by_domain$Domain[1],
-                        Filtered = filter_class,
-                        num_sig_terms = 0
-                      )
-                  }
-                  i <- i + 1
-                }
-                return(do.call(rbind, by_gene_by_domain_list))
-              } else {
-                return(subset_by_gene_by_domain)
-              }
-            }
-          )
-        )
-
-filtering_counts_w <- dcast(filtering_counts_edited, Gene + Domain ~ Filtered,
-                            value.var = 'num_sig_terms')
-
-# Plot Difference in sig genes between Filtered and unfiltered
 # read in sig genes file
 sig_genes_file <- cmd_line_args$args[4]
 sig_genes <- read.delim(file = sig_genes_file)
 
-# get sig_genes data for delayed mutants
-sig_genes_delayed <- 
-  do.call(rbind,
-          lapply(levels(filtering_counts_w$Gene),
-                 function(gene_name){
-                   return(sig_genes[ sig_genes$Gene == gene_name, ])
-                 })
-        )
-sig_genes_delayed <- sig_genes_delayed[ sig_genes_delayed$Set == 'ko_response', ]
-
-sig_genes_delayed_subset <-
-  do.call(rbind,
-    lapply(unique(as.character(sig_genes_delayed$Gene)),
-              function(gene_name, sig_genes_delayed) {
-                gene_subset <-
-                  sig_genes_delayed[ sig_genes_delayed$Gene == gene_name, ]
-                for (comp in c('hom_vs_het_wt', 'hom_vs_het',
-                                'het_vs_wt')) {
-                  sig_genes_delayed_count <-
-                    gene_subset[ gene_subset$Comparison == comp, ]
-                  if(nrow(sig_genes_delayed_count) == 2) {
-                    return(sig_genes_delayed_count)
-                  }
-                }
-              },
-              sig_genes_delayed
-    )
-  )
-
-sig_genes_delayed_subset$Type <- factor(sig_genes_delayed_subset$Type,
-                                        levels = c('unfiltered', 'filtered'))
-sig_genes_delayed_subset_w <- dcast(sig_genes_delayed_subset, Gene ~ Type,
-                            value.var = 'Count')
-
-filtering_genes_plot <- ggplot() +
-  geom_point(data = sig_genes_delayed_subset,
-             aes(x = Type, y = Count,
-                 colour = Gene)) +
-  geom_segment(data = sig_genes_delayed_subset_w,
-               aes(y = unfiltered, yend = filtered, colour = Gene,
-                   x = 'unfiltered', xend = 'filtered')) +
-  geom_text_repel(data = sig_genes_delayed_subset[ sig_genes_delayed_subset$Type == 'unfiltered', ],
-                  aes(x = Type, y = Count, label = Gene),
-                  xlim = c(NA, 1) )
-
-# print to pdf
-pdf(file = file.path('plots', 'filtering.pdf'))
-print(filtering_genes_plot)
-print(filtering_genes_plot + scale_y_log10())
-
-# subset each to BP
-for (domain in levels(filtering_counts_w$Domain)) {
-  filtering_counts_subset <- filtering_counts[ filtering_counts$Domain == domain, ]
-  filtering_counts_w_subset <- filtering_counts_w[ filtering_counts_w$Domain == domain, ]
-  
-  filtering_plot <- ggplot() +
-    geom_point(data = filtering_counts_subset,
-               aes(x = Filtered, y = num_sig_terms,
-                   colour = Gene)) +
-    geom_segment(data = filtering_counts_w_subset,
-                 aes(y = unfiltered, yend = filtered, colour = Gene,
-                     x = 'unfiltered', xend = 'filtered')) +
-    geom_text_repel(data = filtering_counts_subset[ filtering_counts_subset$Filtered == 'unfiltered', ],
-                    aes(x = Filtered, y = num_sig_terms, label = Gene),
-                    xlim = c(NA, 1) ) +
-    labs(title = paste0('Effect of Filtering on the number of GO enrichments (domain = ', domain, ')')) +
-    theme(axis.title.x = element_blank())
-  
-  print(filtering_plot)
-  print(filtering_plot + scale_y_log10())
-
-  # plot sig genes against sig terms
-  merged_data <- merge(sig_genes_delayed_subset, filtering_counts_subset,
-           by.x = c('Gene', 'Comparison', 'Type'),
-           by.y = c('Gene', 'Comparison', 'Filtered'))
-  scatter_plot <- ggplot(data = merged_data) +
-    geom_point(aes(x = Count, y = num_sig_terms, colour = Gene, shape = Type)) +
-    geom_smooth(aes(x = Count, y = num_sig_terms),
-                formula = y ~ x, method = 'lm') + 
-    scale_x_log10() + scale_y_log10()
-  print(scatter_plot)
-}
-dev.off()
-
-
-################################################################################
 # EMAPA
 emap_results_file <- cmd_line_args$args[5]
 emap_results <- read.delim(file = emap_results_file)
