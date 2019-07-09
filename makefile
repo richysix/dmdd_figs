@@ -106,6 +106,14 @@ output/human-mim.tsv: get_mim_data.R \
 	/software/R-3.3.0/bin/Rscript get_mim_data.R \
 	/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/dmdd-genes.txt
 
+# ko response filtering
+ko_response_filtering-Fcho2.tsv ko_response_filtering-Fcho2.eps \
+ko_response_filtering-Hira.tsv ko_response_filtering-Hira.eps: \
+ko_response_filtering.R output/dir_number_to_gene.tsv output/go_blind
+	export R_LIBS_USER=.R/lib:/software/team31/R-3.3.0/:/software/team31/R; \
+	/software/R-3.3.0/bin/Rscript ko_response_filtering.R \
+	output/dir_number_to_gene.tsv output/go_blind
+	
 # Fig2
 plots/emap-bubble_plots-by_results_set.eps: fig2.R \
 data/go_results.tsv /lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/dmdd-genes.txt \
