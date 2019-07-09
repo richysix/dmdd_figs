@@ -14,15 +14,16 @@ option_list <- list(
 cmd_line_args <- parse_args(
   OptionParser(
     option_list=option_list, prog = 'fig2.R',
-    usage = "Usage: %prog [options] expt_samples_file KO_expression_file mouse_baseline zfish_baseline sig_genes" ),
-  positional_arguments = 6
+    usage = "Usage: %prog [options] gene_info_file expt_samples_file Genes_order_file KO_expression_file mouse_baseline sig_genes OMIM_data" ),
+  positional_arguments = 7
 )
 
 #cmd_line_args <- list(
 #  options = list(directory = 'cwd',
 #                 verbose = FALSE ),
 #  args = c('/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/dmdd-genes.txt',
-#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/samples-minus-outliers.txt',
+#           'output/sample_info.txt',
+#           'output/KOs_ordered_by_delay.txt',
 #           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/ko_expr/ko_expr.tsv',
 #           'data/Mm_GRCm38_e88_baseline.rda',
 #           'data/sig_gene_counts.tsv',
@@ -71,17 +72,17 @@ names(gene_name_for_dir) <- gene_info$Dir
 # load sample info
 sample_file <- cmd_line_args$args[2]
 sample_info <- read.table(file = sample_file, sep = "\t", header = TRUE, row.names = 1 )
-sample_info$gene <- gsub('_[a-z0-9]+', '', row.names(sample_info))
 
-# remove Cenpl
-sample_info <- sample_info[ sample_info$gene != 'Cenpl', ]
 # set levels of gt
 sample_info$condition <- factor(sample_info$condition,
                                 levels = c('hom', 'het', 'wt'))
 
 # calculate percentage of hom embryos that are delayed (< 20 somites)
 pc_delayed_homs <- sum( sample_info$somite_number[ sample_info$condition == 'hom'] < 20, na.rm = TRUE) / nrow(sample_info[ sample_info$condition == 'hom', ]) * 100
-print(sprintf('%.1f%% of homs are delayed\n', pc_delayed_homs))
+#print(sprintf('%.1f%% of homs are delayed\n', pc_delayed_homs))
+print(sprintf('num = %d total = %d %.1f%% of homs are delayed',
+sum( sample_info$somite_number[ sample_info$condition == 'hom'] < 20, na.rm = TRUE),
+nrow(sample_info[ sample_info$condition == 'hom', ]), pc_delayed_homs))
 
 # calculate mean number of embryos per condition per expt
 sample_info_by_expt <- split(sample_info, sample_info$gene)
@@ -107,109 +108,16 @@ median_sibs_by_expt <- median(sapply(sample_info_by_expt,
                             }), na.rm = TRUE)
 print(sprintf('The median number of homs and sibs per expt are %d and %d respectively\n', median_homs_by_expt, median_sibs_by_expt))
 
-# label with Theiler stage
-stage_boundaries <- c(4, 7, 12, 19, 29, 34)
-stage_labels <- c('TS12b', 'TS13', 'TS14', 'TS15', 'Other')
-
-# assign stage numbers with their TS
+# set levels of Theiler stage
 sample_info$Theiler_stage <-
-  cut(sample_info$somite_number,
-      breaks = stage_boundaries, labels = stage_labels)
-# 4 embryos are of Unknown stage. Put these in Other with the one TS16 (30s) embryo
-sample_info$Theiler_stage[is.na(sample_info$Theiler_stage)] <- 'Other'
-
-# sort KOs by delay
-# count up numbers of embryos in each stage
-stage_count <- ddply(sample_info, .(gene), summarise,
-                     Severe = sum(Theiler_stage == 'TS12b'),
-                     Moderate = sum(Theiler_stage == 'TS13'),
-                     Slight = sum(Theiler_stage == 'TS14'),
-                     None = sum(Theiler_stage == 'TS15')
-                     )
-# order by Severe, Moderate, Slight then None
-stage_count <- 
-  stage_count[order(stage_count$Severe, stage_count$Moderate, 
-                    stage_count$Slight, stage_count$None, decreasing = TRUE), ]
-# set levels
-stage_count$gene <- factor(stage_count$gene, levels = stage_count$gene)
-
-# get names of genes that are delayed
-delayed <-
-  stage_count$Severe + stage_count$Moderate + stage_count$Slight
-delayed_genes <- stage_count$gene[ delayed > 0 ]
-# write genes to file
-write.table(delayed_genes, file = file.path(wd, 'output', 'KOs_delayed.txt'),
-            quote = FALSE, row.names = FALSE, col.names = FALSE)
-
-# output delayed order
-delay <- factor(rep('None', nrow(stage_count)),
-                levels = c('Severe', 'Moderate', 'Slight', 'None'))
-for ( delay_category in c('Slight', 'Moderate', 'Severe')) {
-  delay[ stage_count[[delay_category]] > 0 ] <- delay_category
-}
-write.table(data.frame(stage_count$gene, delay = delay),
-            file = file.path(wd, 'output', 'KOs_ordered_by_delay.txt'),
-            quote = FALSE, sep = "\t",
-            row.names = FALSE, col.names = FALSE)
-
-# reshape for plotting
-stage_count_m <- melt(stage_count, id.vars = c('gene'),
-                      variable.name = 'delay_type',
-                      value.name = 'count')
-stage_count_m$gene <- factor(stage_count_m$gene,
-                             levels = rev(stage_count$gene) )
-
-# function to get legend of a ggplot object
-get_gg_legend <- function(ggplot_obj){ 
-  tmp <- ggplot_gtable(ggplot_build(ggplot_obj)) 
-  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box") 
-  legend <- tmp$grobs[[leg]] 
-  return(legend)
-} 
-
-# plot
-embryo_stage_plot <- ggplot(data = stage_count_m) + 
-  geom_raster( aes(x = delay_type, y = gene, fill = count) ) + 
-  scale_fill_viridis(direction = -1) +
-  scale_x_discrete(position = 'top') + 
-  theme_void() + theme(axis.text.x = element_text(colour = 'black', angle = 90, hjust = 0, debug = FALSE),
-                       legend.position = 'top' )
+  factor(sample_info$Theiler_stage,
+          levels = c('TS12b', 'TS13', 'TS14', 'TS15', 'Other'))
 
 if (debug) {
   cat('EMBRYO STAGE PLOT...\n')
 }
 
-pdf(file = file.path(plots_dir, 'embryo_stage_colour.pdf'),
-    width = 2, height = 5 )
-print(embryo_stage_plot)
-invisible(dev.off())
-
-# make zeros appear as white
-# convert zeros to NA
-stage_count_na_m <- stage_count_m
-stage_count_na_m$count[ stage_count_na_m$count == 0 ] <- NA
-
-embryo_stage_zero_white_plot <- ggplot(data = stage_count_na_m) + 
-  geom_raster( aes(x = delay_type, y = gene, fill = count) ) + 
-  scale_fill_viridis(direction = -1, na.value = 'white') +
-  scale_x_discrete(position = 'top') + 
-  theme_void() + theme(axis.text.x =
-                       element_text(size = 10, colour = 'black', angle = 90,
-                                    hjust = 0, debug = FALSE),
-                       legend.position = 'top',
-                       legend.title = element_text(size = 10))
-
-pdf(file = file.path(plots_dir, 'embryo_stage_colour_zero_white.pdf'),
-    width = 2, height = 5 )
-print(embryo_stage_zero_white_plot)
-invisible(dev.off())
-
-postscript(file = file.path(plots_dir, 'embryo_stage_colour_zero_white.eps'),
-    width = 2, height = 5 )
-print(embryo_stage_zero_white_plot)
-invisible(dev.off())
-
-# also plot number of embryos as size of box
+# plot number of embryos as size of box
 # split by delay_type
 stage_count_by_gt <-
   ddply(sample_info, .(gene, condition), .drop = FALSE, summarise,
@@ -218,8 +126,14 @@ stage_count_by_gt <-
     Slight = sum(Theiler_stage == 'TS14'),
     None = sum(Theiler_stage == 'TS15')
   )
+  
+# read in KO ordering
+ko_order_file <- cmd_line_args$args[3]
+ko_order <- read.table(ko_order_file)
+names(ko_order) <- c('Gene', 'Delay Category')
+
 # order genes in the same order as stage_count
-stage_count_by_gt <- do.call(rbind, lapply(stage_count$gene,
+stage_count_by_gt <- do.call(rbind, lapply(as.character(ko_order$Gene),
        function(x){ stage_count_by_gt[ stage_count_by_gt$gene == x, ] } )
 )
 
@@ -228,11 +142,12 @@ stage_count_by_gt.m <- melt(stage_count_by_gt, id.vars = c('gene', 'condition'),
                       variable.name = 'delay_type',
                       value.name = 'count')
 stage_count_by_gt.m$gene <- factor(stage_count_by_gt.m$gene,
-                                   levels = rev(stage_count$gene) )
+                                   levels = rev(as.character(ko_order$Gene)) )
 
 stage_count_by_gt.m_by_type <- split(stage_count_by_gt.m, stage_count_by_gt.m$delay_type)
 # also split stage_count by delay_type
-stage_count_by_type <- split(stage_count_m, stage_count_m$delay_type)
+stage_count.m <- ddply(stage_count_by_gt.m, .(gene, delay_type), summarise, count = sum(count))
+stage_count_by_type <- split(stage_count.m, stage_count.m$delay_type)
 
 # figure out max width of column and calculate widths and positions of boxes
 calculate_boxes <- function(delay_type, stage_count_by_gt.m_by_type,
@@ -282,14 +197,14 @@ for ( i in seq_len(length(stage_count_by_gt.m_by_type))) {
   stage_count.for_tiles_list[[i]] <-
     calculate_boxes(delay_type, stage_count_by_gt.m_by_type,
                     stage_count_by_type, offset)
-  offset <- offset + max(stage_count_by_type[[i]]$count)
+  offset <- offset + max(stage_count_by_type[[i]]$count) #max( sapply(split(stage_count_by_gt[['Severe']], stage_count_by_gt$gene), sum) )
   stage_separators$raw[i+1] <- offset
 }
 stage_count.for_tiles <- do.call(rbind, stage_count.for_tiles_list)
 
 # plot with stage as bar length and gt as colour
 # convert gene (directory) name to correct e88 gene name
-gene_names <- gene_name_for_dir[ rev(as.character(stage_count$gene)) ]
+gene_names <- gene_name_for_dir[ rev(as.character(ko_order$Gene)) ]
 
 embryo_stage_size_colour_plot <- ggplot(data = stage_count.for_tiles) + 
   geom_rect( aes( xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = condition)) +
@@ -301,6 +216,14 @@ embryo_stage_size_colour_plot <- ggplot(data = stage_count.for_tiles) +
                     guide = 'none') +  
   theme_void() + theme( axis.text.y = element_text(size = 8, colour = 'black',
                                                    face = 'italic', angle = 0, debug = FALSE) )
+
+# function to get legend of a ggplot object
+get_gg_legend <- function(ggplot_obj){ 
+  tmp <- ggplot_gtable(ggplot_build(ggplot_obj)) 
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box") 
+  legend <- tmp$grobs[[leg]] 
+  return(legend)
+} 
 
 # get legend for plotting separately
 embryo_stage_size_colour_plot_plus_legend <-
@@ -326,42 +249,12 @@ postscript(file = file.path(plots_dir, 'embryo_stage_size_colour.legend.eps'),
 grid.draw(gt_legend)
 invisible(dev.off())
 
-# plot x position as stage
-# order levels of gene_gt by delay and condition
-sample_info$gene_gt <-
-  factor(
-    paste(sample_info$gene, sample_info$condition, sep="-"),
-    levels = rev( paste(rep(stage_count$gene, each = 3),
-                        c('wt', 'het', 'hom'), sep="-") )
-  )
-
-# create stage boundaries
-ts_boundaries <- data.frame(
-  Stage = c(3.5, 7.5, 12.5, 19.5, 29.5),
-  Label = c('TS12a', 'TS12b', 'TS13', 'TS14', 'TS15')
-)
-
-embryo_stage_by_gene_by_gt_plot <- ggplot(data = sample_info) +
-  geom_tile(aes(x = somite_number, y = gene_gt, fill = condition), alpha = 0.2) +
-  scale_fill_manual(values = c('firebrick2', 'green', 'steelblue3'),
-                    guide = guide_legend(reverse = TRUE)) +
-  geom_vline(data = ts_boundaries, aes(xintercept = Stage)) + 
-  theme_void() + theme(legend.position = 'top',
-                     legend.title = element_text(size = 8),
-                     legend.text = element_text(size = 6),
-                     legend.key.size = unit(0.7, 'lines') )
-
-pdf(file = file.path(plots_dir, 'embryo_stage_by_gene_by_gt.pdf'),
-    width = 2, height = 5 )
-print(embryo_stage_by_gene_by_gt_plot)
-invisible(dev.off())
-
 if (debug) {
   cat('KO EXPRESSION PLOT...\n')
 }
 
 # expression of the knocked out gene in homs and hets
-ko_expr_file <- cmd_line_args$args[3]
+ko_expr_file <- cmd_line_args$args[4]
 ko_expr <- read.table(ko_expr_file, sep = "\t", header = FALSE )
 names(ko_expr) <- c('gene_id', 'symbol', 'comparison', 'log2fc')
 ko_expr$gt <- factor( gsub('_vs_.*', '', ko_expr$comparison),
@@ -478,7 +371,7 @@ if (debug) {
 ## BASELINE
 # heatmap for expression of the knocked out genes in baseline
 # load baseline data
-load(cmd_line_args$args[4])
+load(cmd_line_args$args[5])
 
 # get gene_ids in the same order as the heatmap
 id_for <- as.character(unique(ko_expr$gene_id))
@@ -615,7 +508,7 @@ if (debug) {
 }
 
 # numbers of significant genes
-sig_genes_file <- cmd_line_args$args[5]
+sig_genes_file <- cmd_line_args$args[6]
 sig_genes <- read.delim(sig_genes_file)
 # subset to ko_response and remove hom_vs_het
 sig_genes <- sig_genes[ sig_genes$Set == 'ko_response' &
@@ -691,7 +584,7 @@ if (debug) {
 }
 
 # plot MIM data as graphical table
-mim_data_file <- cmd_line_args$args[6]
+mim_data_file <- cmd_line_args$args[7]
 mim_data <- read.delim(mim_data_file)
 mim_data$Dir <- factor(mim_data$Dir, levels = rev(stage_count$gene))
 
