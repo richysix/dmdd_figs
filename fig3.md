@@ -41,7 +41,7 @@ $ROOT/lane-process/dmdd-genes.txt
 Get log2 Fold Change for each gene in homs (vs het_wt) and hets (vs wt)
 
 ```bash
-# get log2fc for hom_vs_het_wt if it exists, then hom_vs_wt, then hom_vs_het
+# get log2fc for hom_vs_wt if it exists, then hom_vs_het
 mkdir ko_expr
 cat /dev/null > ko_expr/ko_expr.tsv
 cat /dev/null > ko_expr/ko_expr.err
@@ -61,7 +61,7 @@ if [[ -e $file ]]
     grep -E "^Gene|^$geneId" $file > ko_expr/$geneId.expr.tsv
     counts=1
     grep -E "$geneId" $file | grep ^ENS | \
-    perl -F"\t" -lane '{print join("\t", $F[0], "'$mut'", "'$comparison'", $F[2], ); }' \
+    perl -F"\t" -lane '{print join("\t", $F[0], "'$mut'", "'$comparison'", @F[2,3], ); }' \
         >> ko_expr/ko_expr.tsv
     hom=1
     break
@@ -75,7 +75,7 @@ if [[ -e $file ]]
     grep -E "^Gene|^$geneId" $file > ko_expr/$geneId.expr.tsv
     counts=1
     grep -E "$geneId" $file | grep ^ENS | \
-    perl -F"\t" -lane '{print join("\t", $F[0], "'$mut'", "'$comparison'", $F[3], ); }' \
+    perl -F"\t" -lane '{print join("\t", $F[0], "'$mut'", "'$comparison'", @F[2,3], ); }' \
         >> ko_expr/ko_expr.tsv
     hom=1
     break
@@ -84,7 +84,7 @@ if [[ -e $file ]]
 fi
 done
 if [[ $hom -eq 0 ]]; then
-    echo -e "$geneId\t$mut\thom\tNA" >> ko_expr/ko_expr.tsv
+    echo -e "$geneId\t$mut\thom\tNA\tNA" >> ko_expr/ko_expr.tsv
 fi
 for comparison in het_vs_wt
 do
@@ -96,7 +96,7 @@ if [[ -e $file ]]
       grep -E "^Gene|^$geneId" $file > ko_expr/$geneId.expr.tsv
     fi
     grep -E "$geneId" $file | grep ^ENS | \
-    perl -F"\t" -lane '{print join("\t", $F[0], "'$mut'", "'$comparison'", $F[2], ); }' \
+    perl -F"\t" -lane '{print join("\t", $F[0], "'$mut'", "'$comparison'", @F[2,3], ); }' \
         >> ko_expr/ko_expr.tsv
     break
   else
@@ -109,12 +109,12 @@ if [[ -e $file ]]
       grep -E "^Gene|^$geneId" $file > ko_expr/$geneId.expr.tsv
     fi
     grep -E "$geneId" $file | grep ^ENS | \
-    perl -F"\t" -lane '{print join("\t", $F[0], "'$mut'", "'$comparison'", $F[3], ); }' \
+    perl -F"\t" -lane '{print join("\t", $F[0], "'$mut'", "'$comparison'", @F[2,3], ); }' \
         >> ko_expr/ko_expr.tsv
     break
   else
     echo "$mut $file does not exist" >> ko_expr/ko_expr.err
-    echo -e "$geneId\t$mut\thet\tNA" >> ko_expr/ko_expr.tsv
+    echo -e "$geneId\t$mut\thet\tNA\tNA" >> ko_expr/ko_expr.tsv
 fi
 done
 done
