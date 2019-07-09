@@ -1,4 +1,4 @@
-outputs: setup.done \
+outputs: output/KOs_delayed.txt output/KOs_ordered_by_delay.txt setup.done \
 plots/tissue_vs_WE_heatmap.eps output/highly_expressed-tissues.tsv \
 output/tissue_vs_WE_Venn_numbers.tsv output/tissue_only-counts.tsv \
 output/human-mim.tsv \
@@ -87,14 +87,14 @@ data/root_terms.txt
 # Fig3 - sample overview
 plots/Sample_overview.eps: fig3.R \
 /lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/dmdd-genes.txt \
-/lustre/scratch117/maz/team31/projects/mouse_DMDD/samples-minus-outliers.txt \
+output/sample_info.txt output/KOs_ordered_by_delay.txt \
 /lustre/scratch117/maz/team31/projects/mouse_DMDD/ko_expr/ko_expr.tsv \
 data/Mm_GRCm38_e88_baseline.rda data/sig_gene_counts.tsv \
 output/human-mim-edited.tsv
-	export R_LIBS_USER=.R/lib:/software/team31/R-3.3.0/:/software/team31/R; \
-	/software/R-3.3.0/bin/Rscript fig3.R \
+	Rscript fig3.R \
 	/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/dmdd-genes.txt \
-	/lustre/scratch117/maz/team31/projects/mouse_DMDD/samples-minus-outliers.txt \
+	output/sample_info.txt \
+	output/KOs_ordered_by_delay.txt \
 	/lustre/scratch117/maz/team31/projects/mouse_DMDD/ko_expr/ko_expr.tsv \
 	data/Mm_GRCm38_e88_baseline.rda \
 	data/sig_gene_counts.tsv \
@@ -125,15 +125,16 @@ output/mrna_abnormal-jaccard-all.rda
 # suppl fig1 - tissues vs whole embryos
 plots/tissue_vs_WE_heatmap.eps output/highly_expressed-tissues.tsv \
 output/tissue_vs_WE_Venn_numbers.tsv output/tissue_only-counts.tsv: \
-fig1.R data/Mm_GRCm38_e88_baseline.rda \
-/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2/counts.txt \
-/lustre/scratch117/maz/team31/projects/mouse_DMDD/PRJEB4513-E8.25/downsample/deseq2/samples.txt
-	export R_LIBS_USER=.R/lib:/software/team31/R-3.3.0/:/software/team31/R; \
-	/software/R-3.3.0/bin/Rscript fig1.R \
+fig1.R data/PRJEB4513-E8.25/4567_somites-counts.tsv \
+data/PRJEB4513-E8.25/4567_somites-samples.tsv \
+data/PRJEB4513-E8.25/tissues-counts.tsv \
+data/PRJEB4513-E8.25/tissues-samples.tsv
+	Rscript fig1.R \
 	data/PRJEB4513-E8.25/4567_somites-counts.tsv \
 	data/PRJEB4513-E8.25/4567_somites-samples.tsv \
 	data/PRJEB4513-E8.25/tissues-counts.tsv \
 	data/PRJEB4513-E8.25/tissues-samples.tsv
 
-setup.done: setup.R
-	/software/R-3.3.0/bin/Rscript setup.R
+output/KOs_delayed.txt output/KOs_ordered_by_delay.txt \
+output/sample_info.txt setup.done: setup.R
+	Rscript setup.R data/counts/samples-gt-gender-stage-somites.txt
