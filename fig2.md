@@ -1,93 +1,49 @@
 # Fig.2
 
-```bash
-# set up working directory
-# change this if you are trying to recreate the analysis
-# everything else should then be relative to this directory
-export ROOT=/lustre/scratch117/maz/team31/projects/mouse_DMDD
-
-# get individual sample info
-for mut in $( cut -f2 $ROOT/lane-process/dmdd/deseq2/samples.txt  | grep _ | \
-sed -E 's/_(wt|het|hom)//' | sort -u | grep -vE 'Sh3pxd2a_i|Cenpl' )
-do
-cat $ROOT/lane-process/$mut/deseq2-baseline-grandhet-blacklist-adj-gt-adj-sex-stage-nicole-definite-maybe-outliers/samples.txt
-done | grep -vE 'condition|baseline' | \
-perl -F"\t" -lane 'BEGIN{print join("\t", "", qw{condition group stage somite_number mutant} ); }
-{ $mutant = $F[0]; $mutant =~ s/_.* \z//xms;
-$somite_num = $F[3]; $somite_num =~ s/somite[s]*//xms;
-print join("\t", @F, $somite_num, $mutant, ); }' > $ROOT/mouse_dmdd_figs/output/samples-gt-gender-stage-ko-no_Cenpl.txt
-```
-
 ## Delay PCA
 
+Make a merged count file for all genes
+
 ```
-# make a merged count file for all genes
 # first create the list of all files
-for mut in $( grep -v Cenpl output/KOs_ordered_by_delay.txt )
-do
-dir=$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers
-file=$dir/hom_vs_het_wt.tsv
-if [[ ! -e $file ]]; then
-  file=$dir/het_vs_wt.tsv
-  if [[ ! -e $file ]]; then
-	file=$dir/hom_vs_het.tsv
-	if [[ ! -e $file ]]; then
-      echo 1>&2 "$file DOES NOT EXIST"
-	else
-      echo $file
-	fi
-  else
-    echo $file
-  fi
-else
-  echo $file
-fi
-done | grep -v '^Gene' | \
-sort -u > $ROOT/mouse_dmdd_figs/output/all_mutants-counts-files.txt
+find data/counts/ | grep tsv$ | sort > output/all_mutants-counts-files.txt
+
+# download merge script
+curl -LO https://github.com/richysix/bioinf-gen/raw/master/merge_deseq_counts.pl
 
 # run script to make count files
-perl ~/checkouts/team31/scripts/merge_deseq_counts.pl \
+perl merge_deseq_counts.pl \
 output/all_mutants-counts-files.txt \
  > output/all_samples_merged-counts.tsv
 
-perl ~/checkouts/team31/scripts/merge_deseq_counts.pl --normalised \
-output/all_mutants-counts-files.txt \
- > output/all_samples_merged-norm_counts.tsv
-
-# make samples file containing just genotype and mutant name for PCA script
-echo -e "\tcondition\tmutant" > $ROOT/mouse_dmdd_figs/output/samples-gt-ko-no_Cenpl.txt
-for mut in $( grep -v Cenpl output/KOs_ordered_by_delay.txt | cut -f1 )
-do
-file=$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/samples.txt
-if [[ ! -e $file ]]; then
-  echo 1>&2 "$file DOES NOT EXIST"
-else
-  cat $file
-fi
-done | grep -v condition | perl -F"\t" -lane '$mutant = $F[0]; $mutant =~ s/_.* \z//xms;
-print join("\t", @F[0,1], $mutant)' \
- >> $ROOT/mouse_dmdd_figs/output/samples-gt-ko-no_Cenpl.txt
-
-# run PCA
-for genes in 50000 # uses all genes
-do
-for transform in vst
-do
-bsub -o output/pca.$genes.$transform.o -e output/pca.$genes.$transform.e \
--M6000 -R'select[mem>6000] rusage[mem=6000]' \
-"export R_LIBS_USER=/software/team31/R-3.3.0
-/software/R-3.3.0/bin/Rscript \
-~rw4/checkouts/bio-misc/pca_rnaseq.R \
-output/all_samples_merged-counts.tsv \
-output/samples-gt-gender-stage-ko-no_Cenpl.txt \
-plots/all_mutants-pca.pdf \
-output/all_mutants.$transform.$genes $transform $genes"
-done
-done
+# make samples file containing just somite number for PCA script
+cut -f1,4 output/sample_info.txt | sed -e 's|stage|condition|' > output/samples-somites.txt
 ```
 
-Produce PCA plot using shiny app and save as rda file.
-Edit plot in interactive R session.
+Download PCA script from another repository and run PCA
+The script produces a series of plots of successive principal components plotted
+against each other. In the PC3 vs PC2 plot the association with somite number can clearly be seen
+
+````
+curl -LO https://github.com/iansealy/bio-misc/raw/master/pca_rnaseq.R
+
+gene=50000
+transform=vst
+Rscript pca_rnaseq.R \
+output/all_samples_merged-counts.tsv \
+output/samples-somites.txt \
+plots/all_mutants-pca.pdf \
+output/all_mutants.$transform.$genes $transform $genes 1 0
+```
+
+To reproduce the image in Fig. 2a.
+Produce PCA plot of PC2 vs PC3 using the [PCA plot](https://richysix.shinyapps.io/pca_plot)
+Shiny app with genotype as shape and somite_number as fill colour and save as rda file.
+Then edit the plot in an interactive R session.
+
+```
+R
+```
 
 ```R
 library('ggplot2')
@@ -115,8 +71,9 @@ postscript(file = file.path('plots', paste0('pca-all_genes-top50000-somite_numbe
             width = 15, height = 7, paper = 'special')
 print(ggplot(data = plot_data) +
     geom_point(aes(x = PC3, y = PC2, fill = somite_number, shape = condition), size = 2, stroke = 0.2) +
-    scale_fill_viridis(name = 'Somite Number', guide = guide_colourbar(order = 1) ) +
+    scale_fill_viridis(name = 'Somite number', guide = guide_colourbar(order = 1) ) +
     scale_shape_manual(values = c(21,22,23), name = 'Genotype', guide = guide_legend(order = 2)) +
+    labs(x = 'PC3 (6.3% variance)', y = 'PC2 (7.7% variance)') +
     facet_wrap( ~ gt_group, nrow = 1) +
     theme_minimal() +
     theme(axis.title = element_text(size = 14),
@@ -159,42 +116,62 @@ pc3_var <- pc3_var[ , c('Gene ID', '% variance explained', 'Name', 'Description'
 pdf(file = file.path('plots', 'all_mutants.vst.50000-PC3.variance-explained.pdf'))
 ggplot(data = pc3_var, aes(x = 1:nrow(pc3_var), y = cumsum(`% variance explained`), group = 1) ) +
  geom_line() + labs(x = 'Gene', y = 'Cumulative % Var explained') +
- theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
 dev.off()
 pc_threshold <- 50
 cutoff <- which(cumsum(pc3_var[['% variance explained']]) > pc_threshold)[1]
 top_genes <- pc3_var[ 1:cutoff, ]
 write.table(top_genes, file = file.path('output', 'pc3-top_genes.tsv'),
 quote = FALSE, row.names = FALSE, sep = "\t")
-
-# load VST transformed data
-library('DESeq2')
-dds <- readRDS(file.path('output', 'all_mutants.vst.50000.dds.rds'))
-# subset counts to PC3 genes and redo PCA
-pc3_gene_ids <- as.character(top_genes[['Gene ID']])
-pca <- prcomp(t(assay(dds)[pc3_gene_ids, ]))
-propVarPC <- pca$sdev^2 / sum( pca$sdev^2 )
-aload <- abs(pca$rotation)
-propVarRegion <- sweep(aload, 2, colSums(aload), "/")
-
-# output PC coordinates
-varPCThreshold <- 1
-lastSigPC <- sum(propVarPC * 100 >= varPCThreshold)
-x <- pca$x[,1:lastSigPC]
-outputBase <- 'output/all_mutants.vst.topPC3_genes'
-write.table( x, file=paste0(outputBase, "-PCs.tsv"), quote=FALSE, sep="\t" )
-
-# subset counts to NOT PC3 genes
-not_pc3_genes <- !(row.names(dds) %in% pc3_gene_ids)
-pca_not_pc3_genes <- prcomp(t(assay(dds)[not_pc3_genes, ]))
-propVarPC <- pca_not_pc3_genes$sdev^2 / sum( pca_not_pc3_genes$sdev^2 )
-lastSigPC <- sum(propVarPC * 100 >= varPCThreshold)
-x <- pca_not_pc3_genes$x[,1:lastSigPC]
-outputBase <- 'output/all_mutants.vst.bottomPC3_genes'
-write.table( x, file=paste0(outputBase, "-PCs.tsv"), quote=FALSE, sep="\t" )
 ```
 
-Get GO results
+## Fig 2c
+
+Merge baseline counts with Brd2 sample counts
+```
+echo "data/counts/Brd2-deseq2-blacklist-adj-gt-adj-sex-outliers.tsv
+output/Mm_GRCm38_e88_baseline.tsv" > output/Brd2-counts-files.txt
+
+# run script to make count files
+perl merge_deseq_counts.pl \
+output/Brd2-counts-files.txt \
+ > output/Brd2-baseline-counts.tsv
+```
+
+Make a sample file for Brd2 plus baseline samples
+```
+grep -E 'condition|Brd2' data/counts/samples-gt-gender-stage-somites.txt \
+ > output/Brd2-samples.txt
+
+grep -E 'condition|Brd2' data/counts/samples-gt-gender-stage-somites.txt | \
+cut -f4 | grep -v stage | sort -u | grep -f - output/samples-Mm_GRCm38_e88_baseline.txt | \
+awk -F"\t" 'BEGIN{OFS = "\t"} { print $1, "baseline", $3, $4, $5 }' \
+ >> output/Brd2-samples.txt
+```
+
+Download normalisation script and normalise Brd2 and baseline counts together
+```
+curl -LO https://github.com/iansealy/bio-misc/raw/master/normalise_rnaseq.R
+Rscript normalise_rnaseq.R \
+output/Brd2-baseline-counts.tsv output/Brd2-samples.txt \
+output/Brd2-baseline-normalised-counts.tsv
+```
+
+Get counts for the genes in Fig. 2c
+```
+for gene in '^Gene' ENSMUSG00000032607 ENSMUSG00000022454 ENSMUSG00000035835 ENSMUSG00000021279 
+do
+grep $gene output/Brd2-baseline-normalised-counts.tsv
+done > output/Brd2-counts.tsv
+```
+
+Download count plot script from another repository and run
+```
+curl -LO https://github.com/iansealy/bio-misc/raw/master/graph_rnaseq_counts.R
+
+Rscript graph_rnaseq_counts.R \
+output/Brd2-counts.tsv output/Brd2-samples.txt \
+plots/Brd2_count_plots.eps default condition stage
+```
 
 ```
 for domain in BP MF CC
@@ -254,26 +231,7 @@ perl -F"\t" -lane 'print join("\t", @F[0..2], "filtered", @F[3..11])' >> data/go
 # remove temp file
 rm data/go_results-unfiltered.tmp
 
-# Want to look through the enrichments and compare filtered to unfiltered for the most delayed mutants
-# for each one, assign it a number and cp the unfiltered GO and the filtered GO to a new directory
-grep -E 'Severe|Moderate' output/KOs_ordered_by_delay.txt | cut -f1 | \
-grep -v Ift140 | perl blind_go_results.pl \
---dir /lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process \
---results_dir deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers \
---comparison hom_vs_het_wt --output_dir output/go_blind \
---key_file output/go_blind/go_blind_key_file.tsv
-Set1: 264 970 703 931 774 630 285 761 92 353 197 446
-Set2: 518 65 328 292 670 940 457 721 806 517 283 971
-
-# go through enrichments
-# e.g.
-cut -f1-6 output/go_blind/971/BP.sig.tsv | \
-perl -F"\t" -lane 'next if $. == 1; print join("\t", @F, $F[3]/$F[4], );' | \
-sort -t$'\t' -gk6,6 | less
-
 ```
-
-
 
 ## EMAPA
 
@@ -355,9 +313,6 @@ export R_LIBS_USER='/lustre/scratch117/maz/team31/projects/mouse_DMDD/mouse_dmdd
 output/emap_results.mrna_abnormal.tsv
 
 ```
-
-
-
 
 process EMAPA terms to collapse
 
@@ -1183,6 +1138,7 @@ join -t$'\t' /lustre/scratch117/maz/team31/resources/go/go_2_description.BP.tsv 
 cut -f1,2,9 | tr ',' '\t' > BP.gmt 
 
 # count plots
+Fig. S4
 mut=Fcho2
 delay_file=$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.baseline-comp/mrna_as_wt.sig.tsv
 grep -E '^Gene|ENSMUSG00000034486|ENSMUSG00000045092|ENSMUSG00000030170|ENSMUSG00000020717' \
@@ -1195,4 +1151,7 @@ output/no_delay/no_delay-counts.tsv $samples_file \
 $count_plots_file default condition stage
 
 ```
-
+Gbx2
+S1pr1
+Wnt5b
+Pecam1
