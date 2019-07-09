@@ -246,14 +246,14 @@ for ( domain in names(go_results_by_domain) ) {
   
   postscript(file = file.path(plots_dir,
                     paste('top_shared_go_results', domain, 'eps', sep = ".")),
-              width = 8, height = 10, paper = 'special', horizontal = FALSE)
+              width = 8.25, height = 14.7, paper = 'special', horizontal = FALSE)
   print(top_shared_go_results_plot + theme_bubble(base_size = 12) +
         theme(axis.text.x = element_text(face = 'italic')))
   dev.off()
   
   postscript(file = file.path(plots_dir,
                     paste('top_shared_go_results-no-y-text', domain, 'eps', sep = ".")),
-              width = 5.6, height = 10, paper = 'special')
+              width = 5, height = 14.7, paper = 'special', horizontal = FALSE)
   print(top_shared_go_results_plot +
           theme(axis.text.y = element_blank(),
                 axis.text.x = element_text(colour = 'black'),
@@ -697,6 +697,11 @@ for (results_set in names(emap_results_list)) {
       width = 7.5, height = 8)
   print(emapa_bubble_plot)
   dev.off()
+  
+  # output source file
+  write.table(results_aggregated,
+              file = file.path('output', paste0(results_set, '.emap_aggregated_summary.tsv')),
+              quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 }
 
 # get legend of max p set
