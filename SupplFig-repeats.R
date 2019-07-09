@@ -394,6 +394,10 @@ postscript(file = file.path('plots', 'repeats-counts_vs_fc.eps'),
 print(counts_vs_fc_plot)
 dev.off()
 
+write.table(plot_data,
+            file = file.path('output', 'FigS5f.tsv'),
+            quote = FALSE, sep = "\t", row.names = FALSE,
+            col.names = TRUE)
 
 #save_plot(file.path('plots', "repeats-supplfig.eps"),
 #          plot_grid(repeats_by_line_bar_chart, repeats_by_line_by_type_plot,
