@@ -1,4 +1,4 @@
-!/usr/bin/env Rscript
+#!/usr/bin/env Rscript
 
 library('optparse')
 
@@ -198,10 +198,21 @@ for (gene in genes) {
   posn_df <- data.frame(
     GO.ID = factor(rep(results_df$GO.ID, 2),
                    levels = levels(results_df$GO.ID)),
-    Filtered <- factor(rep(c('unfiltered', 'filtered'), each = num_rows),
+    Filtered = factor(rep(c('unfiltered', 'filtered'), each = num_rows),
                        levels = c('unfiltered', 'filtered')),
-    posns <- c(posns_in_unfilt, posns_in_filt)
+    posns = c(posns_in_unfilt, posns_in_filt)
   )
+
+  # output plot_data
+  plot_data <- merge(results_df, posn_df, all.y = TRUE)
+  plot_data <- unique(plot_data)
+  plot_data$Gene <- rep(gene, nrow(plot_data))
+  plot_data$Term <- sapply(as.character(plot_data$GO.ID),
+         function(term){ return(plot_data$Term[ plot_data$GO.ID == term &
+                                               !is.na(plot_data$Term) ][1] ) })
+  write.table(plot_data,
+    file = file.path('output', paste0('ko_response_filtering-', gene, '.tsv')),
+    quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
   labels <- unique(results_df$Term)
   names(labels) <- unique(results_df$GO.ID)
