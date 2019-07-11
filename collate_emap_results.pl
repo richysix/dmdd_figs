@@ -8,6 +8,7 @@ use strict;
 use Getopt::Long;
 use autodie;
 use Pod::Usage;
+use Readonly;
 
 # get options
 my %options;
@@ -20,6 +21,7 @@ if( $options{'header'} ){
     my $line = <$c_fh>;
 }
 # for each line, check file exists, output results to all file
+my $header;
 while( my $line = <$c_fh> ){
     chomp $line;
     my ( $mutant, $comparison, $results_set, $file ) = split /\t/, $line;
@@ -41,14 +43,22 @@ while( my $line = <$c_fh> ){
         open my $results_fh, '<', $file;
         if( $options{'header'} ){
             my $results_line = <$results_fh>;
+            if (!$header) {
+                chomp $results_line;
+                my @cols = split /\t/, $results_line;
+                print join("\t", qw{Gene Comparison Set}, @cols, "-log10(pvalue)"), "\n";
+                $header = 1;
+            }
         }
         # for each line, check file exists, output results to all file
         while( my $results_line = <$results_fh> ){
             chomp $results_line;
             my @info = split /\t/, $results_line;
             # This line assumes that the pvalue is in column 7
+            Readonly my $P_VALUE_COLUMN => 6;
+            Readonly my $BASE_LOG => 10; # to calculate log10 we need to do log(PVALUE)/log(10)
             print join("\t", $mutant, $comparison, $results_set, @info,
-                       -log($info[6])/log(10) ), "\n";
+                       -log($info[$P_VALUE_COLUMN])/log($BASE_LOG) ), "\n";
         }
     }
 }
