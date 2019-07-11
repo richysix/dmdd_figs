@@ -233,11 +233,50 @@ rm data/go_results-unfiltered.tmp
 
 ```
 
+Download the sig gene lists
+```
+echo "deseq2-blacklist-adj-gt-adj-sex-outliers-mutant_response-sig.tgz https://ndownloader.figshare.com/files/12207071
+deseq2-blacklist-adj-gt-adj-sex-outliers-delay-sig.tgz https://ndownloader.figshare.com/files/12207335
+deseq2-blacklist-adj-gt-adj-sex-outliers-no_delay-sig.tgz https://ndownloader.figshare.com/files/12207476
+deseq2-blacklist-adj-gt-adj-sex-outliers-discard-sig.tgz https://ndownloader.figshare.com/files/12207617" > output/sig-downloads.txt
+
+ROOT=$( pwd )
+for set in mutant_response delay no_delay discard
+do
+mkdir data/$set
+file=$( grep "\-$set\-" output/sig-downloads.txt | awk '{print $1}' )
+link=$( grep "\-$set\-" output/sig-downloads.txt | awk '{print $2}' )
+curl -L --output data/$set/$file $link
+cd data/$set
+tar -xzvf $file
+cd $ROOT
+done
+```
+
 ## EMAPA
 
 Collect together all EMAPA results
 
 ```
+echo "emapa-mutant_response-results.tgz https://ndownloader.figshare.com/files/12244730
+emapa-delay-results.tgz https://ndownloader.figshare.com/files/12244829
+emapa-no_delay-results.tgz https://ndownloader.figshare.com/files/12244892
+emapa-discard-results.tgz https://ndownloader.figshare.com/files/12244976" > output/emapa-downloads.txt
+
+# make directories
+mkdir data/emap/
+ROOT=$( pwd )
+for set in mutant_response delay no_delay discard
+do
+mkdir data/emap/$set
+file=$( grep "\-$set\-" output/emapa-downloads.txt | awk '{print $1}' )
+link=$( grep "\-$set\-" output/emapa-downloads.txt | awk '{print $2}' )
+curl -L --output data/emap/$set/$file $link
+cd data/emap/$set
+tar -xzvf $file
+cd $ROOT
+done
+
 # collect data for all mutants for each set
 # make config file and run with collate_emap_results
 cat /dev/null > $ROOT/mouse_dmdd_figs/data/sets_to_use.tsv
@@ -287,14 +326,18 @@ echo -e "$mut\t$comparison\t$set\t$file" >> $ROOT/mouse_dmdd_figs/data/sets_to_u
 done
 done
 
-# run script to collect together results from appropriate comparisons
-echo -e "Gene\tComparison\tSet\tTerm ID\tDescription\tAnnotated\
-\tExpected\tObserved\tFold Enrichment\tAdjusted p value\t-log10(pvalue)" \
- > $ROOT/mouse_dmdd_figs/data/emap_results.all.tsv
+echo -e "Mutant\tComparison\tSet\tFile" > data/sets_to_use.tsv
+for file in $( find data/emap -type f -name "*tsv" )
+do
+mut=$( echo $file | sed -e 's|^.*/||; s|\-.*$||' )
+comparison=$( echo $file | sed -e 's|^.*outliers\-||; s|\-.*$||' )
+set=$( echo $file | sed -e 's|^data/emap/||; s|/.*$||' )
+echo -e "$mut\t$comparison\t$set\t$file" 
+done >> data/sets_to_use.tsv
 
+# run script to collect together results from appropriate comparisons
 perl collate_emap_results.pl --header \
-$ROOT/mouse_dmdd_figs/data/sets_to_use.tsv \
- >> $ROOT/mouse_dmdd_figs/data/emap_results.all.tsv
+data/sets_to_use.tsv > data/emap_results.all.tsv
 
 # get just mrna_abnormal results
 head -n1 data/emap_results.all.tsv > output/emap_results.mrna_abnormal.tsv
@@ -311,21 +354,37 @@ export R_LIBS_USER='/lustre/scratch117/maz/team31/projects/mouse_DMDD/mouse_dmdd
 --output_file plots/emap_results.mrna_abnormal.pdf \
 --output_data_file output/emap_results.mrna_abnormal.rda \
 output/emap_results.mrna_abnormal.tsv
-
 ```
 
 process EMAPA terms to collapse
 
 ```
-/software/R-3.3.0/bin/Rscript process_emap.R data/emap_results.all.tsv \
-/lustre/scratch117/maz/team31/projects/mouse_DMDD/emap/EMAPA_Nov_17_2017.obo \
-data/root_terms.txt
+curl -L --output data/emapa.obo http://purl.obolibrary.org/obo/emapa.obo
 
-tr '\r' '\n' < ~/sanger/ZMP/mouse\ DMDD/output/duplicated_terms.txt \
- > ~/sanger/ZMP/mouse\ DMDD/output/duplicated_terms-edited.tsv
-rm ~/sanger/ZMP/mouse\ DMDD/output/duplicated_terms.txt
-scp ~/sanger/ZMP/mouse\ DMDD/output/duplicated_terms-edited.tsv \
-gen1:/lustre/scratch117/maz/team31/projects/mouse_DMDD/output/duplicated_terms-edited.tsv
+Rscript process_emap.R data/emap_results.all.tsv \
+data/EMAPA_Nov_17_2017.obo data/root_terms.txt
+```
+
+The process_emap script outputs terms that are children of two different parent terms,
+so add a column called "to_use" of 1s and 0s indicating which parent to use.
+Save it as output/duplicated_terms-edited.tsv
+
+Get nu
+```
+data/sig_gene_counts.tsv
+```
+
+Run fig2.R script
+
+```
+Rscript fig2.R \
+data/go_results.tsv \
+data/dmdd-genes.txt \
+output/KOs_ordered_by_delay.txt \
+data/sig_gene_counts.tsv \
+data/emap_results.all.tsv \
+output/duplicated_terms-edited.tsv \
+output/delay-jaccard-all.rda
 ```
 
 Calculate the pairwise gene overlap from the ko_response lists for all delayed mutants
@@ -450,21 +509,26 @@ sed -e 's|/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/[a-z._
 --cluster_methods ward.D2 \
 --output_data_file output/ko_response-gene_overlap.rda \
 output/ko_response-hom_vs_het_wt-sig_genes.out
-
 ```
 
-Calculate the pairwise gene overlap from the mrna_abnormal lists for all delayed mutants
+Calculate the pairwise gene overlap from the delay lists for all delayed mutants
 ```
 mutants=( $(sort output/KOs_delayed.txt) )
-cat /dev/null > output/mrna_abnormal.sig_genes.err
-base=/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process
+for mut in ${mutants[@]}; do
+file=data/delay/$mut-deseq2-blacklist-adj-gt-adj-sex-outliers-hom_vs_het_wt-delay.sig.tsv
+if [[ -e $file ]]; then
+  cut -f1 $file | grep -v '^Gene ID' > data/delay/$mut-delay.sig_genes.txt
+fi
+done
+
+cat /dev/null > output/delay.sig_genes.err
 for mut1 in $( seq 0 $(( ${#mutants[@]} - 1 )) )
 do
 for mut2 in $( seq 0 $(( ${#mutants[@]} - 1 )) )
 do
 if [ "$mut1" -lt "$mut2" ]; then
-  file1=$base/${mutants[$mut1]}/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.baseline-comp/mrna_abnormal.sig_genes.txt
-  file2=$base/${mutants[$mut2]}/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.baseline-comp/mrna_abnormal.sig_genes.txt
+  file1=data/delay/${mutants[$mut1]}-delay.sig_genes.txt
+  file2=data/delay/${mutants[$mut2]}-delay.sig_genes.txt
   if [[ -e $file1 && -e $file2 ]]; then
     file1_count=$( cat $file1 | wc -l )
     file2_count=$( cat $file2 | wc -l )
@@ -473,23 +537,22 @@ if [ "$mut1" -lt "$mut2" ]; then
         --header --output_no_header --no_venn \
         $file1 $file2
     else
-      echo "ONE OF THE FILES HAS NO RESULTS: ${mutants[$mut1]}-hom_vs_het_wt ${mutants[$mut2]}-hom_vs_het_wt"  >> output/mrna_abnormal.sig_genes.err
+      echo "ONE OF THE FILES HAS NO RESULTS: ${mutants[$mut1]}-hom_vs_het_wt ${mutants[$mut2]}-hom_vs_het_wt"  >> output/delay.sig_genes.err
     fi
   else
-    echo "ONE OF THE FILES DOES NOT EXIST: ${mutants[$mut1]}-hom_vs_het_wt ${mutants[$mut2]}-hom_vs_het_wt" >> output/mrna_abnormal.sig_genes.err
+    echo "ONE OF THE FILES DOES NOT EXIST: ${mutants[$mut1]}-hom_vs_het_wt ${mutants[$mut2]}-hom_vs_het_wt" >> output/delay.sig_genes.err
   fi
 fi
 done
-done | sed -e 's|/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/||g' | \
-sed -e 's|/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.baseline-comp/mrna_abnormal.sig_genes.txt||g' \
- > output/mrna_abnormal-hom_vs_het_wt-sig_genes.out
+done | sed -e 's|data/delay/||g' | sed -e 's|-delay.sig_genes.txt||g' \
+ > output/delay-hom_vs_het_wt-sig_genes.out
 
 # cluster all based on gene list overlaps
-/software/R-3.3.0/bin/Rscript cluster_by_overlap.R \
---output_base plots/mrna_abnormal-PC3-jaccard-all \
+Rscript cluster_by_overlap.R \
+--output_base plots/delay-jaccard-all \
 --cluster_methods ward.D2 \
---output_data_file output/mrna_abnormal-jaccard-all.rda \
-output/mrna_abnormal-hom_vs_het_wt-sig_genes.out
+--output_data_file output/delay-jaccard-all.rda \
+output/delay-hom_vs_het_wt-sig_genes.out
 ```
 
 get gene lists for specific overlaps
