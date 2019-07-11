@@ -13,6 +13,7 @@ install.packages('ggrepel', lib = '.R/lib')
 install.packages('svglite', lib = '.R/lib')
 install.packages("ontologyIndex", lib = '.R/lib')
 install.packages("ontologyPlot", lib = '.R/lib')
+install.packages("dendextend", lib = ".R/lib")
 install.packages("seriation", lib = '.R/lib')
 
 # install Bioconductor packages
