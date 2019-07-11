@@ -21,12 +21,12 @@ cmd_line_args <- parse_args(
 #                 debug = TRUE,
 #                 verbose = FALSE ),
 #  args = c('data/go_results.tsv',
-#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/dmdd-genes.txt',
+#           'data/dmdd-genes.txt',
 #           'output/KOs_ordered_by_delay.txt',
 #           'data/sig_gene_counts.tsv',
 #           'data/emap_results.all.tsv',
 #           'output/duplicated_terms-edited.tsv',
-#           'output/mrna_abnormal-jaccard-all.rda'
+#           'output/delay-jaccard-all.rda'
 # )
 #)
 
@@ -40,14 +40,9 @@ plots_dir <- file.path('plots')
 
 packages <- c('ggplot2', 'viridis', 'reshape2', 'ontologyIndex', 'ontologyPlot',
               'plyr', 'svglite', 'GO.db', 'devtools', 'cowplot', 'ggdendro',
-              'ggrepel', 'grid')
+              'ggrepel', 'grid', 'biovisr', 'miscr')
 for( package in packages ){
   library(package, character.only = TRUE)
-}
-# load biovisr and miscr. If not installed, install from github repo
-packages <- c('biovisr', 'miscr')
-for( package in packages ){
-  library( package, character.only = TRUE )
 }
 
 # GO enrichment summary
@@ -70,27 +65,15 @@ names(ko_order) <- c('Gene', 'Delay Category')
 go_results$Gene <- factor(go_results$Gene,
                           levels = ko_order[[1]])
 
-# get un-truncated terms using the GOTERMS from GO.db
-full_terms <- sapply(as.character(go_results[['GO.ID']]),
-                      function(term){
-                        desc <- as.character(go_results$Term[ go_results[['GO.ID']] == term ][1])
-                        if (grepl("\\.\\.\\.$", desc)) {
-                          # try and get untruncated version from GO.db
-                          go_term <- GOTERM[[term]]
-                          if (is.null(go_term)) {
-                            if (debug) {
-                              cat(term, "\n")
-                            }
-                            return(desc)
-                          } else {
-                            return(Term(go_term))
-                          }
-                        } else {
-                          return(desc)
-                        }
-                      }
-  )
-go_results[['Term']] <- full_terms
+# get un-truncated terms using GO.db
+go_terms <- go_results[, c("GO.ID", "Term")]
+go_terms$order <- seq_len(nrow(go_terms))
+ids <- unique( as.character( go_results$GO.ID[ grepl("\\.\\.\\.$", go_results$Term) ] ) )
+info <- select(GO.db, keys = ids, columns = c("TERM") )
+merged_terms <- merge(go_terms, info, by.x = "GO.ID", by.y = "GOID", all.x = TRUE)
+merged_terms$TERM[ is.na(merged_terms$TERM) ] <- as.character( merged_terms$Term[ is.na(merged_terms$TERM) ] )
+merged_terms <- merged_terms[ order(merged_terms$order), ]
+go_results[['Term']] <- merged_terms$TERM
 
 go_results_by_domain <- split(go_results, go_results$Domain)
 
