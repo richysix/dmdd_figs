@@ -54,8 +54,7 @@ Download counts for all 73 lines
 # The quickest way is to download the compressed archive
 # You'll need tar to extract the file
 # Alternatively the files can be download from doi.org/10.6084/m9.figshare.6819611
-curl -LO https://ndownloader.figshare.com/files/14151989
-mv 14151989 data/collins_2019_counts_all.tgz
+curl -L --output data/collins_2019_counts_all.tgz https://ndownloader.figshare.com/files/14151989
 cd data
 tar -xzvf collins_2019_counts_all.tgz
 ```
