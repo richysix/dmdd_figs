@@ -13,12 +13,11 @@ Fig. 4b - Heatmap
 Get genes that appear in four or more mutants
 ```
 # create a file of which genes are DE in which lines
-base=/lustre/scratch117/maz/team31/projects/mouse_DMDD
 for mut in $( cut -f1 output/KOs_ordered_by_delay.txt )
 do
 for comparison in hom_vs_het_wt het_vs_wt hom_vs_het
 do
-file=$base/figshare/mutant_response/$mut-deseq2-blacklist-adj-gt-adj-sex-outliers-$comparison-mutant_response.sig.tsv
+file=data/mutant_response/$mut-deseq2-blacklist-adj-gt-adj-sex-outliers-$comparison-mutant_response.sig.tsv
 if [[ -e $file ]]; then
   lines=$(wc -l $file | awk '{print $1}')
   if [[ $lines -eq 1 ]]; then
@@ -33,16 +32,16 @@ done
 done > output/mutant_response-sig_genes-upset.tmp
 
 # subset to ciliopathy mutants
-grep -E 'B9d2|Cc2d2a|Kif3b|Kifap3|Nek9|Rpgripl1|Ift140' output/mutant_response-sig_genes-upset.tmp > output/mutant_response-sig_genes-BCIKKNR-upset.tmp
+grep -E 'B9d2|Cc2d2a|Ift140|Kif3b|Kifap3|Nek9|Rpgripl1' output/mutant_response-sig_genes-upset.tmp > output/mutant_response-sig_genes-BCIKKNR-upset.tmp
 
 # reshape from long format to wide
 for set in BCIKKNR
 do
-/software/R-3.3.0/bin/Rscript reshape-long_to_wide.R output/mutant_response-sig_genes-$set-upset.tmp output/mutant_response-sig_genes-$set-upset.tsv
+Rscript reshape-long_to_wide.R output/mutant_response-sig_genes-$set-upset.tmp output/mutant_response-sig_genes-$set-upset.tsv
 done
 
 # get genes that are DE in at least 4 lines
-/software/R-3.3.0/bin/Rscript get_intersection_genes.R \
+Rscript get_intersection_genes.R \
 output/mutant_response-sig_genes-$set-upset.tsv \
 output/mutant_response-sig_genes-BCIKKNR-intersection-4.txt \
 4
@@ -53,7 +52,7 @@ for mut in B9d2 Cc2d2a Rpgripl1 Kif3b Kifap3 Ift140 Nek9
 do
 for gene in $( cat output/mutant_response-sig_genes-BCIKKNR-intersection-4.txt )
 do
-line=$(grep $gene $ROOT/figshare/mutant_response/$mut*tsv)
+line=$(grep $gene data/mutant_response/$mut*tsv)
 num_lines=$(echo $line | grep -c ^ENS)
 if [[ $num_lines -eq 0 ]];then
   echo -e "$mut\t$gene\tNA\tNA\tNA"
@@ -90,7 +89,7 @@ done >> data/fig4b_log2fc.tsv
 
 Produce heatmap
 ```
-/software/R-3.3.0/bin/Rscript fig4.R \
+Rscript fig4.R \
 data/fig4b_log2fc.tsv
 ```
 
