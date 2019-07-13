@@ -18,18 +18,18 @@ cmd_line_args <- parse_args(
   positional_arguments = 7
 )
 
-#cmd_line_args <- list(
-#  options = list(directory = 'cwd',
-#                 verbose = FALSE ),
-#  args = c('/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/dmdd-genes.txt',
-#           'output/sample_info.txt',
-#           'output/KOs_ordered_by_delay.txt',
-#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/ko_expr/ko_expr.tsv',
-#           'data/Mm_GRCm38_e88_baseline.rda',
-#           'data/sig_gene_counts.tsv',
-#           'output/human-mim-edited.tsv'
-#          )
-#)
+cmd_line_args <- list(
+  options = list(directory = 'cwd',
+                 verbose = FALSE ),
+  args = c('data/dmdd-genes.txt',
+           'output/sample_info.txt',
+           'output/KOs_ordered_by_delay.txt',
+           'data/ko_expr.tsv',
+           'data/Mm_GRCm38_e88_baseline.rda',
+           'data/sig_gene_counts.tsv',
+           'output/human-mim-edited.tsv'
+          )
+)
 
 # make options simpler
 directory <- cmd_line_args$options[['directory']]
@@ -132,7 +132,7 @@ ko_order_file <- cmd_line_args$args[3]
 ko_order <- read.table(ko_order_file)
 names(ko_order) <- c('Gene', 'Delay Category')
 
-# order genes in the same order as stage_count
+# order genes in the same order as ko_order
 stage_count_by_gt <- do.call(rbind, lapply(as.character(ko_order$Gene),
        function(x){ stage_count_by_gt[ stage_count_by_gt$gene == x, ] } )
 )
@@ -210,7 +210,7 @@ embryo_stage_size_colour_plot <- ggplot(data = stage_count.for_tiles) +
   geom_rect( aes( xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = condition)) +
   geom_vline(data = stage_separators, aes(xintercept = raw)) +
   scale_y_continuous(expand = c(0,0),
-                     breaks = seq(0.5,length(stage_count$gene) - 0.5,1),
+                     breaks = seq(0.5,nrow(ko_order) - 0.5,1),
                      labels =  gene_names) +
   scale_fill_manual(values = c('firebrick2', 'steelblue3', 'green'),
                     guide = 'none') +  
@@ -256,11 +256,11 @@ if (debug) {
 # expression of the knocked out gene in homs and hets
 ko_expr_file <- cmd_line_args$args[4]
 ko_expr <- read.table(ko_expr_file, sep = "\t", header = FALSE )
-names(ko_expr) <- c('gene_id', 'symbol', 'comparison', 'log2fc')
+names(ko_expr) <- c('gene_id', 'symbol', 'comparison', 'padj', 'log2fc')
 ko_expr$gt <- factor( gsub('_vs_.*', '', ko_expr$comparison),
                      levels = c('hom', 'het', 'wt') )
 ko_expr$symbol <- factor(ko_expr$symbol,
-                          levels = rev(stage_count$gene))
+                          levels = rev(as.character(ko_order$Gene)) )
 
 # add a df for wt (log2fc = 0)
 num_genes <- nlevels(ko_expr$gene_id)
@@ -271,6 +271,7 @@ ko_expr <-
       gene_id = unique(ko_expr$gene_id),
       symbol = unique(ko_expr$symbol),
       comparison = rep('wt', num_genes),
+      padj = rep(NA, num_genes),
       log2fc = rep(0, num_genes),
       gt = rep('wt', num_genes)
     )
@@ -378,7 +379,7 @@ load(cmd_line_args$args[5])
 # get gene_ids in the same order as the heatmap
 id_for <- as.character(unique(ko_expr$gene_id))
 names(id_for) <- as.character(unique(ko_expr$symbol))
-gene_ids <- id_for[ as.character(stage_count$gene) ]
+gene_ids <- id_for[ as.character(ko_order$Gene) ]
 
 # get counts for those genes
 baseline_subset <- Mm_GRCm38_e88_baseline[gene_ids, ]
@@ -523,7 +524,7 @@ sig_genes <- droplevels(sig_genes)
 
 # order genes
 sig_genes$Gene <- factor(sig_genes$Gene,
-                         levels = rev(stage_count$gene))
+                         levels = rev(ko_order$Gene))
 
 # create new column with combination of type and comparison
 sig_genes$Category <-
@@ -592,7 +593,7 @@ if (debug) {
 # plot MIM data as graphical table
 mim_data_file <- cmd_line_args$args[7]
 mim_data <- read.delim(mim_data_file)
-mim_data$Dir <- factor(mim_data$Dir, levels = rev(stage_count$gene))
+mim_data$Dir <- factor(mim_data$Dir, levels = rev(ko_order$Gene))
 
 mim_reformatted <- do.call(rbind,
                     lapply(split(mim_data, mim_data$Dir),

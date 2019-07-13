@@ -30,7 +30,7 @@ if( cmd_line_args$options[['verbose']] ){
 #cmd_line_args <- list(
 #  options = list(directory = '/nfs/users/nfs_r/rw4/checkouts/mouse_dmdd',
 #                 verbose = FALSE ),
-#  args = c('/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/dmdd-genes.txt')
+#  args = c('data/dmdd-genes.txt')
 #)
 
 packages <- c('biomaRt')

@@ -33,9 +33,9 @@ done
 Get stage information for each Line
 
 ```bash
-# lane-process/dmdd-genes.txt has the mapping of directory names to
+# data/dmdd-genes.txt has the mapping of directory names to
 # gene names and Ensembl IDs
-$ROOT/lane-process/dmdd-genes.txt
+data/dmdd-genes.txt
 ```
 
 Get log2 Fold Change for each gene in homs (vs het_wt) and hets (vs wt)
@@ -146,5 +146,25 @@ Oaz1' | \
 perl ./get_number_sig_genes.pl \
 --dir $ROOT/lane-process \
 --comparison hom_vs_het >> data/sig_gene_counts.tsv
+
+```
+
+Get data from OMIM for mutant genes
+```
+Rscript get_mim_data.R data/dmdd-genes.txt
+# produces output/human-mim.tsv
+# Edit file to add an extra column called mim_short with the shortest abbreviation from description
+```
+
+Run R script to generate figure
+```
+Rscript fig3.R \
+data/dmdd-genes.txt \
+output/sample_info.txt \
+output/KOs_ordered_by_delay.txt \
+data/ko_expr.tsv \
+data/Mm_GRCm38_e88_baseline.rda \
+data/sig_gene_counts.tsv \
+output/human-mim-edited.tsv
 
 ```
