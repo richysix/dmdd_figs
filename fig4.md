@@ -98,7 +98,7 @@ Fig. 4d - Zkscan17 heatmap
 ```
 # genes to plot are in data/fig4d_data_go.tsv
 mut=Zkscan17
-countsFile=$ROOT/lane-process/$mut/deseq2-blacklist-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv
+countsFile=data/mutant_response/Zkscan17-deseq2-blacklist-adj-gt-adj-sex-outliers-hom_vs_het_wt-mutant_response.sig.tsv
 head -n1 $countsFile > output/fig4d.tsv
 for geneId in $( cut -f1 data/fig4d_data_go.tsv | grep -v Gene )
 do
@@ -128,17 +128,18 @@ write.table(data_m, file = Args[7], quote = FALSE, sep = "\t",
             row.names = FALSE, col.names = TRUE)
 ' > reshape-norm_counts.R
 
-/software/R-3.3.0/bin/Rscript reshape-norm_counts.R output/fig4d.tsv output/fig4d_long_scaled.tsv
+Rscript reshape-norm_counts.R output/fig4d.tsv output/fig4d_long_scaled.tsv
 
 # Remove Zkscan17_ from sample names
 mv output/fig4d_long_scaled.tsv output/fig4d_long_scaled.tmp
 sed -e 's|Zkscan17_||' output/fig4d_long_scaled.tmp > output/fig4d_long_scaled.tsv
 rm output/fig4d_long_scaled.tmp
 
+# download heatmap script
+curl -LO https://github.com/richysix/bioinf-gen/raw/master/matrix_heatmap_plot.R
+
 # plot heatmap
-export R_LIBS_USER=.R/lib
-/software/R-3.3.0/bin/Rscript \
-~rw4/checkouts/team31/scripts/matrix_heatmap_plot.R \
+Rscript matrix_heatmap_plot.R \
 --output_file plots/fig4d_heatmap.eps \
 --x_column Sample --y_column Gene.ID --y_labels_column Name \
 --data_column Normalised.Counts.Scaled --data_axis_label 'Expression Level' \
@@ -149,37 +150,57 @@ export R_LIBS_USER=.R/lib
 output/fig4d_long_scaled.tsv
 
 # combine heatmap with plot of categories
-export R_LIBS_USER=.R/lib
-/software/R-3.3.0/bin/Rscript fig4d.R \
+Rscript fig4d.R \
 data/fig4d_data_go.tsv output/fig4d-heatmap.rda
 
 ```
 
-Fig 5f
+Fig 6c
 Count Plots
+Make count file for plots
+Merge baseline counts with Nadk2 sample counts
 
 ```
-# make count file for plots
 # Alas2 = ENSMUSG00000025270
 # Hbb-y = ENSMUSG00000052187
-mut=Nadk2
-countsFile=$ROOT/lane-process/$mut/deseq2-baseline-grandhet-blacklist-adj-gt-adj-sex-stage-nicole-definite-maybe-outliers/hom_vs_het_wt.tsv
+echo "data/counts/Nadk2-deseq2-blacklist-adj-gt-adj-sex-outliers.tsv
+output/Mm_GRCm38_e88_baseline.tsv" > output/Nadk2-counts-files.txt
 
-head -n1 $countsFile > output/fig4f-counts.tsv
-grep -E 'ENSMUSG000000(25270|52187)' $countsFile >> output/fig4f-counts.tsv
+# run script to make count files
+perl merge_deseq_counts.pl \
+output/Nadk2-counts-files.txt \
+ > output/Nadk2-baseline-counts.tsv
+```
 
-# samples file
-# make new samples file with categories baseline, het_wt and hom to match plots in fig. 2
-# one of the "wts" is actually a het, but this doesn't matter as we are combining hets and wts into het_wt.
-perl -F"\t" -lane 'if($. == 1){print join("\t", @F, "category"); }
+Make a sample file for Nadk2 plus baseline samples
+```
+grep -E 'condition|Nadk2' data/counts/samples-gt-gender-stage-somites.txt | \
+perl -F"\t" -lane 'if($. == 1){print join("\t", @F,); }
 else{ $category = $F[1] eq "het" ? "het_wt" : $F[1] eq "wt" ? "het_wt" : $F[1];
-print join("\t", @F, $category, ); }' \
-$ROOT/lane-process/$mut/deseq2-baseline-grandhet-blacklist-adj-gt-adj-sex-stage-nicole-definite-maybe-outliers/samples.txt \
- > output/Nadk2-samples.txt
+print join("\t", $F[0], $category, @F[2..4], ); }' > output/Nadk2-samples.txt
 
-# rerun counts script
-Rscript ~rw4/checkouts/bio-misc/graph_rnaseq_counts.R output/fig4f-counts.tsv \
-output/Nadk2-samples.txt \
-plots/fig4f.eps default category stage
+grep -E 'condition|Nadk2' data/counts/samples-gt-gender-stage-somites.txt | \
+cut -f4 | grep -v stage | sort -u | grep -f - output/samples-Mm_GRCm38_e88_baseline.txt | \
+awk -F"\t" 'BEGIN{OFS = "\t"} { print $1, "baseline", $3, $4, $5 }' \
+ >> output/Nadk2-samples.txt
 
+# normalise RNA-seq
+Rscript normalise_rnaseq.R \
+output/Nadk2-baseline-counts.tsv output/Nadk2-samples.txt \
+output/Nadk2-baseline-normalised-counts.tsv
+```
+
+Get counts for the genes in Fig. 6c
+```
+for gene in '^Gene' ENSMUSG00000025270 ENSMUSG00000052187
+do
+grep $gene output/Nadk2-baseline-normalised-counts.tsv
+done > output/Nadk2-counts.tsv
+```
+
+Run count plot script
+```
+Rscript graph_rnaseq_counts.R \
+output/Nadk2-counts.tsv output/Nadk2-samples.txt \
+plots/Nadk2_count_plots.eps default condition stage
 ```
