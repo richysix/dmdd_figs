@@ -11,12 +11,13 @@ cmd_line_args <- parse_args(
   OptionParser(
     option_list=option_list, prog = 'fig5c.R',
     usage = "Usage: %prog [options] input_file" ),
-  positional_arguments = 2
+  positional_arguments = 3
 )
 
 #cmd_line_args <- list(
 #  options = list(verbose = FALSE),
 #  args = c('output/fig5c-for-enrichment-test.tsv',
+#           1639267,
 #           'output/fig5c-dhx35-repeats-introns-genes-sig.tsv')
 #)
 
@@ -45,7 +46,7 @@ test_enrichment <- function(i, data, total_repeats) {
     return(binom_res$p.value)
 }
 
-total_repeats <- 1639267
+total_repeats <- as.integer( cmd_line_args$args[2] )
 #total_repeats_de <- c(all = 1293, full_length = 592)
 repeats_de_introns$p.value <- sapply(1:nrow(repeats_de_introns), test_enrichment,
                                         repeats_de_introns, total_repeats )
@@ -60,7 +61,7 @@ gene_sig_enrichment <- repeats_de_introns[ repeats_de_introns$padj < 0.05 &
                                           repeats_de_introns$repeats_intron_de > 1 &
                                           !is.na(repeats_de_introns$gene_padj), ]
 
-fold_change_data <- read.delim(file = cmd_line_args$args[2])
+fold_change_data <- read.delim(file = cmd_line_args$args[3])
 
 # get fold change of repeats in de in each gene
 gene_sig_enrichment$repeat_mean_log2fc <-

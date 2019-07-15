@@ -10,15 +10,15 @@ option_list <- list(
 cmd_line_args <- parse_args(
   OptionParser(
     option_list=option_list, prog = 'fig5d.R',
-    usage = "Usage: %prog [options] input_file" ),
-  positional_arguments = 3
+    usage = "Usage: %prog [options] repeats_file num_repeats num_repeats_gt_4kbp repeats_location_file" ),
+  positional_arguments = 4
 )
 
 #cmd_line_args <- list(
 #  options = list(verbose = FALSE),
-#  args = c('data/fig5d_repeats_de_all.tsv',
-#           'data/fig5d_repeats_de.tsv',    
-#           'data/fig5d_repeats_location.tsv')
+#  args = c('output/fig5d_repeats_de.tsv',
+#           3765374, 24162, 
+#           'output/fig5d_repeats_location.tsv')
 #)
 
 if( cmd_line_args$options[['verbose']] ){
@@ -47,8 +47,10 @@ test_enrichment <- function(i, data_subset, total_repeats, full_length) {
     return(binom_res$p.value)
 }
 
-total_repeats <- c(all = 3765374, full_length = 24162)
-#total_repeats_de <- c(all = 1293, full_length = 592)
+#total_repeats <- c(all = 3765374, full_length = 24162)
+total_repeats <- c("all" = as.integer( cmd_line_args$args[2] ),
+                   "full_length" = as.integer( cmd_line_args$args[3] ) )
+
 pvals <- vector('list', length = nlevels(repeats_de_all$full_length))
 list_index <- 1
 for (full_length in levels(repeats_de_all$full_length)) {
@@ -64,39 +66,43 @@ padj_list <- lapply(pvals, p.adjust, method = "BH")
 repeats_de_all$p.value <- do.call(c, pvals)
 repeats_de_all$padj <- do.call(c, padj_list)
 
-# read in data and set levels of Family factor
-repeats_de <- read.delim(file = cmd_line_args$args[2])
-repeats_de$Group <- factor(repeats_de$Group, levels = unique(repeats_de$Group))
-repeats_de_merged <- merge(repeats_de, repeats_de_all, all.x = TRUE)
+enriched_repeats <- repeats_de_all[ repeats_de_all$padj < 0.05, ]
+# set levels of Group
+enriched_repeats$Group <- factor(enriched_repeats$Group,
+                                 levels = c("LINE", "LTR", "DNA", "Satellite", "Unknown") )
 
-# subset to repeats with padj < 0.05 and full_length == 'all'
-# find the families that are sig in all and subset to those families
-sig_repeats <- as.character(repeats_de_merged$Family[ repeats_de_merged$padj < 0.05 &
-                                         !is.na(repeats_de_merged$padj) &
-                                         repeats_de_merged$full_length == 'all' ])
-repeats_de_sig <- do.call(rbind,
-                          lapply(sig_repeats,
-                                 function(name){ repeats_de_merged[ repeats_de_merged$Family == name, ] }
-                                 )
-                        )
-
-repeats_de_sig <- repeats_de_sig[ order(repeats_de_sig$Group,
-                                                repeats_de_sig$padj), ]
-repeats_de_sig$Family <- factor(repeats_de_sig$Family,
-                                levels = as.character(rev(unique(repeats_de_sig$Family))) )
+enriched_repeats <- enriched_repeats[ order(enriched_repeats$Group, enriched_repeats$padj), ]
+# set levels of Family
+enriched_repeats$Family <- factor(enriched_repeats$Family,
+                                  levels = rev(unique(enriched_repeats$Family)) )
+# create entries for families that aren't enriched as full_length
+enriched_repeats <-
+    rbind( enriched_repeats,
+            data.frame(
+                Family = setdiff(enriched_repeats$Family[ enriched_repeats$full_length == "all" ],
+                                enriched_repeats$Family[ enriched_repeats$full_length == "full_length" ]),
+                Group = NA,
+                full_length = "full_length",
+                repeats = NA,
+                de = NA,
+                not_de = NA,
+                p.value = NA,
+                padj = NA
+            )
+    )
 
 # write out repeat families that are enriched
-write.table(repeats_de_sig, file = file.path('output', 'repeats-enriched_families.tsv'),
+write.table(enriched_repeats, file = file.path('output', 'repeats-enriched_families.tsv'),
             sep = "\t",  quote = FALSE, row.names = FALSE)
 
 
 # melt data
-repeats_de_sig_m <- melt(repeats_de_sig[ , c('Group', 'Family', 'full_length', 'notDE', 'DE')],
+repeats_de_sig_m <- melt(enriched_repeats[ , c('Group', 'Family', 'full_length', 'not_de', 'de')],
                             id.vars = c('Group', 'Family', 'full_length'),
                             variable.name = 'category', value.name = 'count')
 
 # set levels of factors
-repeats_de_sig_m$category <- factor(repeats_de_sig_m$category, levels = c('DE', 'notDE'))
+repeats_de_sig_m$category <- factor(repeats_de_sig_m$category, levels = c('de', 'not_de'))
 
 # create colour palette for DE vs notDE
 category_palette <- colour_palette[c('red', 'blue')]
@@ -111,11 +117,12 @@ lines_df <- data.frame(
 )
 
 # get max count to set limits on full-length plot
-max_y <- ceiling( max( repeats_de_sig$repeats, na.rm = TRUE ) / 1000 ) * 1000
+max_y <- ceiling( max( enriched_repeats$repeats, na.rm = TRUE ) / 1000 ) * 1000
+# use max_y to set the limits on the full-length plot so that the bars are scaled the same
 all_bar_plot <- ggplot(data = repeats_de_sig_m[ repeats_de_sig_m$full_length == 'all', ]) +
                     geom_col(aes(x = Family, y = count, fill = category)) +
-                    geom_text(data = repeats_de_sig[ repeats_de_sig$full_length == 'all', ],
-                                aes(x = Family, y = repeats, label = DE),
+                    geom_text(data = enriched_repeats[ enriched_repeats$full_length == 'all', ],
+                                aes(x = Family, y = repeats, label = de),
                                 hjust = 0, nudge_y = 100) +
                     geom_vline(data = lines_df, aes(xintercept = posn),
                                linetype = 5, colour = 'grey80') +
@@ -144,8 +151,8 @@ y_labels_plot <- ggplot(data = repeats_de_sig_m[ repeats_de_sig_m$full_length ==
 # plot of full_length data
 full_length_bar_plot <- ggplot(data = repeats_de_sig_m[ repeats_de_sig_m$full_length == 'full_length', ]) +
                 geom_col(aes(x = Family, y = count, fill = category)) +
-                geom_text(data = repeats_de_sig[ repeats_de_sig$full_length == 'full_length', ],
-                            aes(x = Family, y = repeats, label = DE),
+                geom_text(data = enriched_repeats[ enriched_repeats$full_length == 'full_length', ],
+                            aes(x = Family, y = repeats, label = de),
                             hjust = 0, nudge_y = 100) +
                 geom_vline(data = lines_df, aes(xintercept = posn),
                            linetype = 5, colour = 'grey80') +
@@ -177,7 +184,7 @@ full_length_bar_plot <- full_length_bar_plot +
 
 
 # add in adjusted pvalues for enrichment tests
-all_padj_data <- repeats_de_sig[ repeats_de_sig$full_length == "all", c("Family", "padj")]
+all_padj_data <- enriched_repeats[ enriched_repeats$full_length == "all", c("Family", "padj")]
 # format numbers
 all_padj_data$padj_formatted <- sprintf('%.1e', all_padj_data$padj)
 all_padj_data$padj_formatted[ all_padj_data$padj_formatted == '0.0e+00' ] <- '< 5e-324'
@@ -196,7 +203,7 @@ print(all_pvalue_plot)
 invisible(dev.off())
 
 # same for full_length ones
-full_length_padj_data <- repeats_de_sig[ repeats_de_sig$full_length == "full_length", c("Family", "padj")]
+full_length_padj_data <- enriched_repeats[ enriched_repeats$full_length == "full_length", c("Family", "padj")]
 full_length_padj_data$padj[ full_length_padj_data$padj >= 0.05 ] <- NA
 full_length_padj_data$padj_formatted <- sprintf('%.1e', full_length_padj_data$padj)
 full_length_padj_data$padj_formatted[ full_length_padj_data$padj_formatted == '0.0e+00' ] <- '< 5e-324'
@@ -224,12 +231,12 @@ invisible(dev.off())
 
 # exon, intron, intergenic plot
 # read in data and set levels of Family
-repeats_location <- read.delim(file = cmd_line_args$args[3])
+repeats_location <- read.delim(file = cmd_line_args$args[4])
 # subset to significant families
 rownames(repeats_location) <- repeats_location$Family
-repeats_location <- repeats_location[sig_repeats, ]
+repeats_location <- repeats_location[unique( as.character(enriched_repeats$Family) ), ]
 repeats_location$Family <- factor(repeats_location$Family,
-                                  levels = levels(repeats_de_sig$Family) )
+                                  levels = levels(enriched_repeats$Family) )
 # melt
 repeats_location_m <- melt(repeats_location, id.vars = 'Family',
                            variable.name = 'Location',
@@ -313,6 +320,3 @@ save_plot(file.path('plots', "morc2a-repeats.eps"),
                     ncol = 6, rel_widths = c(6,9,3,6,9,3), align = 'h' ),
           ncol = 6, device = 'eps',
           base_height = 9, base_width = 1.5)
-
-#c(3,6,3,4,6,3)
-

@@ -115,5 +115,114 @@ print join("\t", @F[0..8,'$file1_cols'..'$(( $file1_cols + 6 ))'] ); }' \
 Run Fig. 5c script
 ```
 Rscript fig5c.R output/fig5c-for-enrichment-test.tsv \
+$( wc -l data/solely-introns-repeats-all.txt | awk '{print $1}' ) \
 output/fig5c-dhx35-repeats-introns-genes-sig.tsv
+```
+
+Fig. 5d
+
+All repeats counted by family
+```
+awk -F ":" '$1 !~/adjp/ { group = $2; sub(/\/.*$/, "", group); print $1 "\t" group "\tall"}' \
+data/repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.tsv | \
+sort | uniq -c | awk '{print $2 "\t" $3 "\t" $4 "\t" $1}' > output/all-repeats-count.tsv
+```
+
+Repeats in DE counted by family
+```
+awk -F ":" '$1 !~/adjp/ { group = $2; sub(/\/.*$/, "", group); print $1 "\t" group "\tde"}' \
+data/repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
+sort | uniq -c | awk '{print $2 "\t" $3 "\t" $4 "\t" $1}' > output/all-repeats-in-DE-count.tsv
+```
+
+All repeats longer than 4 kbp counted by family
+```
+awk '$3 !~/adjp/ {print $7-$6"\t"$0}' \
+data/repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.tsv | \
+awk -F "\t" '$1>=4000 {print $2}' | awk -F ":" '{ group = $2; sub(/\/.*$/, "", group); print $1 "\t" group "\tall"}' | \
+sort | uniq -c | awk '{print $2 "\t" $3 "\t" $4 "\t" $1}' > output/all-repeats-count-gt=4000.tsv
+```
+
+Repeats in DE longer than 4 kbp counted by family
+
+```
+awk '$3 !~/adjp/ {print $7-$6"\t"$0}' \
+data/repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
+awk -F "\t" '$1>=4000 {print $2}' | awk -F ":" '{ group = $2; sub(/\/.*$/, "", group); print $1 "\t" group "\tde"}' | \
+sort | uniq -c | awk '{print $2 "\t" $3 "\t" $4 "\t" $1}' > output/all-repeats-count-gt=4000-in-DE.tsv
+```
+
+Combine data
+```
+join -t$'\t' <( sort -t$'\t' -k1,1 output/all-repeats-count.tsv ) \
+<( sort -t$'\t' -k1,1 output/all-repeats-in-DE-count.tsv ) | \
+awk 'BEGIN{ OFS = "\t"; print "Family", "Group", "full_length", "repeats", "de", "not_de" }
+{ print $1, $2, "all", $4, $7, $4 - $7 }' > output/fig5d_repeats_de.tsv
+
+join -t$'\t' <( sort -t$'\t' -k1,1 output/all-repeats-count-gt=4000.tsv ) \
+<( sort -t$'\t' -k1,1 output/all-repeats-count-gt=4000-in-DE.tsv ) | \
+awk 'BEGIN{ OFS = "\t" }
+{ print $1, $2, "full_length", $4, $7, $4 - $7 }' >> output/fig5d_repeats_de.tsv
+```
+
+Make sig files for heatmaps
+
+```
+# L1MdGf_I
+grep -E 'L1MdGf_I:|adjp' data/notranscriptome-repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
+awk '{print $1 "\t" $0}' | sed -e 's|^Name|Gene ID|' > output/L1MdGf_I_hom_vs_het_wt.sig.tsv
+
+# MMERGLN-int
+grep -E 'MMERGLN-int:|adjp' data/notranscriptome-repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
+awk '{print $1 "\t" $0}' | sed -e 's|^Name|Gene ID|' > output/MMERGLN-int_hom_vs_het_wt.sig.tsv
+
+# MMETn-int
+grep -E 'MMETn-int:|adjp' data/notranscriptome-repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
+awk '{print $1 "\t" $0}' | sed -e 's|^Name|Gene ID|' > output/MMETn-int_hom_vs_het_wt.sig.tsv
+
+# samples file
+grep -E 'condition|Morc2a' data/counts/samples-gt-gender-stage-somites.txt > output/Morc2a-samples.txt
+```
+
+The heatmaps were produced with the [geneExpr](https://richysix.shinyapps.io/geneexpr/) Shiny App
+and the above count and sample files.
+
+Locations of repeats
+```
+# total numbers of repeats are in data/repeat-location-all.tsv
+
+# Exons only (one repeat can cover multiple exons, so uniq repeats)
+cut -f1 data/notranscriptome-repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
+grep -Ff - data/overlapping-exons-repeats-all.txt | \
+awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $8}' | \
+sort -u | awk -F ":" '{print $1}' | sort | uniq -c | \
+awk -F " " '{print "exon\t" $1 "\t" $2}' > output/repeat-location-exon.tsv
+
+# Introns only
+cut -f1 data/notranscriptome-repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
+grep -Ff - data/solely-introns-repeats-all.txt | \
+awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $8}' | \
+sort -u | awk -F ":" '{print $1}' | sort | uniq -c | \
+awk -F " " '{print "intron\t" $1 "\t" $2}' > output/repeat-location-intron.tsv
+
+# Join files together and fill in missing values
+join -t$'\t' -a1 -1 3 -2 3 <( sort -t$'\t' -k3,3 data/repeat-location-all.tsv ) \
+<( sort -t$'\t' -k3,3 output/repeat-location-exon.tsv ) | \
+awk 'BEGIN{OFS = "\t"} {if($4 == ""){ $4 = "NA"} if($5 == ""){ $5 = "NA" } print $0 }' | \
+join -t$'\t' -a1 -2 3 - <( sort -t$'\t' -k3,3 output/repeat-location-intron.tsv ) | \
+awk 'BEGIN{OFS = "\t"; print "Family", "exon", "intron", "intergenic" }
+{if($6 == ""){ $6 = "NA"} if($7 == ""){ $7 = "NA" }
+intergenic = $3; if( $5 != "NA" ){ intergenic -= $5 }
+if( $7 != "NA" ){ intergenic -= $7 } print $1, $5, $7, intergenic }' \
+ > output/fig5d_repeats_location.tsv
+```
+
+Run fig5d script
+
+```
+Rscript fig5d.R output/fig5d_repeats_de.tsv \
+$( grep -v Name data/repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.tsv | wc -l ) \
+$( awk 'BEGIN{ sum = 0; } { if( $3 !~/adjp/ && $7-$6 >= 4000 ){sum += 1} }
+END{ print sum }' data/repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.tsv ) \
+output/fig5d_repeats_location.tsv
 ```
