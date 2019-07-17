@@ -13,16 +13,16 @@ option_list <- list(
 
 cmd_line_args <- parse_args(
   OptionParser(
-    option_list=option_list, prog = 'fig4.R',
+    option_list=option_list, prog = 'fig5b.R',
     usage = "Usage: %prog [options] input_file" ),
   positional_arguments = 1
 )
 
 #cmd_line_args <- list(
 #  options = list(directory = 'cwd',
-#                 output_file = file.path('plots', 'fig4-heatmap.svg'),
+#                 output_file = file.path('plots', 'fig5b-heatmap.svg'),
 #                 verbose = FALSE),
-#  args = c('data/fig4b_log2fc.tsv')
+#  args = c('data/fig5b_log2fc.tsv')
 #)
 
 if (cmd_line_args$options[['directory']] == 'cwd') {

@@ -9,17 +9,17 @@ option_list <- list(
 
 cmd_line_args <- parse_args(
   OptionParser(
-    option_list=option_list, prog = 'fig5d.R',
+    option_list=option_list, prog = 'fig5c.R',
     usage = "Usage: %prog [options] data_file heatmap_rda_file" ),
   positional_arguments = 2
 )
 
 #cmd_line_args <- list(
 #  options = list(directory = 'cwd',
-#                 plot_file = file.path('plots', 'fig5d.svg'),
+#                 plot_file = file.path('plots', 'fig5c.svg'),
 #                 verbose = FALSE),
-#  args = c('data/fig5d_data_go.tsv',
-#           'output/fig5d-heatmap.rda')
+#  args = c('data/fig5c_data_go.tsv',
+#           'output/fig5c-heatmap.rda')
 #)
 
 packages <- c('ggplot2', 'reshape2', 'cowplot')
@@ -77,7 +77,7 @@ heatmap_plot <- heatmap_plot +
         axis.title = element_blank())
 
 # make composite figure
-save_plot(file.path('plots', "fig5d.eps"),
+save_plot(file.path('plots', "fig5c.eps"),
           plot_grid(heatmap_plot, category_plot,
           nrow = 1, ncol = 2, rel_widths = c(4,1), align = 'h', axis = 'tb'),
           ncol = 2, device = 'eps',
