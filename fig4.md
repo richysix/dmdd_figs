@@ -1,4 +1,4 @@
-# Fig.2
+# Fig.4
 
 ```bash
 # set up working directory
@@ -158,7 +158,7 @@ Rscript get_mim_data.R data/dmdd-genes.txt
 
 Run R script to generate figure
 ```
-Rscript fig3.R \
+Rscript fig4.R \
 data/dmdd-genes.txt \
 output/sample_info.txt \
 output/KOs_ordered_by_delay.txt \

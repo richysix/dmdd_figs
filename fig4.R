@@ -13,7 +13,7 @@ option_list <- list(
 
 cmd_line_args <- parse_args(
   OptionParser(
-    option_list=option_list, prog = 'fig2.R',
+    option_list=option_list, prog = 'fig4.R',
     usage = "Usage: %prog [options] gene_info_file expt_samples_file Genes_order_file KO_expression_file mouse_baseline sig_genes OMIM_data" ),
   positional_arguments = 7
 )
@@ -78,10 +78,12 @@ sample_info$condition <- factor(sample_info$condition,
                                 levels = c('hom', 'het', 'wt'))
 
 # calculate percentage of hom embryos that are delayed (< 20 somites)
-pc_delayed_homs <- sum( sample_info$somite_number[ sample_info$condition == 'hom'] < 20, na.rm = TRUE) / nrow(sample_info[ sample_info$condition == 'hom', ]) * 100
+DELAY_THRESHOLD <- 20
+pc_delayed_homs <- sum( sample_info$somite_number[ sample_info$condition == 'hom'] < DELAY_THRESHOLD, na.rm = TRUE) /
+                            nrow(sample_info[ sample_info$condition == 'hom', ]) * 100
 #print(sprintf('%.1f%% of homs are delayed\n', pc_delayed_homs))
 print(sprintf('num = %d total = %d %.1f%% of homs are delayed',
-sum( sample_info$somite_number[ sample_info$condition == 'hom'] < 20, na.rm = TRUE),
+sum( sample_info$somite_number[ sample_info$condition == 'hom'] < DELAY_THRESHOLD, na.rm = TRUE),
 nrow(sample_info[ sample_info$condition == 'hom', ]), pc_delayed_homs))
 
 # calculate mean number of embryos per condition per expt
@@ -634,7 +636,7 @@ save_plot(file.path(plots_dir, "Sample_overview.eps"),
           base_height = 9, base_width = 1.54 )
 
 # save plot objects
-save.image(file = file.path(wd, 'output', 'fig3.RData'))
+save.image(file = file.path(wd, 'output', 'fig4.RData'))
 #object_to_save = c('embryo_stage_size_colour_plot', 'embryo_ko_expr_plot',
 #                   'mouse_baseline_ts_heatmap', 'sig_genes_heatmap')
 #save(list = object_to_save, file = file.path(wd, 'output', 'fig1.RData'))
