@@ -9,7 +9,7 @@ option_list <- list(
 
 cmd_line_args <- parse_args(
   OptionParser(
-    option_list=option_list, prog = 'fig5b.R',
+    option_list=option_list, prog = 'fig7b.R',
     usage = "Usage: %prog [options] input_file" ),
   positional_arguments = 1
 )
@@ -75,11 +75,11 @@ location_bar_plot <- ggplot(data = repeats_de_location_m) +
           axis.text.y = element_text(face = "italic")
           )
 
-pdf(file = file.path('plots', 'fig5b.pdf'))
+pdf(file = file.path('plots', 'fig7b.pdf'))
 print(location_bar_plot)
 dev.off()
 
-postscript(file = file.path('plots', 'fig5b.eps'),
+postscript(file = file.path('plots', 'fig7b.eps'),
            width = 5.5, height = 10, horizontal = FALSE, paper = 'special')
 print(location_bar_plot)
 dev.off()

@@ -9,16 +9,16 @@ option_list <- list(
 
 cmd_line_args <- parse_args(
   OptionParser(
-    option_list=option_list, prog = 'fig5d.R',
+    option_list=option_list, prog = 'fig7d.R',
     usage = "Usage: %prog [options] repeats_file num_repeats num_repeats_gt_4kbp repeats_location_file" ),
   positional_arguments = 4
 )
 
 #cmd_line_args <- list(
 #  options = list(verbose = FALSE),
-#  args = c('output/fig5d_repeats_de.tsv',
+#  args = c('output/fig7d_repeats_de.tsv',
 #           3765374, 24162, 
-#           'output/fig5d_repeats_location.tsv')
+#           'output/fig7d_repeats_location.tsv')
 #)
 
 if( cmd_line_args$options[['verbose']] ){
@@ -136,7 +136,7 @@ all_bar_plot <- ggplot(data = repeats_de_sig_m[ repeats_de_sig_m$full_length == 
                           axis.ticks.x = element_line(colour = 'black'),
                           legend.position = 'none')
 
-pdf(file = file.path('plots', 'fig5d-all_repeats_de.pdf'))
+pdf(file = file.path('plots', 'fig7d-all_repeats_de.pdf'))
 print(all_bar_plot)
 invisible(dev.off())
 
@@ -160,7 +160,7 @@ full_length_bar_plot <- ggplot(data = repeats_de_sig_m[ repeats_de_sig_m$full_le
                 scale_fill_manual(values = category_palette) +
                 coord_flip()
                 
-pdf(file = file.path('plots', 'fig5d-full_length-repeats_de.pdf'))
+pdf(file = file.path('plots', 'fig7d-full_length-repeats_de.pdf'))
 print(full_length_bar_plot)
 invisible(dev.off())
 
@@ -198,7 +198,7 @@ all_pvalue_plot <- ggplot(data = all_padj_data) +
                                linetype = 5, colour = 'grey80') +
                     theme_void()
 
-pdf(file = file.path('plots', 'fig5d-all-pvalues.pdf'))
+pdf(file = file.path('plots', 'fig7d-all-pvalues.pdf'))
 print(all_pvalue_plot)
 invisible(dev.off())
 
@@ -225,7 +225,7 @@ full_length_pvalue_plot <- ggplot(data = full_length_padj_data) +
                                 theme_void() +
                                 theme(legend.position = 'none')
 
-pdf(file = file.path('plots', 'fig5d-full_length-pvalues.pdf'))
+pdf(file = file.path('plots', 'fig7d-full_length-pvalues.pdf'))
 print(full_length_pvalue_plot)
 invisible(dev.off())
 
@@ -260,7 +260,7 @@ repeats_location_plot <- ggplot(data = repeats_location_m,
                             scale_y_log10(position = 'right') +
                             coord_flip()
 
-pdf(file = file.path('plots', 'fig5d-all-location.pdf'))
+pdf(file = file.path('plots', 'fig7d-all-location.pdf'))
 print(repeats_location_plot)
 invisible(dev.off())
 
@@ -306,7 +306,7 @@ repeats_location_plot_broken_axis <-
                 legend.position = 'none')
 
 
-postscript(file = file.path('plots', 'fig5d-all-location.eps'),
+postscript(file = file.path('plots', 'fig7d-all-location.eps'),
            width = 2, height = 9, paper = 'special', horizontal = FALSE)
 print(repeats_location_plot_broken_axis)
 invisible(dev.off())

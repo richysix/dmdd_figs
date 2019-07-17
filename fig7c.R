@@ -9,16 +9,16 @@ option_list <- list(
 
 cmd_line_args <- parse_args(
   OptionParser(
-    option_list=option_list, prog = 'fig5c.R',
+    option_list=option_list, prog = 'fig7c.R',
     usage = "Usage: %prog [options] input_file" ),
   positional_arguments = 3
 )
 
 #cmd_line_args <- list(
 #  options = list(verbose = FALSE),
-#  args = c('output/fig5c-for-enrichment-test.tsv',
+#  args = c('output/fig7c-for-enrichment-test.tsv',
 #           1639267,
-#           'output/fig5c-dhx35-repeats-introns-genes-sig.tsv')
+#           'output/fig7c-dhx35-repeats-introns-genes-sig.tsv')
 #)
 
 if( cmd_line_args$options[['verbose']] ){
@@ -136,19 +136,19 @@ repeats_log2fc_plot <- ggplot(data = gene_sig_enrichment,
 #    geom_text_repel(aes(label = label)) +
 #    theme_minimal()
 
-pdf(file = file.path('plots', 'fig5c-plots.pdf'),
+pdf(file = file.path('plots', 'fig7c-plots.pdf'),
     width = 11, height = 8, paper = 'special')
 print(repeats_log2fc_plot)
 #print(repeats_log2fc_plot_enrich_p)
 dev.off()
 
 # output eps
-postscript(file = file.path('plots', 'fig5c.eps'),
+postscript(file = file.path('plots', 'fig7c.eps'),
             width = 9, height = 5, paper = 'special',
             horizontal = FALSE)
 print(repeats_log2fc_plot)
 dev.off()
 
 # output gene ids to file
-write.table(gene_sig_enrichment, file = file.path('output', 'fig5c-plot_data.tsv'),
+write.table(gene_sig_enrichment, file = file.path('output', 'fig7c-plot_data.tsv'),
             sep = "\t",  quote = FALSE, row.names = FALSE)

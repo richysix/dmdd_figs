@@ -1,11 +1,11 @@
-Fig. 5b
+Fig. 7b
 The data for the plot is in data/repeats-location_vs_genes.tsv
 
 ```
-Rscript fig5b.R data/repeats-location_vs_genes.tsv
+Rscript fig7b.R data/repeats-location_vs_genes.tsv
 ```
 
-Fig. 5c
+Fig. 7c
 Download files for repeats analysis
 ```
 mkdir data/repeats/
@@ -26,7 +26,7 @@ Get gene ids for genes with repeats in introns that are in DE
 awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $8}' data/solely-introns-repeats-all.txt | \
 grep -Ff - data/repeats/Dhx35-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
 cut -f 1 | sort -u | grep -Ff - data/solely-introns-repeats-all.txt | \
-awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $1}' | sort -u > output/fig5c-genes-repeats-intron-de_dhx35.txt
+awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $1}' | sort -u > output/fig7c-genes-repeats-intron-de_dhx35.txt
 
 # Count total number of repeats in introns
 wc -l data/solely-introns-repeats-all.txt
@@ -35,31 +35,31 @@ wc -l data/solely-introns-repeats-all.txt
 
 Count number of repeats in genes
 ```
-grep -Ff output/fig5c-genes-repeats-intron-de_dhx35.txt data/solely-introns-repeats-all.txt | \
-cut -f1 | sort | uniq -c | awk 'BEGIN{OFS = "\t"} {print $2, $1}' > output/fig5c-num_repeats-introns.tsv
+grep -Ff output/fig7c-genes-repeats-intron-de_dhx35.txt data/solely-introns-repeats-all.txt | \
+cut -f1 | sort | uniq -c | awk 'BEGIN{OFS = "\t"} {print $2, $1}' > output/fig7c-num_repeats-introns.tsv
 
 # Count number of repeats in introns in de
-grep -Ff output/fig5c-genes-repeats-intron-de_dhx35.txt data/solely-introns-repeats-all.txt | \
+grep -Ff output/fig7c-genes-repeats-intron-de_dhx35.txt data/solely-introns-repeats-all.txt | \
 cut -f 8 | grep -Ff - data/repeats/Dhx35-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
 cut -f 1 | sort -u | grep -Ff - data/solely-introns-repeats-all.txt | \
 awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $1}' | sort | \
-uniq -c | awk 'BEGIN{OFS = "\t"} {print $2, $1}' > output/fig5c-num_repeats_de-introns.tsv
+uniq -c | awk 'BEGIN{OFS = "\t"} {print $2, $1}' > output/fig7c-num_repeats_de-introns.tsv
 ```
 
 Get adjusted pvalues and log2fc of genes with repeats in introns in de
 ```
-grep -Ff output/fig5c-genes-repeats-intron-de_dhx35.txt \
+grep -Ff output/fig7c-genes-repeats-intron-de_dhx35.txt \
 data/repeats/Dhx35-deseq2-notranscriptome-blacklist-adj-gt-adj-sex-outliers-hom_vs_het_wt.tsv | \
-cut -f 1,3,4 | sort -k1,1 > output/fig5c-genes_with_repeats_in_de-pval-log2fc.tsv
+cut -f 1,3,4 | sort -k1,1 > output/fig7c-genes_with_repeats_in_de-pval-log2fc.tsv
 
 # count genes
-wc -l output/fig5c-genes_with_repeats_in_de-pval-log2fc.tsv
-470 output/fig5c-genes_with_repeats_in_de-pval-log2fc.tsv
+wc -l output/fig7c-genes_with_repeats_in_de-pval-log2fc.tsv
+470 output/fig7c-genes_with_repeats_in_de-pval-log2fc.tsv
 
 # two genes are missing because they are blacklisted
 # join to gene list and note as blacklisted
-join -v1 output/fig5c-genes-repeats-intron-de_dhx35.txt output/fig5c-genes_with_repeats_in_de-pval-log2fc.tsv | \
-awk '{print $1 "\tblacklist\tblacklist"}' >> output/fig5c-genes_with_repeats_in_de-pval-log2fc.tsv
+join -v1 output/fig7c-genes-repeats-intron-de_dhx35.txt output/fig7c-genes_with_repeats_in_de-pval-log2fc.tsv | \
+awk '{print $1 "\tblacklist\tblacklist"}' >> output/fig7c-genes_with_repeats_in_de-pval-log2fc.tsv
 
 ```
 
@@ -68,7 +68,7 @@ Get gene ids for repeats in introns in de in all mutants tested
 awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $8}' data/solely-introns-repeats-all.txt | \
 grep -Fhf - data/repeats/*-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
 cut -f1 | sort -u | grep -Ff - data/solely-introns-repeats-all.txt | \
-awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $1}' | sort -u > output/fig5c-genes-repeats-intron-de_all.txt 
+awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $1}' | sort -u > output/fig7c-genes-repeats-intron-de_all.txt 
 
 # get gene ids for repeats in introns in de in everything except Dhx35
 for file in $(ls data/repeats/*-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
@@ -78,19 +78,19 @@ awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $8}' data/sol
 grep -Fhf - $file | cut -f1 | sort -u | \
 grep -Ff - data/solely-introns-repeats-all.txt | \
 awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $1}'
-done | sort -u > output/fig5c-genes-repeats-intron-de_all_but_dhx35.txt
+done | sort -u > output/fig7c-genes-repeats-intron-de_all_but_dhx35.txt
 
 # get genes with repeats in DE in Dhx35 only and ones in Dhx35 and others
-comm -1 -3 output/fig5c-genes-repeats-intron-de_all_but_dhx35.txt output/fig5c-genes-repeats-intron-de_dhx35.txt | \
-awk 'BEGIN{OFS = "\t"} {print $1, "Dhx35_only" }' > output/fig5c-Line-overlap.tsv
-comm -1 -2 output/fig5c-genes-repeats-intron-de_all_but_dhx35.txt output/fig5c-genes-repeats-intron-de_dhx35.txt | \
-awk 'BEGIN{OFS = "\t"} {print $1, "Dhx35_plus" }' >> output/fig5c-Line-overlap.tsv
+comm -1 -3 output/fig7c-genes-repeats-intron-de_all_but_dhx35.txt output/fig7c-genes-repeats-intron-de_dhx35.txt | \
+awk 'BEGIN{OFS = "\t"} {print $1, "Dhx35_only" }' > output/fig7c-Line-overlap.tsv
+comm -1 -2 output/fig7c-genes-repeats-intron-de_all_but_dhx35.txt output/fig7c-genes-repeats-intron-de_dhx35.txt | \
+awk 'BEGIN{OFS = "\t"} {print $1, "Dhx35_plus" }' >> output/fig7c-Line-overlap.tsv
 
 # join files together
-perl -le 'print join("\t", qw{gene_id repeats_intron repeats_intron_de source gene_padj gene_log2fc});' > output/fig5c-for-enrichment-test.tsv
-join -t$'\t' output/fig5c-num_repeats-introns.tsv output/fig5c-num_repeats_de-introns.tsv | \
-join -t$'\t' - <(sort -k1,1 output/fig5c-Line-overlap.tsv) | \
-join -t$'\t' - <(sort -k1,1 output/fig5c-genes_with_repeats_in_de-pval-log2fc.tsv) >> output/fig5c-for-enrichment-test.tsv
+perl -le 'print join("\t", qw{gene_id repeats_intron repeats_intron_de source gene_padj gene_log2fc});' > output/fig7c-for-enrichment-test.tsv
+join -t$'\t' output/fig7c-num_repeats-introns.tsv output/fig7c-num_repeats_de-introns.tsv | \
+join -t$'\t' - <(sort -k1,1 output/fig7c-Line-overlap.tsv) | \
+join -t$'\t' - <(sort -k1,1 output/fig7c-genes_with_repeats_in_de-pval-log2fc.tsv) >> output/fig7c-for-enrichment-test.tsv
 ```
 
 Get repeat log2fc and gene_id info together
@@ -104,22 +104,22 @@ repeat_strand=$(( $file1_cols + 11 - 1 ))
 
 # join repeat and gene info together
 perl -le 'print join("\t", qw{repeat_id pval padj log2fc chr start end strand
-name gene_id gene_chr gene_start gene_end gene_strand gene_biotype gene_name});' > output/fig5c-dhx35-repeats-introns-genes-sig.tsv
+name gene_id gene_chr gene_start gene_end gene_strand gene_biotype gene_name});' > output/fig7c-dhx35-repeats-introns-genes-sig.tsv
 sort -t$'\t' -k1,1 data/repeats/Dhx35-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
 join -t$'\t' -2 8 - <(sort -t$'\t' -k8,8 data/solely-introns-repeats-all.txt) | \
 perl -F"\t" -lane 'if($F['$gene_strand'] eq $F['$repeat_strand']) {
 print join("\t", @F[0..8,'$file1_cols'..'$(( $file1_cols + 6 ))'] ); }' \
- >> output/fig5c-dhx35-repeats-introns-genes-sig.tsv
+ >> output/fig7c-dhx35-repeats-introns-genes-sig.tsv
 ```
 
-Run Fig. 5c script
+Run Fig. 7c script
 ```
-Rscript fig5c.R output/fig5c-for-enrichment-test.tsv \
+Rscript fig7c.R output/fig7c-for-enrichment-test.tsv \
 $( wc -l data/solely-introns-repeats-all.txt | awk '{print $1}' ) \
-output/fig5c-dhx35-repeats-introns-genes-sig.tsv
+output/fig7c-dhx35-repeats-introns-genes-sig.tsv
 ```
 
-Fig. 5d
+Fig. 7d
 
 All repeats counted by family
 ```
@@ -157,12 +157,12 @@ Combine data
 join -t$'\t' <( sort -t$'\t' -k1,1 output/all-repeats-count.tsv ) \
 <( sort -t$'\t' -k1,1 output/all-repeats-in-DE-count.tsv ) | \
 awk 'BEGIN{ OFS = "\t"; print "Family", "Group", "full_length", "repeats", "de", "not_de" }
-{ print $1, $2, "all", $4, $7, $4 - $7 }' > output/fig5d_repeats_de.tsv
+{ print $1, $2, "all", $4, $7, $4 - $7 }' > output/fig7d_repeats_de.tsv
 
 join -t$'\t' <( sort -t$'\t' -k1,1 output/all-repeats-count-gt=4000.tsv ) \
 <( sort -t$'\t' -k1,1 output/all-repeats-count-gt=4000-in-DE.tsv ) | \
 awk 'BEGIN{ OFS = "\t" }
-{ print $1, $2, "full_length", $4, $7, $4 - $7 }' >> output/fig5d_repeats_de.tsv
+{ print $1, $2, "full_length", $4, $7, $4 - $7 }' >> output/fig7d_repeats_de.tsv
 ```
 
 Make sig files for heatmaps
@@ -214,15 +214,15 @@ awk 'BEGIN{OFS = "\t"; print "Family", "exon", "intron", "intergenic" }
 {if($6 == ""){ $6 = "NA"} if($7 == ""){ $7 = "NA" }
 intergenic = $3; if( $5 != "NA" ){ intergenic -= $5 }
 if( $7 != "NA" ){ intergenic -= $7 } print $1, $5, $7, intergenic }' \
- > output/fig5d_repeats_location.tsv
+ > output/fig7d_repeats_location.tsv
 ```
 
-Run fig5d script
+Run fig7d script
 
 ```
-Rscript fig5d.R output/fig5d_repeats_de.tsv \
+Rscript fig7d.R output/fig7d_repeats_de.tsv \
 $( grep -v Name data/repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.tsv | wc -l ) \
 $( awk 'BEGIN{ sum = 0; } { if( $3 !~/adjp/ && $7-$6 >= 4000 ){sum += 1} }
 END{ print sum }' data/repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.tsv ) \
-output/fig5d_repeats_location.tsv
+output/fig7d_repeats_location.tsv
 ```
