@@ -12,6 +12,19 @@ Each individual step is detailed below.
 
 To get the packages for R see the [Required R packages](#packages) section
 
+Download count files for all 73 lines
+```
+# The quickest way is to download the compressed archive
+# You'll need tar to extract the file
+# Alternatively the files can be download from doi.org/10.6084/m9.figshare.6819611
+curl -L --output data/collins_2019_counts_all.tgz https://ndownloader.figshare.com/files/14151989
+cd data
+tar -xzvf collins_2019_counts_all.tgz
+```
+
+This creates a data/counts directory with the counts for each line and a samples
+file detailing the genotype, sex and stage of each sample.
+
 Create output and plots directories and ordered sample information file
 
 ```
@@ -19,7 +32,8 @@ Rscript setup.R data/counts/samples-gt-gender-stage-somites.txt \
 data/Mm_GRCm38_e88_baseline.rds
 ```
 
-## Fig. 1d
+## Fig. 1
+### Fig. 1d
 
 The data for the Novel genes heatmap in Fig. 1d are included in the data/ folder
 (data/346-from-all-novel-blacklist-header.tsv).
@@ -49,17 +63,7 @@ data/PRJEB4513-E8.25/tissues-counts.tsv \
 data/PRJEB4513-E8.25/tissues-samples.tsv
 ```
 
-Download counts for all 73 lines
-```
-# The quickest way is to download the compressed archive
-# You'll need tar to extract the file
-# Alternatively the files can be download from doi.org/10.6084/m9.figshare.6819611
-curl -L --output data/collins_2019_counts_all.tgz https://ndownloader.figshare.com/files/14151989
-cd data
-tar -xzvf collins_2019_counts_all.tgz
-```
-
-# Fig.2
+## Fig. 2 and Fig. 3 
 
 The commands to create the files needed by the fig2 script are in fig2.md
 
