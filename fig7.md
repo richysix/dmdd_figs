@@ -10,7 +10,7 @@ Download files for repeats analysis
 ```
 mkdir data/repeats/
 cd data/repeats/
-curl -L --output deseq2-blacklist-adj-gt-adj-sex-outliers-notranscriptome-repeats-sig.tgz https://ndownloader.figshare.com/files/11865374
+curl -L --output deseq2-blacklist-adj-gt-adj-sex-outliers-notranscriptome-repeats-sig.tgz https://ndownloader.figshare.com/files/16370780
 tar -xzvf deseq2-blacklist-adj-gt-adj-sex-outliers-notranscriptome-repeats-sig.tgz
 
 curl -L --output deseq2-blacklist-adj-gt-adj-sex-outliers-notranscriptome-genes-sig.tgz https://ndownloader.figshare.com/files/11865350
@@ -19,29 +19,31 @@ tar -xzvf deseq2-blacklist-adj-gt-adj-sex-outliers-notranscriptome-genes-sig.tgz
 cd $ROOT
 ```
 
-The data on which repeats are in introns is in data/solely-introns-repeats-all.txt
+
+
+The data on which repeats are in introns is in data/repeats/solely-introns-repeats-all.txt
 
 Get gene ids for genes with repeats in introns that are in DE
 ```
-awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $8}' data/solely-introns-repeats-all.txt | \
+awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $8}' data/repeats/solely-introns-repeats-all.txt | \
 grep -Ff - data/repeats/Dhx35-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
-cut -f 1 | sort -u | grep -Ff - data/solely-introns-repeats-all.txt | \
+cut -f 1 | sort -u | grep -Ff - data/repeats/solely-introns-repeats-all.txt | \
 awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $1}' | sort -u > output/fig7c-genes-repeats-intron-de_dhx35.txt
 
 # Count total number of repeats in introns
-wc -l data/solely-introns-repeats-all.txt
-1639267 data/solely-introns-repeats-all.txt
+wc -l data/repeats/solely-introns-repeats-all.txt
+1639267 data/repeats/solely-introns-repeats-all.txt
 ```
 
 Count number of repeats in genes
 ```
-grep -Ff output/fig7c-genes-repeats-intron-de_dhx35.txt data/solely-introns-repeats-all.txt | \
+grep -Ff output/fig7c-genes-repeats-intron-de_dhx35.txt data/repeats/solely-introns-repeats-all.txt | \
 cut -f1 | sort | uniq -c | awk 'BEGIN{OFS = "\t"} {print $2, $1}' > output/fig7c-num_repeats-introns.tsv
 
 # Count number of repeats in introns in de
-grep -Ff output/fig7c-genes-repeats-intron-de_dhx35.txt data/solely-introns-repeats-all.txt | \
+grep -Ff output/fig7c-genes-repeats-intron-de_dhx35.txt data/repeats/solely-introns-repeats-all.txt | \
 cut -f 8 | grep -Ff - data/repeats/Dhx35-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
-cut -f 1 | sort -u | grep -Ff - data/solely-introns-repeats-all.txt | \
+cut -f 1 | sort -u | grep -Ff - data/repeats/solely-introns-repeats-all.txt | \
 awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $1}' | sort | \
 uniq -c | awk 'BEGIN{OFS = "\t"} {print $2, $1}' > output/fig7c-num_repeats_de-introns.tsv
 ```
@@ -65,18 +67,18 @@ awk '{print $1 "\tblacklist\tblacklist"}' >> output/fig7c-genes_with_repeats_in_
 
 Get gene ids for repeats in introns in de in all mutants tested
 ```
-awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $8}' data/solely-introns-repeats-all.txt | \
+awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $8}' data/repeats/solely-introns-repeats-all.txt | \
 grep -Fhf - data/repeats/*-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
-cut -f1 | sort -u | grep -Ff - data/solely-introns-repeats-all.txt | \
+cut -f1 | sort -u | grep -Ff - data/repeats/solely-introns-repeats-all.txt | \
 awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $1}' | sort -u > output/fig7c-genes-repeats-intron-de_all.txt 
 
 # get gene ids for repeats in introns in de in everything except Dhx35
 for file in $(ls data/repeats/*-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
 grep -v Dhx35)
 do
-awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $8}' data/solely-introns-repeats-all.txt | \
+awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $8}' data/repeats/solely-introns-repeats-all.txt | \
 grep -Fhf - $file | cut -f1 | sort -u | \
-grep -Ff - data/solely-introns-repeats-all.txt | \
+grep -Ff - data/repeats/solely-introns-repeats-all.txt | \
 awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $1}'
 done | sort -u > output/fig7c-genes-repeats-intron-de_all_but_dhx35.txt
 
@@ -106,7 +108,7 @@ repeat_strand=$(( $file1_cols + 11 - 1 ))
 perl -le 'print join("\t", qw{repeat_id pval padj log2fc chr start end strand
 name gene_id gene_chr gene_start gene_end gene_strand gene_biotype gene_name});' > output/fig7c-dhx35-repeats-introns-genes-sig.tsv
 sort -t$'\t' -k1,1 data/repeats/Dhx35-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
-join -t$'\t' -2 8 - <(sort -t$'\t' -k8,8 data/solely-introns-repeats-all.txt) | \
+join -t$'\t' -2 8 - <(sort -t$'\t' -k8,8 data/repeats/solely-introns-repeats-all.txt) | \
 perl -F"\t" -lane 'if($F['$gene_strand'] eq $F['$repeat_strand']) {
 print join("\t", @F[0..8,'$file1_cols'..'$(( $file1_cols + 6 ))'] ); }' \
  >> output/fig7c-dhx35-repeats-introns-genes-sig.tsv
@@ -115,7 +117,7 @@ print join("\t", @F[0..8,'$file1_cols'..'$(( $file1_cols + 6 ))'] ); }' \
 Run Fig. 7c script
 ```
 Rscript fig7c.R output/fig7c-for-enrichment-test.tsv \
-$( wc -l data/solely-introns-repeats-all.txt | awk '{print $1}' ) \
+$( wc -l data/repeats/solely-introns-repeats-all.txt | awk '{print $1}' ) \
 output/fig7c-dhx35-repeats-introns-genes-sig.tsv
 ```
 
@@ -200,7 +202,7 @@ awk -F " " '{print "exon\t" $1 "\t" $2}' > output/repeat-location-exon.tsv
 
 # Introns only
 cut -f1 data/notranscriptome-repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv | \
-grep -Ff - data/solely-introns-repeats-all.txt | \
+grep -Ff - data/repeats/solely-introns-repeats-all.txt | \
 awk -F "\t" '($5 ~/+/ && $12 ~/+/) || ($5 ~/-/ && $12 ~/-/) {print $8}' | \
 sort -u | awk -F ":" '{print $1}' | sort | uniq -c | \
 awk -F " " '{print "intron\t" $1 "\t" $2}' > output/repeat-location-intron.tsv
