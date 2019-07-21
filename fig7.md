@@ -19,8 +19,6 @@ tar -xzvf deseq2-blacklist-adj-gt-adj-sex-outliers-notranscriptome-genes-sig.tgz
 cd $ROOT
 ```
 
-
-
 The data on which repeats are in introns is in data/repeats/solely-introns-repeats-all.txt
 
 Get gene ids for genes with repeats in introns that are in DE

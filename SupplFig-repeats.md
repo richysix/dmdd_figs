@@ -51,3 +51,16 @@ perl -F"\t" -lane 'next if $F[4] eq "NA"; if( $F[4] < 0.05 ){ print join("\t", @
 sort -uk1,1 >> output/repeats-for_volcano_plot.tsv
 ```
 
+## Fig S4
+
+Run SupplFig-repeats scripts
+
+```
+Rscript SupplFig-repeats.R \
+output/num_repeats_by_line.tsv \
+output/repeats_by_line_by_type.tsv \
+output/repeats-for_volcano_plot.tsv \
+data/repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv
+data/repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.tsv
+output/repeats-enriched_families.tsv
+```

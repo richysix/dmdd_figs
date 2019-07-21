@@ -29,8 +29,8 @@ for( package in packages ){
 #  args = c('output/num_repeats_by_line.tsv',
 #           'output/repeats_by_line_by_type.tsv',
 #           'output/repeats-for_volcano_plot.tsv',
-#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Morc2a/deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.sig.tsv',
-#           '/lustre/scratch117/maz/team31/projects/mouse_DMDD/lane-process/Morc2a/deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-nicole-definite-maybe-outliers/hom_vs_het_wt.tsv',
+#           'data/repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.sig.tsv',
+#           'data/repeats/Morc2a-deseq2-notranscriptome-repeatmasker-all-adj-gt-adj-sex-outliers-hom_vs_het_wt.tsv',
 #           'output/repeats-enriched_families.tsv')
 #)
 
