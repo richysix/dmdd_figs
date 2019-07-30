@@ -1,32 +1,43 @@
 # Create package directory
 dir.create(path = file.path('.R', 'lib'), recursive = TRUE)
-install.packages('optparse', lib = '.R/lib')
-install.packages('reshape2', lib = '.R/lib')
-install.packages('plyr', lib = '.R/lib')
-install.packages('ggplot2', lib = '.R/lib')
-install.packages('scales', lib = '.R/lib')
-install.packages('cowplot', lib = '.R/lib')
-install.packages('viridis', lib = '.R/lib')
-install.packages('RColorBrewer', lib = '.R/lib')
-install.packages('ggdendro', lib = '.R/lib')
-install.packages('ggrepel', lib = '.R/lib')
-install.packages('svglite', lib = '.R/lib')
-install.packages("ontologyIndex", lib = '.R/lib')
-install.packages("ontologyPlot", lib = '.R/lib')
-install.packages("dendextend", lib = ".R/lib")
-install.packages("seriation", lib = '.R/lib')
+# set mirror
+local({r <- getOption("repos")
+       r["CRAN"] <- "https://cloud.r-project.org/" 
+       options(repos=r)
+})
+
+packages <- c('optparse', 'reshape2', 'plyr', 'ggplot2', 'scales', 'cowplot',
+    'viridis', 'RColorBrewer', 'ggdendro', 'ggrepel', 'svglite',
+    'ontologyIndex', 'ontologyPlot', 'dendextend', 'seriation')
+for ( package in packages ) {
+    if(!require(package, character.only = TRUE)) {
+        install.packages(package, lib = '.R/lib')
+        require(package, character.only = TRUE, upgrade = FALSE)
+    }
+}
+
+package <- 'cowplot'
+if(!require(package, character.only = TRUE)) {
+    install_version("cowplot", "0.9.4", lib = '.R/lib', upgrade = FALSE)
+}
 
 # install Bioconductor packages
 source("https://bioconductor.org/biocLite.R")
-biocLite("SummarizedExperiment", lib = '.R/lib', lib.loc = '.R/lib')
-biocLite("DESeq2", lib = '.R/lib', lib.loc = '.R/lib')
-biocLite("Rgraphviz", lib = '.R/lib', lib.loc = '.R/lib')
-biocLite("biomaRt", lib = '.R/lib', lib.loc = '.R/lib')
-biocLite("topgo", lib = '.R/lib', lib.loc = '.R/lib')
+bioc_packages <- c("SummarizedExperiment", "DESeq2", "Rgraphviz", "biomaRt",
+                    "topGO")
+for ( package in bioc_packages ) {
+    if(!require(package, character.only = TRUE)) {
+        biocLite(package, lib = '.R/lib', lib.loc = '.R/lib', suppressUpdates = TRUE)
+        require(package, character.only = TRUE)
+    }
+}
 
 # install packages from GitHub
-install.packages("devtools", lib = '.R/lib')
-library('devtools')
-install_github('richysix/biovisr', lib='.R/lib')
-install_github('richysix/miscr', lib='.R/lib')
+package <- 'devtools'
+if(!require(package, character.only = TRUE)) {
+    install.packages("devtools", lib = '.R/lib')
+    require(package, character.only = TRUE)
+}
+install_github('richysix/biovisr', lib='.R/lib', upgrade = FALSE)
+install_github('richysix/miscr', lib='.R/lib', upgrade = FALSE)
 
