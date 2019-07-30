@@ -20,6 +20,7 @@ Download count files for all 73 lines
 curl -L --output data/collins_2019_counts_all.tgz https://ndownloader.figshare.com/files/14151989
 cd data
 tar -xzvf collins_2019_counts_all.tgz
+cd ..
 ```
 
 This creates a data/counts directory with the counts for each line and a samples
