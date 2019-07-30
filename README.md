@@ -32,6 +32,12 @@ Create output and plots directories and ordered sample information file
 Rscript setup.R data/counts/samples-gt-gender-stage-somites.txt \
 data/Mm_GRCm38_e88_baseline.rds
 ```
+This creates the following files:
+* output/KOs_delayed.txt
+* output/KOs_ordered_by_delay.txt
+* output/sample_info.txt
+* output/Mm_GRCm38_e88_baseline.tsv
+* output/samples-Mm_GRCm38_e88_baseline.txt
 
 ## Fig. 1
 ### Fig. 1d
@@ -63,6 +69,12 @@ data/PRJEB4513-E8.25/4567_somites-samples.tsv \
 data/PRJEB4513-E8.25/tissues-counts.tsv \
 data/PRJEB4513-E8.25/tissues-samples.tsv
 ```
+This creates the following files:
+* output/tissue_vs_WE_Venn_numbers.tsv
+* plots/tissue_vs_WE_heatmap.pdf
+* plots/tissue_vs_WE_heatmap.eps
+* output/highly_expressed-tissues.tsv
+* output/tissue_only-counts.tsv
 
 ## Fig. 2 and Fig. 3 
 
