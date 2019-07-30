@@ -343,7 +343,7 @@ output/duplicated_terms-edited.tsv \
 output/delay-jaccard-all.rda
 ```
 
-## Fig. S4
+## Fig. S3
 
 ```
 mut=Fcho2
