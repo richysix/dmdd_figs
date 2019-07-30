@@ -1,5 +1,9 @@
 # Create package directory
-dir.create(path = file.path('.R', 'lib'), recursive = TRUE)
+package_dir <- file.path('.R', 'lib')
+if (!file.exists(package_dir)) {
+    dir.create(path = package_dir, recursive = TRUE)
+}
+
 # set mirror
 local({r <- getOption("repos")
        r["CRAN"] <- "https://cloud.r-project.org/" 
@@ -8,12 +12,18 @@ local({r <- getOption("repos")
 
 packages <- c('optparse', 'reshape2', 'plyr', 'ggplot2', 'scales', 'cowplot',
     'viridis', 'RColorBrewer', 'ggdendro', 'ggrepel', 'svglite',
-    'ontologyIndex', 'ontologyPlot', 'dendextend', 'seriation')
+    'ontologyIndex', 'ontologyPlot', 'dendextend', 'seriation', 'devtools')
+not_installed_packages <- c()
+index <- 1
 for ( package in packages ) {
     if(!require(package, character.only = TRUE)) {
-        install.packages(package, lib = '.R/lib')
-        require(package, character.only = TRUE, upgrade = FALSE)
+        not_installed_packages[index] <- package
+        index = index + 1
     }
+}
+install.packages(not_installed_packages, lib = '.R/lib')
+for ( package in not_installed_packages ) {
+    require(package, character.only = TRUE)
 }
 
 package <- 'cowplot'
@@ -33,11 +43,6 @@ for ( package in bioc_packages ) {
 }
 
 # install packages from GitHub
-package <- 'devtools'
-if(!require(package, character.only = TRUE)) {
-    install.packages("devtools", lib = '.R/lib')
-    require(package, character.only = TRUE)
-}
 install_github('richysix/biovisr', lib='.R/lib', upgrade = FALSE)
 install_github('richysix/miscr', lib='.R/lib', upgrade = FALSE)
 
