@@ -598,8 +598,8 @@ grid.draw(overall_legend)
 dev.off()
 
 # Gene list overlaps
-# plot tree and overlap matrix for mrna_abnormal
-results_set <- 'mrna_abnormal'
+# plot tree and overlap matrix for delay
+results_set <- 'delay'
   
 # load cluster and heatmap plot and output both together with annotations
 load(cmd_line_args$args[7])

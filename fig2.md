@@ -42,13 +42,15 @@ Shiny app with genotype as shape and somite_number as fill colour and save as rd
 Then edit the plot in an interactive R session.
 
 ```
+# set environment variable for plot Rdata file name
+export PLOT_FILE=output/pca-all_genes-top50000-somite_number-pc3_pc2.rda
 R
 ```
 
 ```R
 library('ggplot2')
 library('viridis')
-load('output/pca-all_genes-top50000-somite_number-pc3_pc2.rda')
+load(Sys.getenv(x = c("PLOT_FILE")))
 # plot
 plot_data <- pca_plot$data
 # remove samples with NA as somite number
@@ -150,7 +152,6 @@ awk -F"\t" 'BEGIN{OFS = "\t"} { print $1, "baseline", $3, $4, $5 }' \
 
 Download normalisation script and normalise Brd2 and baseline counts together
 ```
-curl -LO https://github.com/iansealy/bio-misc/raw/master/normalise_rnaseq.R
 Rscript normalise_rnaseq.R \
 output/Brd2-baseline-counts.tsv output/Brd2-samples.txt \
 output/Brd2-baseline-normalised-counts.tsv
@@ -158,11 +159,10 @@ output/Brd2-baseline-normalised-counts.tsv
 
 Get counts for the genes in Fig. 2c
 ```
-head -n1 output/Brd2-baseline-normalised-counts.tsv > output/Brd2-counts.tsv
 for gene in '^Gene' ENSMUSG00000032607 ENSMUSG00000022454 ENSMUSG00000035835 ENSMUSG00000021279 
 do
 grep $gene output/Brd2-baseline-normalised-counts.tsv
-done >> output/Brd2-counts.tsv
+done > output/Brd2-counts.tsv
 ```
 
 Download count plot script from another repository and run
@@ -264,15 +264,12 @@ done
 # run script to collect together results from appropriate comparisons
 perl collate_emap_results.pl --header \
 output/sets_to_use.tsv > output/emap_results.all.tsv
-
 ```
 
 process EMAPA terms to collapse
-
+The obo file for the EMAPA ontology is in the data/EMAPA_Nov_17_2017.obo file
 ```
-curl -L --output data/emapa.obo http://purl.obolibrary.org/obo/emapa.obo
-
-Rscript process_emap.R data/emap_results.all.tsv \
+Rscript process_emap.R output/emap_results.all.tsv \
 data/EMAPA_Nov_17_2017.obo data/root_terms.txt
 ```
 The process_emap script outputs a file (output/duplicated_terms.tsv) of terms
@@ -280,11 +277,8 @@ that are children of two different parent terms, so add a column called "to_use"
 of 1s and 0s indicating which parent to use.
 Save it as output/duplicated_terms-edited.tsv
 
-
-Get numbers of significant genes
-```
+The numbers of significantly differentially expressed genes in each line is in
 data/sig_gene_counts.tsv
-```
 
 Calculate the pairwise gene overlap from the delay lists for all delayed mutants
 ```
@@ -338,7 +332,7 @@ data/go_results.tsv \
 data/dmdd-genes.txt \
 output/KOs_ordered_by_delay.txt \
 data/sig_gene_counts.tsv \
-data/emap_results.all.tsv \
+output/emap_results.all.tsv \
 output/duplicated_terms-edited.tsv \
 output/delay-jaccard-all.rda
 ```
@@ -376,16 +370,15 @@ output/$mut-baseline-normalised-counts.tsv
 
 Get counts for the genes in Fig. S3a-b
 ```
-head -n1 output/$mut-baseline-normalised-counts.tsv > output/$mut-counts.tsv
 for gene in '^Gene' ENSMUSG00000034486 ENSMUSG00000020717
 do
 grep $gene output/$mut-baseline-normalised-counts.tsv
-done >> output/$mut-counts.tsv
+done > output/$mut-counts.tsv
 ```
 
 Run count plot script
 ```
 Rscript graph_rnaseq_counts.R \
 output/$mut-counts.tsv output/$mut-samples.txt \
-plots/${mut}-count_plots.eps default condition stage
+plots/$mut-count_plots.eps default condition stage
 ```
