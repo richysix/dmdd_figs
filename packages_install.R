@@ -10,7 +10,7 @@ local({r <- getOption("repos")
        options(repos=r)
 })
 
-packages <- c('optparse', 'reshape2', 'plyr', 'ggplot2', 'scales', 'cowplot',
+packages <- c('optparse', 'reshape2', 'plyr', 'dplyr', 'ggplot2', 'scales', 'cowplot',
     'viridis', 'RColorBrewer', 'ggdendro', 'ggrepel', 'svglite',
     'ontologyIndex', 'ontologyPlot', 'dendextend', 'seriation', 'devtools')
 not_installed_packages <- c()
@@ -43,6 +43,11 @@ for ( package in bioc_packages ) {
 }
 
 # install packages from GitHub
-install_github('richysix/biovisr', lib='.R/lib', upgrade = FALSE)
-install_github('richysix/miscr', lib='.R/lib', upgrade = FALSE)
-
+github_packages <- c('biovisr', 'miscr')
+for ( package in github_packages ) {
+    if (!require(package, character.only = TRUE)) {
+        install_github(paste0('richysix/', package),
+                       lib='.R/lib', upgrade = FALSE)
+        require(package, character.only = TRUE)
+    }
+}
