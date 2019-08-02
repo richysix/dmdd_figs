@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-.libPaths('./.R/lib')
+#.libPaths('./.R/lib')
 
 library('optparse')
 option_list <- list(
@@ -18,18 +18,19 @@ cmd_line_args <- parse_args(
   positional_arguments = 7
 )
 
-cmd_line_args <- list(
-  options = list(directory = 'cwd',
-                 verbose = FALSE ),
-  args = c('data/dmdd-genes.txt',
-           'output/sample_info.txt',
-           'output/KOs_ordered_by_delay.txt',
-           'data/ko_expr.tsv',
-           'data/Mm_GRCm38_e88_baseline.rda',
-           'data/sig_gene_counts.tsv',
-           'output/human-mim-edited.tsv'
-          )
-)
+#cmd_line_args <- list(
+#  options = list(directory = 'cwd',
+#                 debug = FALSE,
+#                 verbose = FALSE ),
+#  args = c('data/dmdd-genes.txt',
+#           'output/sample_info.txt',
+#           'output/KOs_ordered_by_delay.txt',
+#           'data/ko_expr.tsv',
+#           'data/Mm_GRCm38_e88_baseline.rds',
+#           'data/sig_gene_counts.tsv',
+#           'output/human-mim-edited.tsv'
+#          )
+#)
 
 # make options simpler
 directory <- cmd_line_args$options[['directory']]
@@ -376,7 +377,20 @@ if (debug) {
 ## BASELINE
 # heatmap for expression of the knocked out genes in baseline
 # load baseline data
-load(cmd_line_args$args[5])
+#load(cmd_line_args$args[5])
+Mm_GRCm38_e88_baseline <- readRDS(cmd_line_args$args[5])
+
+# label with Theiler stage
+stage_boundaries <- c(1, 7, 12, 20, 29, 34, 39)
+stage_labels <- c('TS12', 'TS13', 'TS14', 'TS15', 'TS16', 'TS17')
+# assign stage numbers with their TS
+# this issues a warning about introducing NAs by coercion. suppress it.
+somites <- colData(Mm_GRCm38_e88_baseline)$condition
+somites <- as.integer( gsub('somites', '', somites) )
+
+colData(Mm_GRCm38_e88_baseline)$Theiler_stage <-
+  cut(somites,
+      breaks = stage_boundaries, labels = stage_labels)
 
 # get gene_ids in the same order as the heatmap
 id_for <- as.character(unique(ko_expr$gene_id))
@@ -385,7 +399,7 @@ gene_ids <- id_for[ as.character(ko_order$Gene) ]
 
 # get counts for those genes
 baseline_subset <- Mm_GRCm38_e88_baseline[gene_ids, ]
-baseline_counts <- assays(baseline_subset)$norm_counts
+baseline_counts <- assays(baseline_subset)$normalised_counts
 # get means for each gene for each stage
 baseline_counts_by_stage <-
   split.data.frame(t(baseline_counts),
