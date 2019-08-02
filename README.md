@@ -79,6 +79,11 @@ This creates the following files:
 ## Fig. 2 and Fig. 3 
 
 The commands to create the files needed by the fig2 script are in fig2.md
+The script for producing the plots is fig2.R
+
+## Fig. 4
+
+The commands to create the data files for fig4 are in fig4.md and the script is fig4.R
 
 
 <h3 id="packages">Required R packages</h3>
