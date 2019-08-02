@@ -29,6 +29,7 @@ colnames(normalised_counts) <-
 norm_counts <- data.frame(
     'Gene ID' = rownames(countData),
     countData[ , !grepl("count", names(countData)) ],
+    adjp = NA, log2fc = NA,
     normalised_counts,
     check.names = FALSE
 )
